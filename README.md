@@ -1,8 +1,14 @@
+# bevy-input-sequence
+
+This crate provides reading user input sequences, and sending event
+
+## Examples
+
+```rust
 use std::time::Duration;
-
 use bevy::prelude::*;
-
 use bevy_input_sequence::prelude::*;
+
 
 #[derive(Event, Clone, Debug)]
 struct MyEvent;
@@ -29,7 +35,6 @@ fn setup(mut commands: Commands) {
     ));
 }
 
-
 fn input_sequence_event_system(
     mut er: EventReader<MyEvent>
 ) {
@@ -37,3 +42,6 @@ fn input_sequence_event_system(
         println!("{e:?} Coming ");
     }
 }
+```
+
+See [`here`](./examples/) for more examples.

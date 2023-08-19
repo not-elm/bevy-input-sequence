@@ -2,6 +2,20 @@
 name = "bevy-input-sequence"
 version = "0.1.0"
 edition = "2021"
+authors = ["elm"]
+keywords = [
+    "game",
+    "gamedev",
+    "bevy",
+    "input-sequence"
+]
+categories = [
+    "game-engines",
+]
+readme = "README.md"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/elm-register/bevy-input-sequence"
+description = "This crate provides reading user input sequences, and sending event"
 
 
 [[example]]
