@@ -4,7 +4,6 @@ use bevy::prelude::{Commands, Event, EventReader, GamepadButtonType};
 
 use bevy_input_sequence::AddInputSequenceEvent;
 use bevy_input_sequence::prelude::{InputSequence, Timeout};
-use bevy_secret_command::prelude::InputSequence;
 
 #[derive(Event, Clone, Debug)]
 struct MyEvent;
