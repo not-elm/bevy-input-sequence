@@ -25,7 +25,6 @@ impl Timeout {
     }
 
 
-
     #[inline(always)]
     pub(crate) fn timeout(&mut self, time: &Time) -> bool {
         match self {

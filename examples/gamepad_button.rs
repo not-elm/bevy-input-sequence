@@ -2,8 +2,9 @@ use bevy::app::{App, Startup, Update};
 use bevy::DefaultPlugins;
 use bevy::prelude::{Commands, Event, EventReader, GamepadButtonType};
 
-use bevy_secret_command::AppSecretCommandEx;
-use bevy_secret_command::prelude::{InputSequence, Timeout};
+use bevy_input_sequence::AddInputSequenceEvent;
+use bevy_input_sequence::prelude::{InputSequence, Timeout};
+use bevy_secret_command::prelude::InputSequence;
 
 #[derive(Event, Clone, Debug)]
 struct MyEvent;
@@ -12,9 +13,9 @@ struct MyEvent;
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        .add_secret_command_event::<MyEvent>()
+        .add_input_sequence_event::<MyEvent>()
         .add_systems(Startup, setup)
-        .add_systems(Update, secret_event_system)
+        .add_systems(Update, input_sequence_event_system)
         .run();
 }
 
@@ -22,7 +23,7 @@ fn main() {
 fn setup(mut commands: Commands) {
     commands.spawn(InputSequence::from_pad_buttons(
         MyEvent,
-        Timeout::default(),
+        Timeout::None,
         &[
             GamepadButtonType::North,
             GamepadButtonType::East,
@@ -33,10 +34,10 @@ fn setup(mut commands: Commands) {
 }
 
 
-fn secret_event_system(
+fn input_sequence_event_system(
     mut er: EventReader<MyEvent>
 ) {
     for e in er.iter() {
-        println!("KonamiCommandEvent::{e:?} Coming ");
+        println!("{e:?} Coming ");
     }
 }

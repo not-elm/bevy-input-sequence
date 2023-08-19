@@ -1,9 +1,12 @@
+use std::time::Duration;
+
 use bevy::app::{App, Startup, Update};
 use bevy::DefaultPlugins;
-use bevy::prelude::{Commands, Event, EventReader, GamepadAxisType, GamepadButtonType, KeyCode};
+use bevy::prelude::{Commands, Event, EventReader, GamepadButtonType, KeyCode};
 
-use bevy_secret_command::AppSecretCommandEx;
-use bevy_secret_command::prelude::{Entry, InputSequence, Timeout};
+use bevy_input_sequence::AddInputSequenceEvent;
+use bevy_input_sequence::prelude::{Act, InputSequence, Timeout};
+use bevy_secret_command::prelude::{Act, InputSequence};
 
 #[derive(Event, Clone, Debug)]
 struct MyEvent;
@@ -12,9 +15,9 @@ struct MyEvent;
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        .add_secret_command_event::<MyEvent>()
+        .add_input_sequence_event::<MyEvent>()
         .add_systems(Startup, setup)
-        .add_systems(Update, secret_event_system)
+        .add_systems(Update, input_sequence_event_system)
         .run();
 }
 
@@ -22,21 +25,21 @@ fn main() {
 fn setup(mut commands: Commands) {
     commands.spawn(InputSequence::new(
         MyEvent,
-        Timeout::default(),
+        Timeout::from_duration(Duration::from_secs(5)),
         &[
-            Entry::Key(KeyCode::A),
-            Entry::PadButton(GamepadButtonType::East) | Entry::Key(KeyCode::B),
-            Entry::PadAxis(GamepadAxisType::LeftStickY),
-            Entry::PadButtonAxis(GamepadButtonType::LeftTrigger)
+            Act::Key(KeyCode::W) | Act::PadButton(GamepadButtonType::North),
+            Act::Key(KeyCode::D) | Act::PadButton(GamepadButtonType::East),
+            Act::Key(KeyCode::S) | Act::PadButton(GamepadButtonType::South),
+            Act::Key(KeyCode::A) | Act::PadButton(GamepadButtonType::West)
         ],
     ));
 }
 
 
-fn secret_event_system(
+fn input_sequence_event_system(
     mut er: EventReader<MyEvent>
 ) {
     for e in er.iter() {
-        println!("KonamiCommandEvent::{e:?} Coming ");
+        println!("{e:?} Coming ");
     }
 }

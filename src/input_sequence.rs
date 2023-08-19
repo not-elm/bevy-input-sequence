@@ -1,8 +1,8 @@
-use bevy::prelude::{Component, Event, GamepadAxisType, GamepadButtonType, KeyCode};
+use bevy::prelude::{Component, Event, GamepadButtonType, KeyCode};
 
-use crate::input::Entry;
+use crate::act::Act;
+use crate::key_sequence::KeySequence;
 use crate::prelude::Timeout;
-use crate::sequence::KeySequence;
 
 #[derive(Component)]
 pub struct InputSequence<E>(KeySequence<E>);
@@ -30,31 +30,10 @@ impl<E: Event + Clone> InputSequence<E> {
 
 
     #[inline(always)]
-    pub fn from_pad_button_axes(
-        event: E,
-        timeout: Timeout,
-        buttons: &[GamepadButtonType],
-    ) -> InputSequence<E> {
-        Self(KeySequence::from_pad_button_axes(event, timeout, buttons))
-    }
-
-
-    #[inline(always)]
-    pub fn from_pad_axes(
-        event: E,
-        timeout: Timeout,
-        axes: &[GamepadAxisType],
-    ) -> InputSequence<E> {
-        Self(KeySequence::from_pad_axes(event, timeout, axes))
-    }
-
-
-
-    #[inline(always)]
     pub fn new(
         event: E,
         timeout: Timeout,
-        inputs: &[Entry],
+        inputs: &[Act],
     ) -> InputSequence<E> {
         Self(KeySequence::new(event, inputs, timeout))
     }
@@ -67,7 +46,7 @@ impl<E: Event + Clone> InputSequence<E> {
 
 
     #[inline(always)]
-    pub(crate) fn next_input(&self) -> Option<Entry> {
+    pub(crate) fn next_input(&self) -> Option<Act> {
         self.0.next_input()
     }
 
@@ -85,26 +64,3 @@ impl<E: Event + Clone> InputSequence<E> {
 }
 
 
-pub struct Builder<E>{
-    event: E,
-    timeout: Timeout,
-    inputs: Vec<Entry>
-}
-
-
-impl<E: Event + Clone> Builder<E> {
-    fn new(event: E) -> Builder<E>{
-        Self{
-            event,
-            timeout: Timeout::default(),
-            inputs: vec![]
-        }
-    }
-
-
-    fn timeout(mut self, timeout: Timeout) -> Builder<E>{
-        self.timeout = timeout;
-        self
-    }
-
-}

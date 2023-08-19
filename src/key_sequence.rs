@@ -1,16 +1,16 @@
 use std::collections::VecDeque;
 
-use bevy::prelude::{Component, Event, GamepadAxisType, GamepadButtonType, KeyCode};
+use bevy::prelude::{Component, Event, GamepadButtonType, KeyCode};
 use bevy::time::Time;
 
-use crate::input::Entry;
+use crate::act::Act;
 use crate::prelude::Timeout;
 
 #[derive(Component, Debug)]
 pub(crate) struct KeySequence<E> {
     event: E,
     timeout: Timeout,
-    inputs: VecDeque<Entry>,
+    inputs: VecDeque<Act>,
 }
 
 
@@ -22,7 +22,7 @@ impl<E> KeySequence<E>
         Self {
             event,
             timeout,
-            inputs: VecDeque::from_iter(keycodes.iter().copied().map(Entry::Key)),
+            inputs: VecDeque::from_iter(keycodes.iter().copied().map(Act::Key)),
         }
     }
 
@@ -32,33 +32,13 @@ impl<E> KeySequence<E>
         Self {
             event,
             timeout,
-            inputs: VecDeque::from_iter(buttons.iter().copied().map(Entry::PadButton)),
+            inputs: VecDeque::from_iter(buttons.iter().copied().map(Act::PadButton)),
         }
     }
 
 
     #[inline(always)]
-    pub fn from_pad_button_axes(event: E, timeout: Timeout, axes: &[GamepadButtonType]) -> KeySequence<E> {
-        Self {
-            event,
-            timeout,
-            inputs: VecDeque::from_iter(axes.iter().copied().map(Entry::PadButtonAxis)),
-        }
-    }
-
-
-    #[inline(always)]
-    pub fn from_pad_axes(event: E, timeout: Timeout, axes: &[GamepadAxisType]) -> KeySequence<E> {
-        Self {
-            event,
-            timeout,
-            inputs: VecDeque::from_iter(axes.iter().copied().map(Entry::PadAxis)),
-        }
-    }
-
-
-    #[inline(always)]
-    pub fn new(event: E, inputs: &[Entry], timeout: Timeout) -> KeySequence<E> {
+    pub fn new(event: E, inputs: &[Act], timeout: Timeout) -> KeySequence<E> {
         Self {
             event,
             timeout,
@@ -74,7 +54,7 @@ impl<E> KeySequence<E>
 
 
     #[inline(always)]
-    pub fn next_input(&self) -> Option<Entry> {
+    pub fn next_input(&self) -> Option<Act> {
         self.inputs.front().cloned()
     }
 
