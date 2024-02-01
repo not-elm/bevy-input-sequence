@@ -15,7 +15,7 @@ mod act;
 
 
 pub mod prelude {
-    pub use crate::act::Act;
+    pub use crate::act::{Act, Modifiers};
     pub use crate::AddInputSequenceEvent;
     pub use crate::input_sequence::InputSequence;
     pub use crate::timeout::Timeout;

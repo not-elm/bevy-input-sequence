@@ -1,6 +1,6 @@
 use std::collections::VecDeque;
 
-use bevy::prelude::{Component, Event, GamepadButtonType, KeyCode};
+use bevy::prelude::{Component, Event};//, GamepadButtonType, KeyCode};
 use bevy::time::Time;
 
 use crate::act::Act;
@@ -18,31 +18,11 @@ impl<E> KeySequence<E>
     where E: Event + Clone
 {
     #[inline(always)]
-    pub fn from_keycodes(event: E, timeout: Timeout, keycodes: &[KeyCode]) -> KeySequence<E> {
+    pub fn new(event: E, inputs: impl IntoIterator<Item = Act>, timeout: Timeout) -> KeySequence<E> {
         Self {
             event,
             timeout,
-            inputs: VecDeque::from_iter(keycodes.iter().copied().map(Act::Key)),
-        }
-    }
-
-
-    #[inline(always)]
-    pub fn from_pad_buttons(event: E, timeout: Timeout, buttons: &[GamepadButtonType]) -> KeySequence<E> {
-        Self {
-            event,
-            timeout,
-            inputs: VecDeque::from_iter(buttons.iter().copied().map(Act::PadButton)),
-        }
-    }
-
-
-    #[inline(always)]
-    pub fn new(event: E, inputs: &[Act], timeout: Timeout) -> KeySequence<E> {
-        Self {
-            event,
-            timeout,
-            inputs: VecDeque::from_iter(inputs.iter().cloned()),
+            inputs: VecDeque::from_iter(inputs)
         }
     }
 

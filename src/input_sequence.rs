@@ -1,4 +1,4 @@
-use bevy::prelude::{Component, Event, GamepadButtonType, KeyCode};
+use bevy::prelude::{Component, Event};
 
 use crate::act::Act;
 use crate::key_sequence::KeySequence;
@@ -9,33 +9,14 @@ pub struct InputSequence<E>(KeySequence<E>);
 
 
 impl<E: Event + Clone> InputSequence<E> {
-    #[inline(always)]
-    pub fn from_keycodes(
-        event: E,
-        timeout: Timeout,
-        keycodes: &[KeyCode],
-    ) -> InputSequence<E> {
-        Self(KeySequence::from_keycodes(event, timeout, keycodes))
-    }
-
 
     #[inline(always)]
-    pub fn from_pad_buttons(
+    pub fn new<T>(
         event: E,
         timeout: Timeout,
-        buttons: &[GamepadButtonType],
-    ) -> InputSequence<E> {
-        Self(KeySequence::from_pad_buttons(event, timeout, buttons))
-    }
-
-
-    #[inline(always)]
-    pub fn new(
-        event: E,
-        timeout: Timeout,
-        inputs: &[Act],
-    ) -> InputSequence<E> {
-        Self(KeySequence::new(event, inputs, timeout))
+        inputs: impl IntoIterator<Item = T>,
+    ) -> InputSequence<E> where T: Into<Act> {
+        Self(KeySequence::new(event, inputs.into_iter().map(|x| x.into()), timeout))
     }
 
 

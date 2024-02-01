@@ -20,10 +20,10 @@ fn main() {
 
 
 fn setup(mut commands: Commands) {
-    commands.spawn(InputSequence::from_pad_buttons(
+    commands.spawn(InputSequence::new(
         MyEvent,
         Timeout::None,
-        &[
+        [
             GamepadButtonType::North,
             GamepadButtonType::East,
             GamepadButtonType::South,

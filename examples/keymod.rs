@@ -21,11 +21,10 @@ fn setup(mut commands: Commands) {
         MyEvent,
         Timeout::from_duration(Duration::from_secs(1)),
         [
-            // KeyCode::ControlLeft,
-            KeyCode::W,
-            KeyCode::D,
-            KeyCode::S,
-            KeyCode::A
+            (Modifiers::Control, KeyCode::W),
+            (Modifiers::empty(), KeyCode::D),
+            (Modifiers::empty(), KeyCode::S),
+            (Modifiers::empty(), KeyCode::A),
         ],
     ));
 }
@@ -34,7 +33,7 @@ fn setup(mut commands: Commands) {
 fn input_sequence_event_system(
     mut er: EventReader<MyEvent>
 ) {
-    for e in er.read() {
+    for e in er.iter() {
         println!("{e:?} Coming ");
     }
 }
