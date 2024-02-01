@@ -47,7 +47,6 @@ impl<E> InputSequence<E>
         self.timeout.timedout(time)
     }
 
-
     #[inline(always)]
     pub(crate) fn start_sequence(self, at: usize) -> SequenceReader<E> {
         SequenceReader::new(self, at)

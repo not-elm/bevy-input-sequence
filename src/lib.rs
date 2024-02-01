@@ -87,7 +87,7 @@ fn input_system<E: Event + Clone>(
                 commands.entity(seq_entity).despawn();
                 ew.send(seq.event().clone());
             }
-        } else if seq.timedout(&time) || just_other_inputted(&inputs, &next_input) {
+        } else if just_other_inputted(&inputs, &next_input) || seq.timedout(&time) {
             // eprintln!("timeout or other input");
             commands.entity(seq_entity).despawn();
         }
@@ -129,7 +129,7 @@ mod tests {
 
 
     #[test]
-    fn once_key() {
+    fn one_key() {
         let mut app = new_app();
 
         app.world.spawn(InputSequence::new(

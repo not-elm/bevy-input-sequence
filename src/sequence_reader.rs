@@ -23,8 +23,8 @@ impl<E: Event + Clone> SequenceReader<E> {
 
 
     #[inline(always)]
-    pub(crate) fn next_input(&self) -> Option<Act> {
-        self.0.as_ref().unwrap().inputs.get(self.1).cloned()
+    pub(crate) fn next_input(&self) -> Option<&Act> {
+        self.0.as_ref().unwrap().inputs.get(self.1)
     }
 
 
