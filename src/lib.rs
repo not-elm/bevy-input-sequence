@@ -130,10 +130,10 @@ mod tests {
     fn once_key() {
         let mut app = new_app();
 
-        app.world.spawn(InputSequence::from_keycodes(
+        app.world.spawn(InputSequence::new(
             MyEvent,
             Timeout::None,
-            &[KeyCode::A],
+            [KeyCode::A],
         ));
         press_key(&mut app, KeyCode::A);
         app.update();
@@ -145,10 +145,10 @@ mod tests {
     fn two_keycodes() {
         let mut app = new_app();
 
-        app.world.spawn(InputSequence::from_keycodes(
+        app.world.spawn(InputSequence::new(
             MyEvent,
             Timeout::None,
-            &[KeyCode::A, KeyCode::B],
+            [KeyCode::A, KeyCode::B],
         ));
 
         press_key(&mut app, KeyCode::A);
@@ -166,10 +166,10 @@ mod tests {
     fn delete_sequences_if_pressed_incorrect_key() {
         let mut app = new_app();
 
-        app.world.spawn(InputSequence::from_keycodes(
+        app.world.spawn(InputSequence::new(
             MyEvent,
             Timeout::None,
-            &[KeyCode::A, KeyCode::B, KeyCode::C],
+            [KeyCode::A, KeyCode::B, KeyCode::C],
         ));
 
         press_key(&mut app, KeyCode::A);
@@ -194,10 +194,10 @@ mod tests {
         let mut app = new_app();
 
         app.world.send_event(GamepadConnectionEvent::new(Gamepad::new(1), GamepadConnection::Connected(GamepadInfo { name: "".to_string() })));
-        app.world.spawn(InputSequence::from_pad_buttons(
+        app.world.spawn(InputSequence::new(
             MyEvent,
             Timeout::None,
-            &[
+            [
                 GamepadButtonType::North,
                 GamepadButtonType::East,
                 GamepadButtonType::South,
@@ -228,7 +228,7 @@ mod tests {
         app.world.spawn(InputSequence::new(
             MyEvent,
             Timeout::None,
-            &[
+            [
                 Act::Key(KeyCode::A),
                 Act::Key(KeyCode::B),
                 Act::Key(KeyCode::C) | Act::PadButton(GamepadButtonType::North),
@@ -262,10 +262,10 @@ mod tests {
     fn timeout_1frame() {
         let mut app = new_app();
 
-        app.world.spawn(InputSequence::from_keycodes(
+        app.world.spawn(InputSequence::new(
             MyEvent,
             Timeout::from_frame_count(1),
-            &[KeyCode::A, KeyCode::B],
+            [KeyCode::A, KeyCode::B],
         ));
 
         press_key(&mut app, KeyCode::A);
@@ -286,10 +286,10 @@ mod tests {
     fn no_timeout_1frame() {
         let mut app = new_app();
 
-        app.world.spawn(InputSequence::from_keycodes(
+        app.world.spawn(InputSequence::new(
             MyEvent,
             Timeout::from_frame_count(2),
-            &[KeyCode::A, KeyCode::B],
+            [KeyCode::A, KeyCode::B],
         ));
 
         press_key(&mut app, KeyCode::A);
@@ -310,10 +310,10 @@ mod tests {
     fn timeout_3frames() {
         let mut app = new_app();
 
-        app.world.spawn(InputSequence::from_keycodes(
+        app.world.spawn(InputSequence::new(
             MyEvent,
             Timeout::from_frame_count(2),
-            &[KeyCode::A, KeyCode::B, KeyCode::C],
+            [KeyCode::A, KeyCode::B, KeyCode::C],
         ));
 
         press_key(&mut app, KeyCode::A);
@@ -362,7 +362,7 @@ mod tests {
         mut commands: Commands,
         mut er: EventReader<MyEvent>,
     ) {
-        for _ in er.iter() {
+        for _ in er.read() {
             commands.spawn(EventSent);
         }
     }
