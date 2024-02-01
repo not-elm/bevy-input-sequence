@@ -43,7 +43,7 @@ impl<E> InputSequence<E>
     }
 
     #[inline(always)]
-    pub fn timedout(&mut self, time: &Time) -> bool {
+    pub(crate) fn timedout(&mut self, time: &Time) -> bool {
         self.timeout.timedout(time)
     }
 
