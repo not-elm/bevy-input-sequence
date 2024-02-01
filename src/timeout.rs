@@ -26,7 +26,7 @@ impl Timeout {
 
 
     #[inline(always)]
-    pub(crate) fn timeout(&mut self, time: &Time) -> bool {
+    pub(crate) fn timedout(&mut self, time: &Time) -> bool {
         match self {
             Self::None => false,
 

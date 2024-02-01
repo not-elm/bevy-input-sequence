@@ -5,11 +5,11 @@ use bevy::prelude::{Commands, Entity, Event, EventWriter, GamepadButton, IntoSys
 use bevy::time::Time;
 
 use crate::act::Act;
-use crate::key_sequence::KeySequence;
+use crate::sequence_reader::SequenceReader;
 use crate::prelude::InputSequence;
 
-mod key_sequence;
 mod input_sequence;
+mod sequence_reader;
 mod timeout;
 mod act;
 
@@ -53,13 +53,13 @@ fn start_input_system<E: Event + Clone>(
     inputs: InputParams,
 ) {
     for seq in secrets.iter() {
-        let Some(input) = seq.next_input() else { continue; };
+        let input = seq.first_input();
 
         if input.just_inputted(&inputs) {
-            if seq.once_key() {
-                ew.send(seq.event());
+            if seq.one_key() {
+                ew.send(seq.event().clone());
             } else {
-                commands.spawn(seq.next_sequence());
+                commands.spawn(seq.clone().start_sequence(1));
             }
         }
     }
@@ -69,24 +69,26 @@ fn start_input_system<E: Event + Clone>(
 fn input_system<E: Event + Clone>(
     mut commands: Commands,
     mut ew: EventWriter<E>,
-    mut key_seq: Query<(Entity, &mut KeySequence<E>)>,
+    mut key_seq: Query<(Entity, &mut SequenceReader<E>)>,
     time: Res<Time>,
     inputs: InputParams,
 ) {
     for (seq_entity, mut seq) in key_seq.iter_mut() {
         let Some(next_input) = seq.next_input() else {
+            // eprintln!("no more input");
             commands.entity(seq_entity).despawn();
             continue;
         };
 
         if next_input.just_inputted(&inputs) {
-            commands.entity(seq_entity).despawn();
+            seq.next_sequence();
             if seq.is_last() {
-                ew.send(seq.event());
-            } else {
-                commands.spawn(seq.next_sequence());
+                // eprintln!("send event");
+                commands.entity(seq_entity).despawn();
+                ew.send(seq.event().clone());
             }
-        } else if seq.timeout(&time) || just_other_inputted(&inputs, &next_input) {
+        } else if seq.timedout(&time) || just_other_inputted(&inputs, &next_input) {
+            // eprintln!("timeout or other input");
             commands.entity(seq_entity).despawn();
         }
     }
@@ -116,7 +118,7 @@ mod tests {
     use crate::{input_system, start_input_system};
     use crate::act::Act;
     use crate::input_sequence::InputSequence;
-    use crate::key_sequence::KeySequence;
+    use crate::sequence_reader::SequenceReader;
     use crate::prelude::Timeout;
 
     #[derive(Event, Clone)]
@@ -185,7 +187,7 @@ mod tests {
         press_key(&mut app, KeyCode::D);
         app.update();
         assert!(app.world.query::<&EventSent>().iter(&app.world).next().is_none());
-        assert!(app.world.query::<&KeySequence<MyEvent>>().iter(&app.world).next().is_none());
+        assert!(app.world.query::<&SequenceReader<MyEvent>>().iter(&app.world).next().is_none());
     }
 
 
@@ -278,7 +280,7 @@ mod tests {
         press_key(&mut app, KeyCode::B);
         app.update();
         assert!(app.world.query::<&EventSent>().iter(&app.world).next().is_none());
-        assert!(app.world.query::<&KeySequence<MyEvent>>().iter(&app.world).next().is_none());
+        assert!(app.world.query::<&SequenceReader<MyEvent>>().iter(&app.world).next().is_none());
     }
 
 
@@ -302,7 +304,7 @@ mod tests {
         press_key(&mut app, KeyCode::B);
         app.update();
         assert!(app.world.query::<&EventSent>().iter(&app.world).next().is_some());
-        assert!(app.world.query::<&KeySequence<MyEvent>>().iter(&app.world).next().is_none());
+        assert!(app.world.query::<&SequenceReader<MyEvent>>().iter(&app.world).next().is_none());
     }
 
 
@@ -326,16 +328,16 @@ mod tests {
         press_key(&mut app, KeyCode::B);
         app.update();
         assert!(app.world.query::<&EventSent>().iter(&app.world).next().is_none());
-        assert!(app.world.query::<&KeySequence<MyEvent>>().iter(&app.world).next().is_some());
+        assert!(app.world.query::<&SequenceReader<MyEvent>>().iter(&app.world).next().is_some());
 
         clear_just_pressed(&mut app, KeyCode::B);
         app.update();
         assert!(app.world.query::<&EventSent>().iter(&app.world).next().is_none());
-        assert!(app.world.query::<&KeySequence<MyEvent>>().iter(&app.world).next().is_some());
+        assert!(app.world.query::<&SequenceReader<MyEvent>>().iter(&app.world).next().is_none());
 
         app.update();
         assert!(app.world.query::<&EventSent>().iter(&app.world).next().is_none());
-        assert!(app.world.query::<&KeySequence<MyEvent>>().iter(&app.world).next().is_none());
+        assert!(app.world.query::<&SequenceReader<MyEvent>>().iter(&app.world).next().is_none());
     }
 
 

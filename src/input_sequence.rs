@@ -1,47 +1,55 @@
 use bevy::prelude::{Component, Event};
+use bevy::time::Time;
 
 use crate::act::Act;
-use crate::key_sequence::KeySequence;
 use crate::prelude::Timeout;
+use crate::SequenceReader;
 
-#[derive(Component)]
-pub struct InputSequence<E>(KeySequence<E>);
-
-
-impl<E: Event + Clone> InputSequence<E> {
-
-    #[inline(always)]
-    pub fn new<T>(
-        event: E,
-        timeout: Timeout,
-        inputs: impl IntoIterator<Item = T>,
-    ) -> InputSequence<E> where T: Into<Act> {
-        Self(KeySequence::new(event, inputs.into_iter().map(|x| x.into()), timeout))
-    }
-
-
-    #[inline(always)]
-    pub(crate) fn event(&self) -> E {
-        self.0.event()
-    }
-
-
-    #[inline(always)]
-    pub(crate) fn next_input(&self) -> Option<Act> {
-        self.0.next_input()
-    }
-
-
-    #[inline(always)]
-    pub(crate) fn next_sequence(&self) -> KeySequence<E> {
-        self.0.next_sequence()
-    }
-
-
-    #[inline(always)]
-    pub(crate) fn once_key(&self) -> bool {
-        self.0.is_last()
-    }
+#[derive(Component, Debug, Clone)]
+pub struct InputSequence<E> {
+    pub(crate) event: E,
+    timeout: Timeout,
+    pub(crate) inputs: Vec<Act>,
 }
 
 
+impl<E> InputSequence<E>
+    where E: Event + Clone
+{
+    #[inline(always)]
+    pub fn new<T>(event: E, timeout: Timeout, inputs: impl IntoIterator<Item = T>) -> InputSequence<E>
+    where T: Into<Act> {
+        let r = Self {
+            event,
+            timeout,
+            inputs: Vec::from_iter(inputs.into_iter().map(|x| x.into()))
+        };
+        assert!(r.inputs.len() > 0, "input sequence must have one or more inputs.");
+        r
+    }
+
+    #[inline(always)]
+    pub(crate) fn one_key(&self) -> bool {
+        1 == self.inputs.len()
+    }
+
+    pub fn first_input(&self) -> &Act {
+        &self.inputs[0]
+    }
+
+    #[inline(always)]
+    pub fn event(&self) -> &E {
+        &self.event
+    }
+
+    #[inline(always)]
+    pub fn timedout(&mut self, time: &Time) -> bool {
+        self.timeout.timedout(time)
+    }
+
+
+    #[inline(always)]
+    pub(crate) fn start_sequence(self, at: usize) -> SequenceReader<E> {
+        SequenceReader::new(self, at)
+    }
+}

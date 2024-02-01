@@ -28,6 +28,14 @@ fn setup(mut commands: Commands) {
             KeyCode::A
         ],
     ));
+
+    commands.spawn(InputSequence::new(
+        MyEvent,
+        Timeout::from_duration(Duration::from_secs(1)),
+        [
+            KeyCode::Z,
+        ],
+    ));
 }
 
 
