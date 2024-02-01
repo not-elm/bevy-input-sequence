@@ -7,7 +7,10 @@ keywords = [
     "game",
     "gamedev",
     "bevy",
-    "input-sequence"
+    "input-sequence",
+    "hotkey",
+    "cheat-code",
+    "key-sequence"
 ]
 categories = [
     "game-engines",
@@ -15,7 +18,7 @@ categories = [
 readme = "README.md"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/elm-register/bevy-input-sequence"
-description = "This crate provides reading user input sequences, and sending event"
+description = "Recognizes input sequences and send events"
 
 
 [[example]]
@@ -34,4 +37,4 @@ path = "examples/multiple_input.rs"
 
 
 [dependencies]
-bevy = "0.11.2"
+bevy = "0.12.1"
