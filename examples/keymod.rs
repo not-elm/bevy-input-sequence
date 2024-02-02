@@ -29,10 +29,7 @@ fn setup(mut commands: Commands) {
     ));
 }
 
-
-fn input_sequence_event_system(
-    mut er: EventReader<MyEvent>
-) {
+fn input_sequence_event_system(mut er: EventReader<MyEvent>) {
     for e in er.read() {
         println!("{e:?} Coming ");
     }

@@ -1,16 +1,14 @@
 use std::time::Duration;
 
 use bevy::app::{App, Startup, Update};
-use bevy::DefaultPlugins;
 use bevy::prelude::{Commands, Event, EventReader, GamepadButtonType, KeyCode};
+use bevy::DefaultPlugins;
 
-use bevy_input_sequence::AddInputSequenceEvent;
 use bevy_input_sequence::prelude::{Act, InputSequence, Timeout};
-
+use bevy_input_sequence::AddInputSequenceEvent;
 
 #[derive(Event, Clone, Debug)]
 struct MyEvent;
-
 
 fn main() {
     App::new()
@@ -21,7 +19,6 @@ fn main() {
         .run();
 }
 
-
 fn setup(mut commands: Commands) {
     commands.spawn(InputSequence::new(
         MyEvent,
@@ -30,15 +27,12 @@ fn setup(mut commands: Commands) {
             Act::Key(KeyCode::W) | Act::PadButton(GamepadButtonType::North),
             Act::Key(KeyCode::D) | Act::PadButton(GamepadButtonType::East),
             Act::Key(KeyCode::S) | Act::PadButton(GamepadButtonType::South),
-            Act::Key(KeyCode::A) | Act::PadButton(GamepadButtonType::West)
+            Act::Key(KeyCode::A) | Act::PadButton(GamepadButtonType::West),
         ],
     ));
 }
 
-
-fn input_sequence_event_system(
-    mut er: EventReader<MyEvent>
-) {
+fn input_sequence_event_system(mut er: EventReader<MyEvent>) {
     for e in er.read() {
         println!("{e:?} Coming ");
     }

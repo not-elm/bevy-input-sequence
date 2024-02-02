@@ -1,13 +1,12 @@
 use bevy::app::{App, Startup, Update};
-use bevy::DefaultPlugins;
 use bevy::prelude::{Commands, Event, EventReader, GamepadButtonType};
+use bevy::DefaultPlugins;
 
-use bevy_input_sequence::AddInputSequenceEvent;
 use bevy_input_sequence::prelude::{InputSequence, Timeout};
+use bevy_input_sequence::AddInputSequenceEvent;
 
 #[derive(Event, Clone, Debug)]
 struct MyEvent;
-
 
 fn main() {
     App::new()
@@ -17,7 +16,6 @@ fn main() {
         .add_systems(Update, input_sequence_event_system)
         .run();
 }
-
 
 fn setup(mut commands: Commands) {
     commands.spawn(InputSequence::new(
@@ -32,10 +30,7 @@ fn setup(mut commands: Commands) {
     ));
 }
 
-
-fn input_sequence_event_system(
-    mut er: EventReader<MyEvent>
-) {
+fn input_sequence_event_system(mut er: EventReader<MyEvent>) {
     for e in er.read() {
         println!("{e:?} Coming ");
     }

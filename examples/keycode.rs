@@ -25,23 +25,18 @@ fn setup(mut commands: Commands) {
             KeyCode::W,
             KeyCode::D,
             KeyCode::S,
-            KeyCode::A
+            KeyCode::A,
         ],
     ));
 
     commands.spawn(InputSequence::new(
         MyEvent,
         Timeout::from_duration(Duration::from_secs(1)),
-        [
-            KeyCode::Z,
-        ],
+        [KeyCode::Z],
     ));
 }
 
-
-fn input_sequence_event_system(
-    mut er: EventReader<MyEvent>
-) {
+fn input_sequence_event_system(mut er: EventReader<MyEvent>) {
     for e in er.read() {
         println!("{e:?} Coming ");
     }

@@ -12,19 +12,28 @@ pub struct InputSequence<E> {
     pub(crate) inputs: Vec<Act>,
 }
 
-
 impl<E> InputSequence<E>
-    where E: Event + Clone
+where
+    E: Event + Clone,
 {
     #[inline(always)]
-    pub fn new<T>(event: E, timeout: Timeout, inputs: impl IntoIterator<Item = T>) -> InputSequence<E>
-    where T: Into<Act> {
+    pub fn new<T>(
+        event: E,
+        timeout: Timeout,
+        inputs: impl IntoIterator<Item = T>,
+    ) -> InputSequence<E>
+    where
+        T: Into<Act>,
+    {
         let r = Self {
             event,
             timeout,
-            inputs: Vec::from_iter(inputs.into_iter().map(|x| x.into()))
+            inputs: Vec::from_iter(inputs.into_iter().map(|x| x.into())),
         };
-        assert!(r.inputs.len() > 0, "input sequence must have one or more inputs.");
+        assert!(
+            r.inputs.len() > 0,
+            "input sequence must have one or more inputs."
+        );
         r
     }
 
