@@ -10,12 +10,15 @@ use crate::act::Act;
 use crate::prelude::InputSequence;
 use crate::sequence_reader::SequenceReader;
 
+//pub use bevy_input_sequence_macro::{key, keyseq};
+
 mod act;
 mod input_sequence;
 mod sequence_reader;
 mod timeout;
 
 pub mod prelude {
+    pub use bevy_input_sequence_macro::{key, keyseq};
     pub use crate::act::{Act, Modifiers};
     pub use crate::input_sequence::InputSequence;
     pub use crate::timeout::Timeout;

@@ -20,12 +20,13 @@ fn setup(mut commands: Commands) {
     commands.spawn(InputSequence::new(
         MyEvent,
         Timeout::from_duration(Duration::from_secs(1)),
-        [
-            (Modifiers::Control, KeyCode::W),
-            (Modifiers::empty(), KeyCode::D),
-            (Modifiers::empty(), KeyCode::S),
-            (Modifiers::empty(), KeyCode::A),
-        ],
+        // [
+            keyseq!(ctrl-W D S A)
+            // (Modifiers::Control, KeyCode::W),
+            // (Modifiers::empty(), KeyCode::D),
+            // (Modifiers::empty(), KeyCode::S),
+            // (Modifiers::empty(), KeyCode::A),
+        // ],
     ));
 }
 

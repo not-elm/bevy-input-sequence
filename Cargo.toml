@@ -39,3 +39,4 @@ path = "examples/multiple_input.rs"
 [dependencies]
 bevy = "0.12.1"
 bitflags = "2.4.2"
+bevy-input-sequence-macro = { version = "0.1.0", path = "macro" }
