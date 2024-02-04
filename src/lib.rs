@@ -56,7 +56,7 @@ fn start_input_system<E: Event + Clone>(
             if seq.one_key() {
                 ew.send(seq.event().clone());
             } else {
-                commands.spawn(seq.clone().start_sequence(1));
+                commands.spawn(seq.clone().start_reader(1));
             }
         }
     }

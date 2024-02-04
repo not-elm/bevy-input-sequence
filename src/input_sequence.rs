@@ -61,7 +61,7 @@ where
     }
 
     #[inline(always)]
-    pub(crate) fn start_sequence(self, at: usize) -> SequenceReader<E> {
+    pub(crate) fn start_reader(self, at: usize) -> SequenceReader<E> {
         SequenceReader::new(self, at)
     }
 }
