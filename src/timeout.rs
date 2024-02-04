@@ -29,7 +29,7 @@ impl Timeout {
         match self {
             Self::None => false,
 
-            Self::Time(timer) => timer.tick(time.delta()).just_finished(),
+            Self::Time(timer) => timer.tick(time.delta()).finished(),
 
             Self::Frames { limit, current } => {
                 *current += 1;
