@@ -17,16 +17,18 @@ fn main() {
 }
 
 fn setup(mut commands: Commands) {
-    commands.spawn(InputSequence::new(
-        MyEvent,
-        // [
-            keyseq!(ctrl-W D S A)
-            // (Modifiers::Control, KeyCode::W),
-            // (Modifiers::empty(), KeyCode::D),
-            // (Modifiers::empty(), KeyCode::S),
-            // (Modifiers::empty(), KeyCode::A),
-        // ],
-    ).timeout(Duration::from_secs(1)));
+    commands.spawn(
+        InputSequence::new(
+            MyEvent,
+            // [
+            keyseq!(ctrl-W D S A), // (Modifiers::Control, KeyCode::W),
+                                   // (Modifiers::empty(), KeyCode::D),
+                                   // (Modifiers::empty(), KeyCode::S),
+                                   // (Modifiers::empty(), KeyCode::A),
+                                   // ],
+        )
+        .timeout(Duration::from_secs(1)),
+    );
 }
 
 fn input_sequence_event_system(mut er: EventReader<MyEvent>) {

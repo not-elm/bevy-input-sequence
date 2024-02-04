@@ -1,3 +1,5 @@
+#![doc(html_root_url = "https://docs.rs/bevy-input-sequence/0.2.0")]
+#![doc = include_str!("../README.md")]
 use bevy::app::{App, Update};
 use bevy::ecs::system::SystemParam;
 use bevy::input::Input;
@@ -18,11 +20,11 @@ mod sequence_reader;
 mod timeout;
 
 pub mod prelude {
-    pub use bevy_input_sequence_macro::{key, keyseq};
     pub use crate::act::{Act, Modifiers};
     pub use crate::input_sequence::InputSequence;
     pub use crate::timeout::Timeout;
     pub use crate::AddInputSequenceEvent;
+    pub use bevy_input_sequence_macro::{key, keyseq};
 }
 
 pub trait AddInputSequenceEvent {
@@ -125,8 +127,7 @@ mod tests {
     fn one_key() {
         let mut app = new_app();
 
-        app.world
-            .spawn(InputSequence::new(MyEvent, [KeyCode::A]));
+        app.world.spawn(InputSequence::new(MyEvent, [KeyCode::A]));
         press_key(&mut app, KeyCode::A);
         app.update();
         assert!(app
@@ -141,10 +142,8 @@ mod tests {
     fn two_keycodes() {
         let mut app = new_app();
 
-        app.world.spawn(InputSequence::new(
-            MyEvent,
-            [KeyCode::A, KeyCode::B],
-        ));
+        app.world
+            .spawn(InputSequence::new(MyEvent, [KeyCode::A, KeyCode::B]));
 
         press_key(&mut app, KeyCode::A);
         app.update();
@@ -325,10 +324,10 @@ mod tests {
     fn timeout_1frame() {
         let mut app = new_app();
 
-        app.world.spawn(InputSequence::new(
-            MyEvent,
-            [KeyCode::A, KeyCode::B],
-        ).timeout(Timeout::from_frame_count(1)));
+        app.world.spawn(
+            InputSequence::new(MyEvent, [KeyCode::A, KeyCode::B])
+                .timeout(Timeout::from_frame_count(1)),
+        );
 
         press_key(&mut app, KeyCode::A);
         app.update();
@@ -362,10 +361,10 @@ mod tests {
     fn no_timeout_1frame() {
         let mut app = new_app();
 
-        app.world.spawn(InputSequence::new(
-            MyEvent,
-            [KeyCode::A, KeyCode::B],
-        ).timeout(Timeout::from_frame_count(2)));
+        app.world.spawn(
+            InputSequence::new(MyEvent, [KeyCode::A, KeyCode::B])
+                .timeout(Timeout::from_frame_count(2)),
+        );
 
         press_key(&mut app, KeyCode::A);
         app.update();
@@ -399,10 +398,10 @@ mod tests {
     fn timeout_3frames() {
         let mut app = new_app();
 
-        app.world.spawn(InputSequence::new(
-            MyEvent,
-            [KeyCode::A, KeyCode::B, KeyCode::C],
-        ).timeout(Timeout::from_frame_count(2)));
+        app.world.spawn(
+            InputSequence::new(MyEvent, [KeyCode::A, KeyCode::B, KeyCode::C])
+                .timeout(Timeout::from_frame_count(2)),
+        );
 
         press_key(&mut app, KeyCode::A);
         app.update();

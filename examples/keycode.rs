@@ -1,40 +1,50 @@
+use bevy::prelude::*;
+use bevy_input_sequence::prelude::*;
 use std::time::Duration;
 
-use bevy::prelude::*;
-
-use bevy_input_sequence::prelude::*;
+#[derive(Clone, Debug)]
+enum Direction {
+    Clockwise,
+    CounterClockwise,
+}
 
 #[derive(Event, Clone, Debug)]
-struct MyEvent;
+struct MyEvent(Direction);
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .add_input_sequence_event::<MyEvent>()
         .add_systems(Startup, setup)
-        .add_systems(Update, input_sequence_event_system)
+        .add_systems(Update, event_listener)
         .run();
 }
 
+#[rustfmt::skip]
 fn setup(mut commands: Commands) {
-    commands.spawn(InputSequence::new(
-        MyEvent,
-        [
-            // KeyCode::ControlLeft,
-            KeyCode::W,
-            KeyCode::D,
-            KeyCode::S,
-            KeyCode::A,
-        ],
-    ).timeout(Duration::from_secs(1)));
+    // Specify key codes directly.
+    commands.spawn(
+        InputSequence::new(
+            MyEvent(Direction::Clockwise),
+            [KeyCode::W,
+             KeyCode::D,
+             KeyCode::S,
+             KeyCode::A],
+        )
+        .timeout(Duration::from_secs(1)),
+    );
 
-    commands.spawn(InputSequence::new(
-        MyEvent,
-        [KeyCode::Z],
-    ));
+    // Use keyseq! macro.
+    commands.spawn(
+        InputSequence::new(
+            MyEvent(Direction::CounterClockwise),
+            keyseq!(W A S D),
+        )
+        .timeout(Duration::from_secs(1)),
+    );
 }
 
-fn input_sequence_event_system(mut er: EventReader<MyEvent>) {
+fn event_listener(mut er: EventReader<MyEvent>) {
     for e in er.read() {
         println!("{e:?} Coming ");
     }

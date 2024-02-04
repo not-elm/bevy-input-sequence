@@ -17,10 +17,7 @@ where
     E: Event + Clone,
 {
     #[inline(always)]
-    pub fn new<T>(
-        event: E,
-        inputs: impl IntoIterator<Item = T>,
-    ) -> InputSequence<E>
+    pub fn new<T>(event: E, inputs: impl IntoIterator<Item = T>) -> InputSequence<E>
     where
         T: Into<Act>,
     {

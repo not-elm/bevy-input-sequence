@@ -20,15 +20,18 @@ fn main() {
 }
 
 fn setup(mut commands: Commands) {
-    commands.spawn(InputSequence::new(
-        MyEvent,
-        [
-            Act::Key(KeyCode::W) | Act::PadButton(GamepadButtonType::North),
-            Act::Key(KeyCode::D) | Act::PadButton(GamepadButtonType::East),
-            Act::Key(KeyCode::S) | Act::PadButton(GamepadButtonType::South),
-            Act::Key(KeyCode::A) | Act::PadButton(GamepadButtonType::West),
-        ],
-    ).timeout(Duration::from_secs(5)));
+    commands.spawn(
+        InputSequence::new(
+            MyEvent,
+            [
+                Act::Key(KeyCode::W) | Act::PadButton(GamepadButtonType::North),
+                Act::Key(KeyCode::D) | Act::PadButton(GamepadButtonType::East),
+                Act::Key(KeyCode::S) | Act::PadButton(GamepadButtonType::South),
+                Act::Key(KeyCode::A) | Act::PadButton(GamepadButtonType::West),
+            ],
+        )
+        .timeout(Duration::from_secs(5)),
+    );
 }
 
 fn input_sequence_event_system(mut er: EventReader<MyEvent>) {

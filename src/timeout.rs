@@ -11,7 +11,6 @@ pub enum Timeout {
 }
 
 impl Timeout {
-
     #[inline(always)]
     pub const fn from_frame_count(limit_frame_count: u32) -> Timeout {
         Self::Frames {

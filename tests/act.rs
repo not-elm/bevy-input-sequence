@@ -1,7 +1,6 @@
-
 use bevy::prelude::*;
-use bevy_input_sequence::prelude::*;
 use bevy_input_sequence::prelude::Act::*;
+use bevy_input_sequence::prelude::*;
 
 #[allow(unused_must_use)]
 #[test]
@@ -15,7 +14,10 @@ fn test_key_eq() {
 #[allow(unused_must_use)]
 #[test]
 fn test_keyseq_macro() {
-    assert_eq!(vec![KeyChord(Modifiers::empty(), KeyCode::A)], keyseq! { A });
+    assert_eq!(
+        vec![KeyChord(Modifiers::empty(), KeyCode::A)],
+        keyseq! { A }
+    );
     assert_eq!(
         vec![
             KeyChord(Modifiers::empty(), KeyCode::A),
@@ -24,7 +26,6 @@ fn test_keyseq_macro() {
         keyseq! { A B }
     );
 }
-
 
 /// XXX: This doc test isn't working.
 ///
@@ -39,18 +40,48 @@ fn test_key_macro() {
     assert_eq!(KeyChord(Modifiers::Control, KeyCode::Key2), key! { ctrl-2 });
     assert_eq!(KeyChord(Modifiers::Control, KeyCode::F2), key! { ctrl-F2 });
     // assert_eq!(KeyChord(Modifiers::Control, KeyCode::F2), key!{ ctrl-f2 });
-    assert_eq!(KeyChord(Modifiers::Control, KeyCode::Semicolon), key! { ctrl-; });
-    assert_eq!(KeyChord(Modifiers::Control, KeyCode::Caret), key! { ctrl-^ });
+    assert_eq!(
+        KeyChord(Modifiers::Control, KeyCode::Semicolon),
+        key! { ctrl-; }
+    );
+    assert_eq!(
+        KeyChord(Modifiers::Control, KeyCode::Caret),
+        key! { ctrl-^ }
+    );
     // assert_eq!(KeyChord(Modifiers::Control, KeyCode::Colon), key! { ctrl-: });
-    assert_eq!(KeyChord(Modifiers::Control, KeyCode::Equals), key! { ctrl-= });
-    assert_eq!(KeyChord(Modifiers::Control, KeyCode::Comma), key! { ctrl-, });
-    assert_eq!(KeyChord(Modifiers::Control, KeyCode::Period), key! { ctrl-. });
-    assert_eq!(KeyChord(Modifiers::Control, KeyCode::Slash), key! { ctrl-/ });
-    assert_eq!(KeyChord(Modifiers::Control, KeyCode::Minus), key! { ctrl-- });
-    assert_eq!(KeyChord(Modifiers::Control, KeyCode::Underline), key! { ctrl-_ });
+    assert_eq!(
+        KeyChord(Modifiers::Control, KeyCode::Equals),
+        key! { ctrl-= }
+    );
+    assert_eq!(
+        KeyChord(Modifiers::Control, KeyCode::Comma),
+        key! { ctrl-, }
+    );
+    assert_eq!(
+        KeyChord(Modifiers::Control, KeyCode::Period),
+        key! { ctrl-. }
+    );
+    assert_eq!(
+        KeyChord(Modifiers::Control, KeyCode::Slash),
+        key! { ctrl-/ }
+    );
+    assert_eq!(
+        KeyChord(Modifiers::Control, KeyCode::Minus),
+        key! { ctrl-- }
+    );
+    assert_eq!(
+        KeyChord(Modifiers::Control, KeyCode::Underline),
+        key! { ctrl-_ }
+    );
     // assert_eq!(KeyChord(Modifiers::Control, KeyCode::Colon), key! { ctrl-: });
-    assert_eq!(KeyChord(Modifiers::Control | Modifiers::Shift, KeyCode::Semicolon), key! { ctrl-: });
-    assert_eq!(KeyChord(Modifiers::Control, KeyCode::Apostrophe), key! { ctrl-'\'' });
+    assert_eq!(
+        KeyChord(Modifiers::Control | Modifiers::Shift, KeyCode::Semicolon),
+        key! { ctrl-: }
+    );
+    assert_eq!(
+        KeyChord(Modifiers::Control, KeyCode::Apostrophe),
+        key! { ctrl-'\'' }
+    );
 
     assert_eq!(
         KeyChord(Modifiers::Control | Modifiers::Shift, KeyCode::A),
@@ -66,11 +97,17 @@ fn test_key_macro() {
         KeyChord(Modifiers::Control, KeyCode::Asterisk),
         key! { ctrl-Asterisk }
     ); // All bevy KeyCode names work.
-    assert_eq!(KeyChord(Modifiers::Control, KeyCode::Asterisk), key! { ctrl-* }); // with some short hand.
+    assert_eq!(
+        KeyChord(Modifiers::Control, KeyCode::Asterisk),
+        key! { ctrl-* }
+    ); // with some short hand.
 
     assert_eq!(KeyChord(Modifiers::Control, KeyCode::Plus), key! { ctrl-+ });
     assert_eq!(KeyChord(Modifiers::Control, KeyCode::At), key! { ctrl-@ });
-    assert_eq!(KeyChord(Modifiers::Control, KeyCode::Grave), key! { ctrl-'`' });
+    assert_eq!(
+        KeyChord(Modifiers::Control, KeyCode::Grave),
+        key! { ctrl-'`' }
+    );
     assert_eq!(
         KeyChord(Modifiers::Control, KeyCode::Backslash),
         key! { ctrl-'\\' }
@@ -102,7 +139,10 @@ fn test_key_macro() {
         key! { ctrl-alt-; }
     );
     assert_eq!(
-        KeyChord(Modifiers::Control | Modifiers::Alt | Modifiers::Shift, KeyCode::Semicolon),
+        KeyChord(
+            Modifiers::Control | Modifiers::Alt | Modifiers::Shift,
+            KeyCode::Semicolon
+        ),
         key! { ctrl-alt-: }
     );
     assert_eq!(
