@@ -77,7 +77,7 @@ fn input_system<E: Event + Clone>(
         };
 
         if next_input.just_inputted(&inputs) {
-            seq.next_sequence();
+            seq.next_act();
             if seq.is_last() {
                 // eprintln!("send event");
                 commands.entity(seq_entity).despawn();
@@ -126,7 +126,7 @@ mod tests {
         let mut app = new_app();
 
         app.world
-            .spawn(InputSequence::new(MyEvent, Timeout::None, [KeyCode::A]));
+            .spawn(InputSequence::new(MyEvent, [KeyCode::A]));
         press_key(&mut app, KeyCode::A);
         app.update();
         assert!(app
@@ -143,7 +143,6 @@ mod tests {
 
         app.world.spawn(InputSequence::new(
             MyEvent,
-            Timeout::None,
             [KeyCode::A, KeyCode::B],
         ));
 
@@ -173,7 +172,6 @@ mod tests {
 
         app.world.spawn(InputSequence::new(
             MyEvent,
-            Timeout::None,
             [KeyCode::A, KeyCode::B, KeyCode::C],
         ));
 
@@ -225,7 +223,6 @@ mod tests {
         ));
         app.world.spawn(InputSequence::new(
             MyEvent,
-            Timeout::None,
             [
                 GamepadButtonType::North,
                 GamepadButtonType::East,
@@ -275,7 +272,6 @@ mod tests {
         ));
         app.world.spawn(InputSequence::new(
             MyEvent,
-            Timeout::None,
             [
                 Act::Key(KeyCode::A),
                 Act::Key(KeyCode::B),
@@ -331,9 +327,8 @@ mod tests {
 
         app.world.spawn(InputSequence::new(
             MyEvent,
-            Timeout::from_frame_count(1),
             [KeyCode::A, KeyCode::B],
-        ));
+        ).timeout(Timeout::from_frame_count(1)));
 
         press_key(&mut app, KeyCode::A);
         app.update();
@@ -369,9 +364,8 @@ mod tests {
 
         app.world.spawn(InputSequence::new(
             MyEvent,
-            Timeout::from_frame_count(2),
             [KeyCode::A, KeyCode::B],
-        ));
+        ).timeout(Timeout::from_frame_count(2)));
 
         press_key(&mut app, KeyCode::A);
         app.update();
@@ -407,9 +401,8 @@ mod tests {
 
         app.world.spawn(InputSequence::new(
             MyEvent,
-            Timeout::from_frame_count(2),
             [KeyCode::A, KeyCode::B, KeyCode::C],
-        ));
+        ).timeout(Timeout::from_frame_count(2)));
 
         press_key(&mut app, KeyCode::A);
         app.update();

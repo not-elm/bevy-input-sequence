@@ -12,7 +12,7 @@ impl<E: Event + Clone> SequenceReader<E> {
         Self(Some(seq), start_index)
     }
 
-    /// Returns the event. Repeated calls to `event()` will cause a panic.
+    /// Returns the event. Repeated calls to `event()` will panic.
     #[inline(always)]
     pub(crate) fn event(&mut self) -> E {
         self.0.take().expect("No input sequence in reader").event
@@ -24,7 +24,7 @@ impl<E: Event + Clone> SequenceReader<E> {
     }
 
     #[inline(always)]
-    pub(crate) fn next_sequence(&mut self) {
+    pub(crate) fn next_act(&mut self) {
         self.1 += 1;
     }
 
