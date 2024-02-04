@@ -19,7 +19,6 @@ fn main() {
 fn setup(mut commands: Commands) {
     commands.spawn(InputSequence::new(
         MyEvent,
-        Timeout::from_duration(Duration::from_secs(1)),
         [
             // KeyCode::ControlLeft,
             KeyCode::W,
@@ -27,11 +26,10 @@ fn setup(mut commands: Commands) {
             KeyCode::S,
             KeyCode::A,
         ],
-    ));
+    ).timeout(Timeout::from_duration(Duration::from_secs(1))));
 
     commands.spawn(InputSequence::new(
         MyEvent,
-        Timeout::from_duration(Duration::from_secs(1)),
         [KeyCode::Z],
     ));
 }

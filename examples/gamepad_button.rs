@@ -2,7 +2,7 @@ use bevy::app::{App, Startup, Update};
 use bevy::prelude::{Commands, Event, EventReader, GamepadButtonType};
 use bevy::DefaultPlugins;
 
-use bevy_input_sequence::prelude::{InputSequence, Timeout};
+use bevy_input_sequence::prelude::InputSequence;
 use bevy_input_sequence::AddInputSequenceEvent;
 
 #[derive(Event, Clone, Debug)]
@@ -20,7 +20,6 @@ fn main() {
 fn setup(mut commands: Commands) {
     commands.spawn(InputSequence::new(
         MyEvent,
-        Timeout::None,
         [
             GamepadButtonType::North,
             GamepadButtonType::East,
