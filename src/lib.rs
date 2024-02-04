@@ -11,6 +11,7 @@ use bevy::time::Time;
 pub use crate::act::Act;
 pub use crate::input_sequence::InputSequence;
 use crate::sequence_reader::SequenceReader;
+pub use crate::timeout::TimeLimit;
 
 pub use bevy_input_sequence_macro::{key, keyseq};
 
@@ -28,7 +29,8 @@ pub mod prelude {
 }
 
 pub trait AddInputSequenceEvent {
-    /// Adds fires an event `E` when a component `InputSequence` is present in the app.
+    /// Setup event `E` so that it may fire when a component `InputSequence` is
+    /// present in the app.
     fn add_input_sequence_event<E: Event + Clone>(&mut self) -> &mut App;
 }
 
@@ -57,11 +59,11 @@ fn start_input_system<E: Event + Clone>(
             continue;
         };
 
-        if input.just_inputted(&inputs) {
+        if input.just_inputted(&inputs, &None) {
             if seq.one_key() {
                 ew.send(seq.event.clone());
             } else {
-                commands.spawn(seq.clone().start_reader(1));
+                commands.spawn(SequenceReader::new(seq.clone(), 1, input.gen_context(&inputs)));
             }
         }
     }
@@ -81,27 +83,20 @@ fn input_system<E: Event + Clone>(
             continue;
         };
 
-        if next_input.just_inputted(&inputs) {
+        if next_input.just_inputted(&inputs, &seq.context) {
             seq.next_act();
             if seq.is_last() {
                 // eprintln!("send event");
                 commands.entity(seq_entity).despawn();
-                ew.send(seq.event().clone());
+                ew.send(seq.event());
             }
-        } else if just_other_inputted(&inputs, &next_input) || seq.timedout(&time) {
+        } else if seq.just_other_inputted(&inputs, &next_input) || seq.timedout(&time) {
             // eprintln!("time_limit or other input");
             commands.entity(seq_entity).despawn();
         }
     }
 }
 
-fn just_other_inputted(inputs: &InputParams, next_input: &Act) -> bool {
-    if next_input.other_pressed_keycode(inputs.key.get_just_pressed()) {
-        return true;
-    }
-
-    next_input.other_pressed_pad_button(inputs.button_inputs.get_just_pressed())
-}
 
 #[cfg(test)]
 mod tests {

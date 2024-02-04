@@ -91,7 +91,7 @@ impl Act {
             .count()
     }
 
-    pub(crate) fn just_inputted(&self, inputs: &InputParams) -> bool {
+    pub(crate) fn just_inputted(&self, inputs: &InputParams, context: &Option<usize>) -> bool {
         match self {
             Self::Key(keycode) => inputs.key.just_pressed(*keycode),
             Self::KeyChord(modifiers, keycode) => {
@@ -102,9 +102,23 @@ impl Act {
             Self::PadButton(button) => inputs
                 .button_inputs
                 .get_just_pressed()
+                .filter(|button| context.map_or(true, |x| x == button.gamepad.id))
                 .any(|pressed| pressed.button_type == *button),
 
-            Self::Any(any) => any.iter().any(|input| input.just_inputted(inputs)),
+            Self::Any(any) => any.iter().any(|input| input.just_inputted(inputs, context)),
+        }
+    }
+
+    /// Generate a bit of context.
+    pub(crate) fn gen_context(&self, inputs: &InputParams) -> Option<usize> {
+        match self {
+            Self::PadButton(button) => inputs
+                .button_inputs
+                .get_just_pressed()
+                .filter(|pressed| pressed.button_type == *button)
+                .map(|x| x.gamepad.id)
+                .next(),
+            _ => None
         }
     }
 

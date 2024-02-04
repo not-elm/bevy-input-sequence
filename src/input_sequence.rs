@@ -2,7 +2,6 @@ use bevy::prelude::{Component, Event};
 
 use crate::act::Act;
 use crate::timeout::TimeLimit;
-use crate::SequenceReader;
 
 /// An input sequence fires an event when its acts are matched within the
 /// given time limit.
@@ -46,8 +45,4 @@ where
         self.acts.get(0)
     }
 
-    #[inline(always)]
-    pub(crate) fn start_reader(self, at: usize) -> SequenceReader<E> {
-        SequenceReader::new(self, at)
-    }
 }
