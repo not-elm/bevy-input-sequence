@@ -3,6 +3,7 @@ use bevy::prelude::{Component, Event, Time};
 use crate::act::Act;
 use crate::input_sequence::InputSequence;
 
+/// Reads input matching or not against a given input sequence.
 #[derive(Component)]
 pub(crate) struct SequenceReader<E>(Option<InputSequence<E>>, usize);
 

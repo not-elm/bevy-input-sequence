@@ -144,3 +144,4 @@ impl BitOr for Act {
         Self::Any(vec![self, rhs])
     }
 }
+

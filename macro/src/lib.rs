@@ -56,7 +56,7 @@ fn partial_key(input: TokenStream) -> (TokenStream, TokenStream) {
         if i.peek().is_none() || (!is_dash(&tree) && !is_dash(i.peek().unwrap())) {
             key_code = match tree {
                 TokenTree::Literal(ref literal) => {
-                    let x = literal.to_string();
+                    let x = literal.span().source_text().unwrap();
                     if x.len() == 1 && x.parse::<u8>().is_ok() {
                         let key = Ident::new(&format!("Key{x}"), literal.span());
                         Some(quote! { ::bevy::prelude::KeyCode::#key })
@@ -92,21 +92,24 @@ fn partial_key(input: TokenStream) -> (TokenStream, TokenStream) {
                     name.as_ref().map(|n| {
                         let token = Ident::new(n, punct.span());
                         quote! {::bevy::prelude::KeyCode::#token }
+
+
                     })
                 },
                 TokenTree::Ident(ref ident) => {
-                    // Some(quote! { ::bevy::prelude::KeyCode::#ident })
-                    let label = ident.to_string();
+                    let label = ident.span().source_text().unwrap();
                     if label.len() == 1 {
                         let name : Option<Cow<'static, str>>
                             = match label.chars().next().unwrap() {
-                            x @ 'A'..='Z' => {
+                            // x @ 'A'..='Z' => {
+                            'A'..='Z' => {
                                 // I'm not sure I like adding shift.
                                 // add_shift = true;
-                                Some(x.to_string().into())
+                                // Some(x.to_string().into())
+                                Some(label.into())
                             },
                             x @ 'a'..='z' => {
-                                abort!(x, "Use uppercase key names.");
+                                abort!(x, "Use uppercase key names");
                                 // let s = x.to_ascii_uppercase().to_string();
                                 // Some(s.into())
                             },
@@ -132,7 +135,7 @@ fn partial_key(input: TokenStream) -> (TokenStream, TokenStream) {
         } else {
             let replacement = match tree {
                 TokenTree::Ident(ref ident) => {
-                    match ident.to_string().as_str() {
+                    match ident.span().source_text().unwrap().as_str() {
                         "alt" => Some(TokenTree::Group(Group::new(Delimiter::None,
                                                             quote! { ::bevy_input_sequence::prelude::Modifiers::Alt }))),
                         "ctrl" => Some(TokenTree::Group(Group::new(Delimiter::None,
