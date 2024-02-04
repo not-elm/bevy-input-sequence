@@ -1,6 +1,6 @@
 # bevy-input-sequence
 
-This crate provides recognizes input sequences and send events.
+This crate recognizes input sequences and sends events.
 
 ## Use cases
 
@@ -62,7 +62,7 @@ fn event_listener(
     mut er: EventReader<MyEvent>
 ) {
     for e in er.read() {
-        println!("{e:?} Coming ");
+        println!("{e:?} emitted ");
     }
 }
 ```

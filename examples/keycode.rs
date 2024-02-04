@@ -46,6 +46,6 @@ fn setup(mut commands: Commands) {
 
 fn event_listener(mut er: EventReader<MyEvent>) {
     for e in er.read() {
-        println!("{e:?} Coming ");
+        println!("{e:?} emitted");
     }
 }
