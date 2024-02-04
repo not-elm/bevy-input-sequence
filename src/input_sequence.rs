@@ -19,7 +19,6 @@ where
     #[inline(always)]
     pub fn new<T>(
         event: E,
-        timeout: Timeout,
         inputs: impl IntoIterator<Item = T>,
     ) -> InputSequence<E>
     where
@@ -27,7 +26,7 @@ where
     {
         let r = Self {
             event,
-            timeout,
+            timeout: Timeout::None,
             inputs: Vec::from_iter(inputs.into_iter().map(|x| x.into())),
         };
         assert!(
@@ -35,6 +34,11 @@ where
             "input sequence must have one or more inputs."
         );
         r
+    }
+
+    pub fn timeout(mut self, timeout: Timeout) -> Self {
+        self.timeout = timeout;
+        self
     }
 
     #[inline(always)]

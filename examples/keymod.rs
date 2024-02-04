@@ -19,7 +19,6 @@ fn main() {
 fn setup(mut commands: Commands) {
     commands.spawn(InputSequence::new(
         MyEvent,
-        Timeout::from_duration(Duration::from_secs(1)),
         // [
             keyseq!(ctrl-W D S A)
             // (Modifiers::Control, KeyCode::W),
@@ -27,7 +26,7 @@ fn setup(mut commands: Commands) {
             // (Modifiers::empty(), KeyCode::S),
             // (Modifiers::empty(), KeyCode::A),
         // ],
-    ));
+    ).timeout(Timeout::from_duration(Duration::from_secs(1))));
 }
 
 fn input_sequence_event_system(mut er: EventReader<MyEvent>) {
