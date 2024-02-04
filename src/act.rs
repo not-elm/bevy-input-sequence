@@ -5,6 +5,7 @@ use std::ops::BitOr;
 use crate::InputParams;
 
 bitflags! {
+    /// A bit flag that stores the modifier keys--alt, control, shift, and super--in a byte.
     #[derive(Clone, Copy, Debug, PartialOrd, PartialEq, Eq, Hash, Ord)]
     pub struct Modifiers: u8 {
         const Alt     = 0b00000001;
@@ -46,11 +47,16 @@ impl From<KeyCode> for Modifiers {
     }
 }
 
+/// Each input sequence is a series of `Act`s.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Act {
+    /// A simple key input, e.g. `Act::Key(KeyCode::A)` for the `A` key.
     Key(KeyCode),
+    /// A key chord, e.g. `ctrl-A`
     KeyChord(Modifiers, KeyCode),
+    /// A controller input
     PadButton(GamepadButtonType),
+    /// Any collection of Acts
     Any(Vec<Act>),
 }
 
