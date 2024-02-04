@@ -121,6 +121,7 @@ fn test_key_macro() {
         KeyChord(Modifiers::Control | Modifiers::Alt, KeyCode::A),
         key! { ctrl-alt-A }
     );
+
     assert_eq!(KeyChord(Modifiers::empty(), KeyCode::A), key! { A });
     assert_eq!(
         KeyChord(Modifiers::Control | Modifiers::Alt, KeyCode::A),

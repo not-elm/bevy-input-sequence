@@ -1,0 +1,5 @@
+error: Too many tokens; use keyseq! for multiple keys
+ --> tests/compile_fail/too_many_keys.rs:4:20
+  |
+4 |     let _ = key!(A B);
+  |                    ^

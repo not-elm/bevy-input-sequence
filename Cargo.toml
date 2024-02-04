@@ -37,6 +37,10 @@ path = "examples/multiple_input.rs"
 
 
 [dependencies]
-bevy = "0.12.1"
+bevy = { version = "0.12.1", default-features = false, features = [] }
 bitflags = "2.4.2"
 bevy-input-sequence-macro = { version = "0.1.0", path = "macro" }
+
+[dev-dependencies]
+bevy = "0.12.1"
+trybuild = "1.0"

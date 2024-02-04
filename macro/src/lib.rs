@@ -10,12 +10,37 @@ use std::borrow::Cow;
 //     proc_macro::TokenStream::new()
 // }
 
+/// Uses a short hand notation to describe a key chord. Returns a Act::KeyChord.
+///
+/// Specify a key and any modifiers.
+///
+/// ```ignore
+/// assert_eq(key!(A), KeyChord(Modifiers::empty(), KeyCode::A));
+/// assert_eq(key!(ctrl-A), KeyChord(Modifiers::Control, KeyCode::A));
+/// assert_eq(key!(alt-ctrl-A), KeyChord(Modifiers::Alt | Modifiers::Control, KeyCode::A));
+/// ```
+///
+/// Can use symbols or their given name in KeyCode enum, e.g. ';' or "SemiColon".
+///
+/// ```ignore
+/// assert_eq(key!(ctrl-;), KeyChord(Modifiers::Control, KeyCode::SemiColon));
+/// assert_eq(key!(ctrl-SemiColon), KeyChord(Modifiers::Control, KeyCode::SemiColon));
+/// ```
+///
+/// More than one key will cause a panic at compile-time. Use keyseq! for that.
+/// ```ignore
+/// #[test]
+/// #[should_panic]
+/// fn too_many_keys() {
+///     let _ = key!(a b);
+/// }
+/// ```
 #[proc_macro_error]
 #[proc_macro]
 pub fn key(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let (result, leftover) = partial_key(input.into());
     if !leftover.is_empty() {
-        abort!(leftover, "Left over tokens");
+        abort!(leftover, "Too many tokens; use keyseq! for multiple keys");
     }
     result.into()
 }
