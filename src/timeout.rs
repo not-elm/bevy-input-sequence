@@ -11,10 +11,6 @@ pub enum Timeout {
 }
 
 impl Timeout {
-    #[inline(always)]
-    pub fn from_duration(timeout: Duration) -> Timeout {
-        Self::Time(Timer::new(timeout, TimerMode::Once))
-    }
 
     #[inline(always)]
     pub const fn from_frame_count(limit_frame_count: u32) -> Timeout {
@@ -44,7 +40,7 @@ impl Clone for Timeout {
         match self {
             Timeout::None => Timeout::None,
             Timeout::Frames { limit, current: _ } => Timeout::from_frame_count(*limit),
-            Timeout::Time(timer) => Timeout::from_duration(timer.duration()),
+            Timeout::Time(timer) => timer.duration().into(),
         }
     }
 }
@@ -52,6 +48,14 @@ impl Clone for Timeout {
 impl Default for Timeout {
     #[inline(always)]
     fn default() -> Self {
-        Self::from_duration(Duration::from_secs(1))
+        // XXX: This is a opinionated default.
+        Duration::from_secs(1).into()
+    }
+}
+
+impl From<Duration> for Timeout {
+    #[inline(always)]
+    fn from(duration: Duration) -> Self {
+        Self::Time(Timer::new(duration, TimerMode::Once))
     }
 }

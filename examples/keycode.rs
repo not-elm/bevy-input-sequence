@@ -26,7 +26,7 @@ fn setup(mut commands: Commands) {
             KeyCode::S,
             KeyCode::A,
         ],
-    ).timeout(Timeout::from_duration(Duration::from_secs(1))));
+    ).timeout(Duration::from_secs(1)));
 
     commands.spawn(InputSequence::new(
         MyEvent,

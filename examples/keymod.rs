@@ -26,7 +26,7 @@ fn setup(mut commands: Commands) {
             // (Modifiers::empty(), KeyCode::S),
             // (Modifiers::empty(), KeyCode::A),
         // ],
-    ).timeout(Timeout::from_duration(Duration::from_secs(1))));
+    ).timeout(Duration::from_secs(1)));
 }
 
 fn input_sequence_event_system(mut er: EventReader<MyEvent>) {

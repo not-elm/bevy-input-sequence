@@ -36,8 +36,8 @@ where
         r
     }
 
-    pub fn timeout(mut self, timeout: Timeout) -> Self {
-        self.timeout = timeout;
+    pub fn timeout(mut self, timeout: impl Into<Timeout>) -> Self {
+        self.timeout = timeout.into();
         self
     }
 

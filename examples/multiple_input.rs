@@ -4,7 +4,7 @@ use bevy::app::{App, Startup, Update};
 use bevy::prelude::{Commands, Event, EventReader, GamepadButtonType, KeyCode};
 use bevy::DefaultPlugins;
 
-use bevy_input_sequence::prelude::{Act, InputSequence, Timeout};
+use bevy_input_sequence::prelude::{Act, InputSequence};
 use bevy_input_sequence::AddInputSequenceEvent;
 
 #[derive(Event, Clone, Debug)]
@@ -28,7 +28,7 @@ fn setup(mut commands: Commands) {
             Act::Key(KeyCode::S) | Act::PadButton(GamepadButtonType::South),
             Act::Key(KeyCode::A) | Act::PadButton(GamepadButtonType::West),
         ],
-    ).timeout(Timeout::from_duration(Duration::from_secs(5))));
+    ).timeout(Duration::from_secs(5)));
 }
 
 fn input_sequence_event_system(mut er: EventReader<MyEvent>) {
