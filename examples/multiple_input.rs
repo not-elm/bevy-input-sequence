@@ -30,7 +30,7 @@ fn setup(mut commands: Commands) {
                 Act::Key(KeyCode::A) | Act::PadButton(GamepadButtonType::West),
             ],
         )
-        .timeout(Duration::from_secs(5)),
+        .time_limit(Duration::from_secs(5)),
     );
 }
 

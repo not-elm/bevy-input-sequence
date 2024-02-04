@@ -8,11 +8,11 @@ use bevy::prelude::{
 };
 use bevy::time::Time;
 
-use crate::act::Act;
-use crate::prelude::InputSequence;
+pub use crate::act::Act;
+pub use crate::input_sequence::InputSequence;
 use crate::sequence_reader::SequenceReader;
 
-//pub use bevy_input_sequence_macro::{key, keyseq};
+pub use bevy_input_sequence_macro::{key, keyseq};
 
 mod act;
 mod input_sequence;
@@ -22,12 +22,13 @@ mod timeout;
 pub mod prelude {
     pub use crate::act::{Act, Modifiers};
     pub use crate::input_sequence::InputSequence;
-    pub use crate::timeout::Timeout;
+    pub use crate::timeout::TimeLimit;
     pub use crate::AddInputSequenceEvent;
     pub use bevy_input_sequence_macro::{key, keyseq};
 }
 
 pub trait AddInputSequenceEvent {
+    /// Adds fires an event `E` when a component `InputSequence` is present in the app.
     fn add_input_sequence_event<E: Event + Clone>(&mut self) -> &mut App;
 }
 
@@ -52,11 +53,13 @@ fn start_input_system<E: Event + Clone>(
     inputs: InputParams,
 ) {
     for seq in secrets.iter() {
-        let input = seq.first_input();
+        let Some(input) = seq.first_input() else {
+            continue;
+        };
 
         if input.just_inputted(&inputs) {
             if seq.one_key() {
-                ew.send(seq.event().clone());
+                ew.send(seq.event.clone());
             } else {
                 commands.spawn(seq.clone().start_reader(1));
             }
@@ -86,7 +89,7 @@ fn input_system<E: Event + Clone>(
                 ew.send(seq.event().clone());
             }
         } else if just_other_inputted(&inputs, &next_input) || seq.timedout(&time) {
-            // eprintln!("timeout or other input");
+            // eprintln!("time_limit or other input");
             commands.entity(seq_entity).despawn();
         }
     }
@@ -113,7 +116,7 @@ mod tests {
 
     use crate::act::Act;
     use crate::input_sequence::InputSequence;
-    use crate::prelude::Timeout;
+    use crate::prelude::TimeLimit;
     use crate::sequence_reader::SequenceReader;
     use crate::{input_system, start_input_system};
 
@@ -325,8 +328,7 @@ mod tests {
         let mut app = new_app();
 
         app.world.spawn(
-            InputSequence::new(MyEvent, [KeyCode::A, KeyCode::B])
-                .timeout(Timeout::from_frame_count(1)),
+            InputSequence::new(MyEvent, [KeyCode::A, KeyCode::B]).time_limit(TimeLimit::Frames(1)),
         );
 
         press_key(&mut app, KeyCode::A);
@@ -362,8 +364,7 @@ mod tests {
         let mut app = new_app();
 
         app.world.spawn(
-            InputSequence::new(MyEvent, [KeyCode::A, KeyCode::B])
-                .timeout(Timeout::from_frame_count(2)),
+            InputSequence::new(MyEvent, [KeyCode::A, KeyCode::B]).time_limit(TimeLimit::Frames(2)),
         );
 
         press_key(&mut app, KeyCode::A);
@@ -400,7 +401,7 @@ mod tests {
 
         app.world.spawn(
             InputSequence::new(MyEvent, [KeyCode::A, KeyCode::B, KeyCode::C])
-                .timeout(Timeout::from_frame_count(2)),
+                .time_limit(TimeLimit::Frames(2)),
         );
 
         press_key(&mut app, KeyCode::A);

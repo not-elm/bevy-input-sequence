@@ -1,15 +1,16 @@
 use bevy::prelude::{Component, Event};
-use bevy::time::Time;
 
 use crate::act::Act;
-use crate::prelude::Timeout;
+use crate::timeout::TimeLimit;
 use crate::SequenceReader;
 
+/// An input sequence fires an event when its acts are matched within the
+/// given time limit.
 #[derive(Component, Debug, Clone)]
 pub struct InputSequence<E> {
-    pub(crate) event: E,
-    timeout: Timeout,
-    pub(crate) inputs: Vec<Act>,
+    pub event: E,
+    pub time_limit: Option<TimeLimit>,
+    pub acts: Vec<Act>,
 }
 
 impl<E> InputSequence<E>
@@ -17,44 +18,32 @@ where
     E: Event + Clone,
 {
     #[inline(always)]
-    pub fn new<T>(event: E, inputs: impl IntoIterator<Item = T>) -> InputSequence<E>
+    pub fn new<T>(event: E, acts: impl IntoIterator<Item = T>) -> InputSequence<E>
     where
-        T: Into<Act>,
+        Act: From<T>,
     {
-        let r = Self {
+        Self {
             event,
-            timeout: Timeout::None,
-            inputs: Vec::from_iter(inputs.into_iter().map(|x| x.into())),
-        };
-        assert!(
-            r.inputs.len() > 0,
-            "input sequence must have one or more inputs."
-        );
-        r
+            time_limit: None,
+            acts: Vec::from_iter(acts.into_iter().map(Act::from)),
+        }
     }
 
-    pub fn timeout(mut self, timeout: impl Into<Timeout>) -> Self {
-        self.timeout = timeout.into();
+    /// Specify a time limit from the start of the first matching input.
+    pub fn time_limit(mut self, time_limit: impl Into<TimeLimit>) -> Self {
+        self.time_limit = Some(time_limit.into());
         self
     }
 
+    /// Return true if there is only one act in the sequence.
     #[inline(always)]
     pub(crate) fn one_key(&self) -> bool {
-        1 == self.inputs.len()
+        1 == self.acts.len()
     }
 
-    pub fn first_input(&self) -> &Act {
-        &self.inputs[0]
-    }
-
-    #[inline(always)]
-    pub fn event(&self) -> &E {
-        &self.event
-    }
-
-    #[inline(always)]
-    pub(crate) fn timedout(&mut self, time: &Time) -> bool {
-        self.timeout.timedout(time)
+    /// Return the first act or input.
+    pub fn first_input(&self) -> Option<&Act> {
+        self.acts.get(0)
     }
 
     #[inline(always)]

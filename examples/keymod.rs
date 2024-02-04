@@ -27,7 +27,7 @@ fn setup(mut commands: Commands) {
                                    // (Modifiers::empty(), KeyCode::A),
                                    // ],
         )
-        .timeout(Duration::from_secs(1)),
+        .time_limit(Duration::from_secs(1)),
     );
 }
 

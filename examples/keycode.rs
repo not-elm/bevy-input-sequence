@@ -31,7 +31,7 @@ fn setup(mut commands: Commands) {
              KeyCode::S,
              KeyCode::A],
         )
-        .timeout(Duration::from_secs(1)),
+        .time_limit(Duration::from_secs(1)),
     );
 
     // Use keyseq! macro.
@@ -40,7 +40,7 @@ fn setup(mut commands: Commands) {
             MyEvent(Direction::CounterClockwise),
             keyseq!(W A S D),
         )
-        .timeout(Duration::from_secs(1)),
+        .time_limit(Duration::from_secs(1)),
     );
 }
 
