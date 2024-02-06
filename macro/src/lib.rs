@@ -5,12 +5,7 @@ use proc_macro2::{Delimiter, Group, Ident, Punct, Spacing, TokenStream, TokenTre
 use quote::quote;
 use std::borrow::Cow;
 
-// #[proc_macro]
-// fn noop(_input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-//     proc_macro::TokenStream::new()
-// }
-
-/// Uses a short hand notation to describe a key chord. Returns a Act::KeyChord.
+/// Uses a short hand notation to describe a key chord, returns a Act::KeyChord.
 ///
 /// Specify a key and any modifiers.
 ///
@@ -20,19 +15,18 @@ use std::borrow::Cow;
 /// assert_eq(key!(alt-ctrl-A), KeyChord(Modifiers::Alt | Modifiers::Control, KeyCode::A));
 /// ```
 ///
-/// Can use symbols or their given name in KeyCode enum, e.g. ';' or "SemiColon".
+/// Can use symbols or their given name in KeyCode enum, e.g. ';' or "Semicolon".
 ///
 /// ```ignore
-/// assert_eq(key!(ctrl-;), KeyChord(Modifiers::Control, KeyCode::SemiColon));
-/// assert_eq(key!(ctrl-SemiColon), KeyChord(Modifiers::Control, KeyCode::SemiColon));
+/// assert_eq(key!(ctrl-;), KeyChord(Modifiers::Control, KeyCode::Semicolon));
+/// assert_eq(key!(ctrl-Semicolon), KeyChord(Modifiers::Control, KeyCode::Semicolon));
 /// ```
 ///
 /// More than one key will cause a panic at compile-time. Use keyseq! for that.
+///
 /// ```ignore
-/// #[test]
-/// #[should_panic]
 /// fn too_many_keys() {
-///     let _ = key!(a b);
+///     let _ = key!(A B);
 /// }
 /// ```
 #[proc_macro_error]
@@ -45,6 +39,23 @@ pub fn key(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     result.into()
 }
 
+/// Uses a short hand notation to describe a sequence of key chords, returns an
+/// array of [Act::KeyChord].
+///
+/// Specify a key and any modifiers.
+///
+/// ```ignore
+/// assert_eq!(keyseq!(A B), [KeyChord(Modifiers::empty(), KeyCode::A), KeyChord(Modifiers::empty(), KeyCode::B)]);
+/// assert_eq!(keyseq!(ctrl-A B), [KeyChord(Modifiers::Control, KeyCode::A), KeyChord(Modifiers::empty(), KeyCode::B)]);
+/// assert_eq!(keyseq!(alt-ctrl-A Escape), [KeyChord(Modifiers::Alt | Modifiers::Control, KeyCode::A), KeyChord(Modifiers::empty(), KeyCode::Escape)]);
+/// ```
+///
+/// One can use symbols or their given name in KeyCode enum, e.g. ';' or "Semicolon".
+///
+/// ```ignore
+/// assert_eq!(keyseq!(ctrl-;), [KeyChord(Modifiers::Control, KeyCode::Semicolon)]);
+/// assert_eq!(keyseq!(ctrl-Semicolon), [KeyChord(Modifiers::Control, KeyCode::Semicolon)]);
+/// ```
 #[proc_macro_error]
 #[proc_macro]
 pub fn keyseq(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
@@ -94,30 +105,27 @@ fn partial_key(input: TokenStream) -> (TokenStream, TokenStream) {
                             _ => todo!("literal char {x} {:?}", literal),
                         }
                     }
-                    // else {
-                    //     todo!("literal {:?}", literal);
-                    // }
                 }
                 TokenTree::Punct(ref punct) => {
-                    let name: Option<Cow<'static, str>> = match punct.as_char() {
-                        ';' => Some("Semicolon".into()),
+                    let name: Option<&str> = match punct.as_char() {
+                        ';' => Some("Semicolon"),
                         ':' => {
                             add_shift = true;
-                            Some("Semicolon".into())
+                            Some("Semicolon")
                         }
-                        ',' => Some("Comma".into()),
-                        '.' => Some("Period".into()),
-                        '^' => Some("Caret".into()),
-                        '=' => Some("Equals".into()),
-                        '/' => Some("Slash".into()),
-                        '-' => Some("Minus".into()),
-                        '*' => Some("Asterisk".into()),
-                        '+' => Some("Plus".into()),
-                        '@' => Some("At".into()),
+                        ',' => Some("Comma"),
+                        '.' => Some("Period"),
+                        '^' => Some("Caret"),
+                        '=' => Some("Equals"),
+                        '/' => Some("Slash"),
+                        '-' => Some("Minus"),
+                        '*' => Some("Asterisk"),
+                        '+' => Some("Plus"),
+                        '@' => Some("At"),
                         // _ => None
                         _ => todo!("punct {:?}", punct),
                     };
-                    name.as_ref().map(|n| {
+                    name.map(|n| {
                         let token = Ident::new(n, punct.span());
                         quote! {::bevy::prelude::KeyCode::#token }
                     })

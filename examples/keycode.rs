@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use bevy_input_sequence::prelude::*;
+use bevy_input_sequence::prelude::Act::*;
 use std::time::Duration;
 
 #[derive(Clone, Debug)]
@@ -30,6 +31,14 @@ fn setup(mut commands: Commands) {
              KeyCode::D,
              KeyCode::S,
              KeyCode::A],
+        )
+        .time_limit(Duration::from_secs(1)),
+    );
+
+    commands.spawn(
+        InputSequence::new(
+            MyEvent(Direction::Clockwise),
+            [KeyChord(Modifiers::Shift, KeyCode::Semicolon)],
         )
         .time_limit(Duration::from_secs(1)),
     );
