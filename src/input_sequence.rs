@@ -7,15 +7,19 @@ use crate::timeout::TimeLimit;
 /// given time limit.
 #[derive(Component, Debug, Clone)]
 pub struct InputSequence<E> {
+    /// Event emitted
     pub event: E,
-    pub time_limit: Option<TimeLimit>,
+    /// Sequence of acts that trigger input sequence
     pub acts: Vec<Act>,
+    /// Optional time limit after first match
+    pub time_limit: Option<TimeLimit>,
 }
 
 impl<E> InputSequence<E>
 where
     E: Event + Clone,
 {
+    /// Create new input sequence. Not operant until added to an entity.
     #[inline(always)]
     pub fn new<T>(event: E, acts: impl IntoIterator<Item = T>) -> InputSequence<E>
     where

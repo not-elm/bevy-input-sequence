@@ -8,14 +8,19 @@ bitflags! {
     /// A bit flag that stores the modifier keys--alt, control, shift, and super--in a byte.
     #[derive(Clone, Copy, Debug, PartialOrd, PartialEq, Eq, Hash, Ord)]
     pub struct Modifiers: u8 {
+        /// Represents the alt key, left or right.
         const Alt     = 0b00000001;
+        /// Represents the control key, left or right.
         const Control = 0b00000010;
+        /// Represents the shift key, left or right.
         const Shift   = 0b00000100;
-        const Super   = 0b00001000; // Windows or Command
+        /// Represents the macOS command or Windows key, left or right.
+        const Super   = 0b00001000;
     }
 }
 
 impl Modifiers {
+    /// Check modifier keys for `any_pressed()` to populate bit flags.
     fn from_input(input: &Res<Input<KeyCode>>) -> Modifiers {
         let mut mods = Modifiers::empty();
         if input.any_pressed([KeyCode::ShiftLeft, KeyCode::ShiftRight]) {
@@ -91,8 +96,10 @@ impl Act {
             .count()
     }
 
-    pub(crate) fn just_inputted(&self, inputs: &InputParams, context: &Option<usize>) -> bool {
-        match self {
+    /// Check whether anything was inputted for this act. Return result and possible context.
+    pub(crate) fn just_inputted(&self, inputs: &InputParams, context: &Option<usize>) -> (bool, Option<usize>) {
+        let mut c: Option<usize> = None;
+        let result = match self {
             Self::Key(keycode) => inputs.key.just_pressed(*keycode),
             Self::KeyChord(modifiers, keycode) => {
                 let current_modifiers = Modifiers::from_input(&inputs.key);
@@ -102,24 +109,15 @@ impl Act {
             Self::PadButton(button) => inputs
                 .button_inputs
                 .get_just_pressed()
-                .filter(|button| context.map_or(true, |x| x == button.gamepad.id))
+                .filter(|button| {
+                    c = Some(button.gamepad.id);
+                    context.map_or(true, |x| x == button.gamepad.id)
+                })
                 .any(|pressed| pressed.button_type == *button),
 
-            Self::Any(any) => any.iter().any(|input| input.just_inputted(inputs, context)),
-        }
-    }
-
-    /// Generate a bit of context.
-    pub(crate) fn gen_context(&self, inputs: &InputParams) -> Option<usize> {
-        match self {
-            Self::PadButton(button) => inputs
-                .button_inputs
-                .get_just_pressed()
-                .filter(|pressed| pressed.button_type == *button)
-                .map(|x| x.gamepad.id)
-                .next(),
-            _ => None
-        }
+            Self::Any(any) => any.iter().any(|input| input.just_inputted(inputs, context).0),
+        };
+        (result, c)
     }
 
     fn button_type(&self) -> Vec<&GamepadButtonType> {
@@ -161,6 +159,7 @@ impl BitOr for Act {
 
     #[inline(always)]
     fn bitor(self, rhs: Self) -> Self::Output {
+        // TODO: Consider specializing for Self::Any.
         Self::Any(vec![self, rhs])
     }
 }

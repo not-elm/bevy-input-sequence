@@ -6,10 +6,13 @@ use bevy::time::{Time, Timer};
 /// Specify a time limit in either frame counts or duration.
 #[derive(Clone, Resource, Debug)]
 pub enum TimeLimit {
+    /// Time limit for frame count
     Frames(u32),
+    /// Time limit for duration
     Duration(Duration),
 }
 
+/// Tracks a time limit at runtime.
 #[derive(Resource, Debug)]
 pub(crate) enum Timeout {
     None,
@@ -22,9 +25,7 @@ impl Timeout {
     pub(crate) fn timedout(&mut self, time: &Time) -> bool {
         match self {
             Self::None => false,
-
             Self::Time(timer) => timer.tick(time.delta()).finished(),
-
             Self::Frames { limit, current } => {
                 *current += 1;
                 limit <= current

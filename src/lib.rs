@@ -1,5 +1,6 @@
 #![doc(html_root_url = "https://docs.rs/bevy-input-sequence/0.2.0")]
 #![doc = include_str!("../README.md")]
+#![forbid(missing_docs)]
 use bevy::app::{App, Update};
 use bevy::ecs::system::SystemParam;
 use bevy::input::Input;
@@ -20,6 +21,7 @@ mod input_sequence;
 mod sequence_reader;
 mod timeout;
 
+/// Convenient glob imports
 pub mod prelude {
     pub use crate::act::{Act, Modifiers};
     pub use crate::input_sequence::InputSequence;
@@ -28,6 +30,7 @@ pub mod prelude {
     pub use bevy_input_sequence_macro::{key, keyseq};
 }
 
+/// App extension trait
 pub trait AddInputSequenceEvent {
     /// Setup event `E` so that it may fire when a component `InputSequence` is
     /// present in the app.
@@ -58,12 +61,12 @@ fn start_input_system<E: Event + Clone>(
         let Some(input) = seq.first_input() else {
             continue;
         };
-
-        if input.just_inputted(&inputs, &None) {
+        let (yes, context) = input.just_inputted(&inputs, &None);
+        if yes {
             if seq.one_key() {
                 ew.send(seq.event.clone());
             } else {
-                commands.spawn(SequenceReader::new(seq.clone(), 1, input.gen_context(&inputs)));
+                commands.spawn(SequenceReader::new(seq.clone(), 1, context));
             }
         }
     }
@@ -83,7 +86,7 @@ fn input_system<E: Event + Clone>(
             continue;
         };
 
-        if next_input.just_inputted(&inputs, &seq.context) {
+        if next_input.just_inputted(&inputs, &seq.context).0 {
             seq.next_act();
             if seq.is_last() {
                 // eprintln!("send event");
