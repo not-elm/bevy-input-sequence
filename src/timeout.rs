@@ -3,7 +3,7 @@ use std::time::Duration;
 use bevy::prelude::{Resource, TimerMode};
 use bevy::time::{Time, Timer};
 
-/// Specify a time limit in either frame counts or duration.
+/// A time limit specified as frame counts or duration.
 #[derive(Clone, Resource, Debug)]
 pub enum TimeLimit {
     /// Time limit for frame count

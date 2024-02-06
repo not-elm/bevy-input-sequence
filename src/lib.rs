@@ -5,11 +5,12 @@ use bevy::app::{App, Update};
 use bevy::ecs::system::SystemParam;
 use bevy::input::Input;
 use bevy::prelude::{
-    Commands, Entity, Event, EventWriter, GamepadButton, IntoSystemConfigs, KeyCode, Query, Res,
+    Commands, Entity, Event, EventWriter, GamepadButton, IntoSystemConfigs, KeyCode, Query, Res, Resource, Local, ResMut, Added, RemovedComponents
 };
 use bevy::time::Time;
+use trie_rs::{Trie, TrieBuilder};
 
-pub use crate::act::Act;
+pub use crate::act::{Act, Modifiers};
 pub use crate::input_sequence::InputSequence;
 use crate::sequence_reader::SequenceReader;
 pub use crate::timeout::TimeLimit;
@@ -21,7 +22,11 @@ mod input_sequence;
 mod sequence_reader;
 mod timeout;
 
-/// Convenient glob imports
+/// Convenient glob imports module
+///
+/// ```
+/// use bevy_input_sequence::prelude::*;
+/// ```
 pub mod prelude {
     pub use crate::act::{Act, Modifiers};
     pub use crate::input_sequence::InputSequence;
@@ -37,11 +42,40 @@ pub trait AddInputSequenceEvent {
     fn add_input_sequence_event<E: Event + Clone>(&mut self) -> &mut App;
 }
 
+#[derive(Resource)]
+struct InputSequenceCache<E> {
+    trie: Option<Trie<Act, InputSequence<E>>>,
+}
+
+impl<E: Event + Clone> InputSequenceCache<E> {
+    pub fn trie(&mut self, sequences: &Query<&InputSequence<E>>) -> &Trie<Act, InputSequence<E>> {
+        self.trie.get_or_insert_with(|| {
+            let mut builder = TrieBuilder::new();
+            for sequence in sequences.iter()
+            {
+                builder.push(dbg!(sequence.acts.clone()), sequence.clone());
+            }
+            builder.build()
+        })
+    }
+}
+
+impl<E> Default for InputSequenceCache<E> {
+    fn default() -> Self {
+        Self {
+            trie: None
+        }
+    }
+}
+
+
 impl AddInputSequenceEvent for App {
     #[inline(always)]
     fn add_input_sequence_event<E: Event + Clone>(&mut self) -> &mut App {
-        self.add_event::<E>()
-            .add_systems(Update, (input_system::<E>, start_input_system::<E>).chain())
+        self.init_resource::<InputSequenceCache<E>>()
+            .add_event::<E>()
+            // .add_systems(Update, (input_system::<E>, start_input_system::<E>).chain())
+            .add_systems(Update, (detect_removals::<E>, detect_additions::<E>, input_system_trie::<E>).chain())
     }
 }
 
@@ -51,54 +85,117 @@ struct InputParams<'w> {
     pub button_inputs: Res<'w, Input<GamepadButton>>,
 }
 
-fn start_input_system<E: Event + Clone>(
-    mut commands: Commands,
-    mut ew: EventWriter<E>,
+fn input_system_trie<E: Event + Clone>(
+    mut writer: EventWriter<E>,
     secrets: Query<&InputSequence<E>>,
-    inputs: InputParams,
-) {
-    for seq in secrets.iter() {
-        let Some(input) = seq.first_input() else {
-            continue;
-        };
-        let (yes, context) = input.just_inputted(&inputs, &None);
-        if yes {
-            if seq.one_key() {
-                ew.send(seq.event.clone());
-            } else {
-                commands.spawn(SequenceReader::new(seq.clone(), 1, context));
-            }
-        }
-    }
-}
-
-fn input_system<E: Event + Clone>(
-    mut commands: Commands,
-    mut ew: EventWriter<E>,
-    mut key_seq: Query<(Entity, &mut SequenceReader<E>)>,
     time: Res<Time>,
-    inputs: InputParams,
+    keys: Res<Input<KeyCode>>,
+    buttons: Res<Input<GamepadButton>>,
+    mut last_inputs: Local<Vec<Act>>,
+    mut last_times: Local<Vec<f32>>,
+    mut cache: ResMut<InputSequenceCache<E>>,
 ) {
-    for (seq_entity, mut seq) in key_seq.iter_mut() {
-        let Some(next_input) = seq.next_input() else {
-            // eprintln!("no more input");
-            commands.entity(seq_entity).despawn();
-            continue;
-        };
-
-        if next_input.just_inputted(&inputs, &seq.context).0 {
-            seq.next_act();
-            if seq.is_last() {
-                // eprintln!("send event");
-                commands.entity(seq_entity).despawn();
-                ew.send(seq.event());
-            }
-        } else if seq.just_other_inputted(&inputs, &next_input) || seq.timedout(&time) {
-            // eprintln!("time_limit or other input");
-            commands.entity(seq_entity).despawn();
+    let mods = Modifiers::from_input(&keys);
+    let trie = cache.trie(&secrets);
+    for key_code in keys.get_just_pressed() {
+        let key = Act::KeyChord(mods, *key_code);
+        last_inputs.push(key);
+        last_times.push(time.elapsed_seconds());
+        for seq in consume_input(&trie, &mut last_inputs) {
+            eprintln!("fire");
+            writer.send(seq.event);
         }
+        let len = last_times.len();
+        let _ = last_times.drain(0..len - last_inputs.len());
     }
 }
+
+fn detect_additions<E: Event + Clone>(
+    secrets: Query<&InputSequence<E>, Added<InputSequence<E>>>,
+    mut cache: ResMut<InputSequenceCache<E>>,
+) {
+    if secrets.iter().next().is_some() {
+        eprintln!("added");
+        cache.trie = None;
+    }
+}
+
+fn detect_removals<E: Event>(
+    mut cache: ResMut<InputSequenceCache<E>>,
+    mut removals: RemovedComponents<InputSequence<E>>,
+) {
+    if removals.iter().next().is_some() {
+        eprintln!("removed");
+        cache.trie = None;
+    }
+}
+
+fn consume_input<E: Event + Clone>(trie: &Trie<Act, InputSequence<E>>,
+                                   input: &mut Local<Vec<Act>>) -> impl Iterator<Item = InputSequence<E>> {
+    let mut result = vec![];
+    for i in 0..input.len() {
+        eprintln!("checking {:?}", &input[i..]);
+        if let Some(seq) = trie.get(&input[i..]) {
+            eprintln!("has match {:?}", &input[i..]);
+            result.push(seq.clone());
+        } else if ! trie.predictive_search(&input[i..]).is_empty() {
+            eprintln!("has prefix {:?}", &input[i..]);
+            let _ = input.drain(0..i);
+            return result.into_iter();
+        }
+    }
+    let _ = input.clear();
+    return result.into_iter();
+}
+
+// fn start_input_system<E: Event + Clone>(
+//     mut commands: Commands,
+//     mut ew: EventWriter<E>,
+//     secrets: Query<&InputSequence<E>>,
+//     inputs: InputParams,
+// ) {
+//     for seq in secrets.iter() {
+//         let Some(input) = seq.first_input() else {
+//             continue;
+//         };
+//         let (yes, context) = input.just_inputted(&inputs, &None);
+//         if yes {
+//             if seq.one_key() {
+//                 ew.send(seq.event.clone());
+//             } else {
+//                 commands.spawn(SequenceReader::new(seq.clone(), 1, context));
+//             }
+//         }
+//     }
+// }
+
+// fn input_system<E: Event + Clone>(
+//     mut commands: Commands,
+//     mut ew: EventWriter<E>,
+//     mut key_seq: Query<(Entity, &mut SequenceReader<E>)>,
+//     time: Res<Time>,
+//     inputs: InputParams,
+// ) {
+//     for (seq_entity, mut seq) in key_seq.iter_mut() {
+//         let Some(next_input) = seq.next_input() else {
+//             // eprintln!("no more input");
+//             commands.entity(seq_entity).despawn();
+//             continue;
+//         };
+
+//         if next_input.just_inputted(&inputs, &seq.context).0 {
+//             seq.next_act();
+//             if seq.is_last() {
+//                 // eprintln!("send event");
+//                 commands.entity(seq_entity).despawn();
+//                 ew.send(seq.event());
+//             }
+//         } else if seq.just_other_inputted(&inputs, &next_input) || seq.timedout(&time) {
+//             // eprintln!("time_limit or other input");
+//             commands.entity(seq_entity).despawn();
+//         }
+//     }
+// }
 
 
 #[cfg(test)]
@@ -116,7 +213,7 @@ mod tests {
     use crate::input_sequence::InputSequence;
     use crate::prelude::TimeLimit;
     use crate::sequence_reader::SequenceReader;
-    use crate::{input_system, start_input_system};
+    // use crate::{input_system, start_input_system};
 
     #[derive(Event, Clone)]
     struct MyEvent;
@@ -275,8 +372,8 @@ mod tests {
             [
                 Act::Key(KeyCode::A),
                 Act::Key(KeyCode::B),
-                Act::Key(KeyCode::C) | Act::PadButton(GamepadButtonType::North),
-                Act::PadButton(GamepadButtonType::C),
+                Act::Key(KeyCode::C) | Act::PadButton(GamepadButtonType::North.into()),
+                Act::PadButton(GamepadButtonType::C.into()),
             ],
         ));
         app.update();
@@ -492,10 +589,10 @@ mod tests {
         app.add_plugins(MinimalPlugins);
         app.add_systems(Update, read);
         app.add_event::<MyEvent>();
-        app.add_systems(
-            Update,
-            (input_system::<MyEvent>, start_input_system::<MyEvent>).chain(),
-        );
+        // app.add_systems(
+        //     Update,
+        //     (input_system::<MyEvent>, start_input_system::<MyEvent>).chain(),
+        // );
         app.init_resource::<Gamepads>();
         app.init_resource::<Input<GamepadButton>>();
         app.init_resource::<Input<GamepadAxis>>();

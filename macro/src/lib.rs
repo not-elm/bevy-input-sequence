@@ -5,7 +5,7 @@ use proc_macro2::{Delimiter, Group, Ident, Punct, Spacing, TokenStream, TokenTre
 use quote::quote;
 use std::borrow::Cow;
 
-/// Uses a short hand notation to describe a key chord, returns a Act::KeyChord.
+/// Uses a short hand notation to describe a key chord, returns a [Act::KeyChord](::bevy_input_sequence::Act::KeyChord).
 ///
 /// Specify a key and any modifiers.
 ///
@@ -40,7 +40,7 @@ pub fn key(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 }
 
 /// Uses a short hand notation to describe a sequence of key chords, returns an
-/// array of [Act::KeyChord].
+/// array of [Act::KeyChord](::bevy_input_sequence::Act::KeyChord).
 ///
 /// Specify a key and any modifiers.
 ///

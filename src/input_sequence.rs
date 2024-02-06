@@ -3,8 +3,8 @@ use bevy::prelude::{Component, Event};
 use crate::act::Act;
 use crate::timeout::TimeLimit;
 
-/// An input sequence fires an event when its acts are matched within the
-/// given time limit.
+/// An input sequence is a series of [Act]s that fires an event when matched
+/// with inputs within the given time limit.
 #[derive(Component, Debug, Clone)]
 pub struct InputSequence<E> {
     /// Event emitted

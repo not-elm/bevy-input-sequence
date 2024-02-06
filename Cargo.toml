@@ -38,6 +38,7 @@ path = "examples/multiple_input.rs"
 
 [dependencies]
 bevy = { version = "0.12.1", default-features = false, features = [] }
+trie-rs = { git = "https://github.com/sudarshan-reddy/kv-trie-rs.git", branch = "sudarshan-reddy/split-label-to-kv" }
 bitflags = "2.4.2"
 bevy-input-sequence-macro = { version = "0.1.0", path = "macro" }
 

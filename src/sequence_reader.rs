@@ -55,14 +55,14 @@ impl<E: Event + Clone> SequenceReader<E> {
         self.timeout.timedout(time)
     }
 
-    pub(crate) fn just_other_inputted(&self, inputs: &InputParams, next_input: &Act) -> bool {
-        next_input.other_pressed_keycode(inputs.key.get_just_pressed())
-            || next_input.other_pressed_pad_button(
-                inputs
-                    .button_inputs
-                    .get_just_pressed()
-                    // Only account for gamepads that start the sequence.
-                    .filter(|button| self.context.map_or(true, |x| x == button.gamepad.id)),
-            )
-    }
+    // pub(crate) fn just_other_inputted(&self, inputs: &InputParams, next_input: &Act) -> bool {
+    //     next_input.other_pressed_keycode(inputs.key.get_just_pressed())
+    //         || next_input.other_pressed_pad_button(
+    //             inputs
+    //                 .button_inputs
+    //                 .get_just_pressed()
+    //                 // Only account for gamepads that start the sequence.
+    //                 .filter(|button| self.context.map_or(true, |x| x == button.gamepad.id)),
+    //         )
+    // }
 }
