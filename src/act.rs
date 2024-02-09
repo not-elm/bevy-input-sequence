@@ -56,15 +56,26 @@ impl From<KeyCode> for Modifiers {
 /// An act represents a key press, button press, key chord, or some combination.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Act {
-    /// A simple key input, e.g. `Act::Key(KeyCode::A)` for the `A` key.
-    Key(KeyCode),
-    /// A key chord, e.g. `ctrl-A`
+    // A simple key input, e.g. `Act::Key(KeyCode::A)` for the `A` key.
+    // Key(KeyCode),
+    /// A key chord, e.g. `A`, `ctrl-B`, `ctrl-alt-C`
     KeyChord(Modifiers, KeyCode),
     /// A controller input
     PadButton(GamepadButton),
     /// Any collection of Acts
     Any(Vec<Act>),
 }
+// impl PartialEq for Book {
+//     fn eq(&self, other: &Self) -> bool {
+//         match (self, other) {
+//             (Key(a), Key(b)) => a == b,
+//             (KeyChord(_, a), Key(b)) => a == b,
+//             (Key(a), KeyChord(_, b)) => a == b,
+//         }
+//         self.isbn == other.isbn
+//     }
+// }
+// impl Eq for Act { }
 
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub(crate) struct GamepadButton(GamepadButtonType);
@@ -77,18 +88,15 @@ impl From<GamepadButtonType> for GamepadButton {
 
 impl PartialOrd for GamepadButton {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        match (self, other) {
-            _ => None,
-        }
+        use bevy::reflect::Enum;
+        self.0.variant_index().partial_cmp(&self.0.variant_index())
     }
 }
 
 impl Ord for GamepadButton {
     fn cmp(&self, other: &Self) -> Ordering {
-        use Act::*;
-        match (self, other) {
-            _ => Ordering::Equal
-        }
+        use bevy::reflect::Enum;
+        self.0.variant_index().cmp(&self.0.variant_index())
     }
 }
 
@@ -158,6 +166,9 @@ impl Act {
     //         }
     //     }
     // }
+    pub(crate) fn key(key: KeyCode) -> Act {
+        key.into()
+    }
 }
 
 impl From<(Modifiers, KeyCode)> for Act {
@@ -170,7 +181,7 @@ impl From<(Modifiers, KeyCode)> for Act {
 impl From<KeyCode> for Act {
     #[inline(always)]
     fn from(value: KeyCode) -> Self {
-        Self::Key(value)
+        Self::KeyChord(Modifiers::empty(), value)
     }
 }
 

@@ -1,11 +1,12 @@
 #![doc(html_root_url = "https://docs.rs/bevy-input-sequence/0.2.0")]
 #![doc = include_str!("../README.md")]
 #![forbid(missing_docs)]
+use std::collections::HashMap;
 use bevy::app::{App, Update};
-use bevy::ecs::system::SystemParam;
-use bevy::input::Input;
+use bevy::ecs::{system::SystemParam, world::{FromWorld, World}};
+use bevy::core::FrameCount;
 use bevy::prelude::{
-    Commands, Entity, Event, EventWriter, GamepadButton, IntoSystemConfigs, KeyCode, Query, Res, Resource, Local, ResMut, Added, RemovedComponents
+    Commands, Entity, Event, EventWriter, GamepadButton, IntoSystemConfigs, KeyCode, Query, Res, Resource, Local, ResMut, Added, RemovedComponents, Input
 };
 use bevy::time::Time;
 use trie_rs::{Trie, TrieBuilder};
@@ -50,10 +51,12 @@ struct InputSequenceCache<E> {
 impl<E: Event + Clone> InputSequenceCache<E> {
     pub fn trie(&mut self, sequences: &Query<&InputSequence<E>>) -> &Trie<Act, InputSequence<E>> {
         self.trie.get_or_insert_with(|| {
+            eprintln!("gen trie");
             let mut builder = TrieBuilder::new();
             for sequence in sequences.iter()
             {
-                builder.push(dbg!(sequence.acts.clone()), sequence.clone());
+                // builder.push(dbg!(sequence.acts.clone()), sequence.clone());
+                builder.push(sequence.acts.clone(), sequence.clone());
             }
             builder.build()
         })
@@ -85,28 +88,101 @@ struct InputParams<'w> {
     pub button_inputs: Res<'w, Input<GamepadButton>>,
 }
 
+// #[derive(Default)]
+struct Covec<T,S>(Vec<T>, Vec<S>);
+
+impl<T, S> Covec<T,S> {
+    fn push(&mut self, x: T, y: S) {
+       self.0.push(x);
+       self.1.push(y);
+    }
+
+    fn drain1_sync(&mut self) {
+        let len0 = self.0.len();
+        let len1 = self.1.len();
+        let _ = self.1.drain(0..len1.saturating_sub(len0));
+    }
+}
+
+impl<T,S> Default for Covec<T,S> {
+    fn default() -> Self {
+        Self(vec![], vec![])
+    }
+}
+
+#[derive(Clone)]
+struct FrameTime {
+    frame: u32,
+    time: f32,
+}
+
+impl std::ops::Sub for &FrameTime {
+    type Output = FrameTime;
+
+    fn sub(self, other: Self) -> Self::Output {
+        FrameTime {
+            frame: self.frame - other.frame,
+            time: self.time - other.time,
+        }
+    }
+}
+
+impl FrameTime {
+    fn has_timedout(&self, time_limit: &TimeLimit) -> bool {
+        match time_limit {
+            TimeLimit::Frames(f) => self.frame > *f,
+            TimeLimit::Duration(d) => self.time > d.as_secs_f32()
+        }
+    }
+}
+
 fn input_system_trie<E: Event + Clone>(
     mut writer: EventWriter<E>,
     secrets: Query<&InputSequence<E>>,
     time: Res<Time>,
     keys: Res<Input<KeyCode>>,
     buttons: Res<Input<GamepadButton>>,
-    mut last_inputs: Local<Vec<Act>>,
-    mut last_times: Local<Vec<f32>>,
+    mut last_inputs: Local<Covec<Act, FrameTime>>,
+    // mut last_times: Local<Vec<f32>>,
+    mut last_buttons: Local<HashMap<usize, Covec<Act, FrameTime>>>,
     mut cache: ResMut<InputSequenceCache<E>>,
+    frame_count: Res<FrameCount>,
 ) {
     let mods = Modifiers::from_input(&keys);
     let trie = cache.trie(&secrets);
+    eprintln!("running");
+    let now = FrameTime { time: time.elapsed_seconds(), frame: frame_count.0 };
     for key_code in keys.get_just_pressed() {
         let key = Act::KeyChord(mods, *key_code);
-        last_inputs.push(key);
-        last_times.push(time.elapsed_seconds());
-        for seq in consume_input(&trie, &mut last_inputs) {
-            eprintln!("fire");
+        // last_inputs.push(key);
+        // last_times.push(time.elapsed_seconds());
+        last_inputs.push(key, now.clone());
+        let start = last_inputs.1[0].clone();
+        for seq in consume_input(&trie, &mut last_inputs.0) {
+            if seq.time_limit.map(|limit| (&now - &start).has_timedout(&limit)).unwrap_or(false) {
+                eprintln!("timed out");
+            } else {
+                eprintln!("fire");
+                writer.send(seq.event);
+            }
+        }
+        last_inputs.drain1_sync();
+    }
+    for button in buttons.get_just_pressed() {
+        let pad_buttons = match last_buttons.get_mut(&button.gamepad.id) {
+            Some(x) => x,
+            None => {
+                last_buttons.insert(button.gamepad.id, Covec::default());
+                last_buttons.get_mut(&button.gamepad.id).unwrap()
+            }
+        };
+
+        pad_buttons.push(button.button_type.into(), now.clone());
+        for seq in consume_input(&trie, &mut pad_buttons.0) {
+            eprintln!("fire button");
             writer.send(seq.event);
         }
-        let len = last_times.len();
-        let _ = last_times.drain(0..len - last_inputs.len());
+        pad_buttons.drain1_sync();
     }
 }
 
@@ -125,13 +201,13 @@ fn detect_removals<E: Event>(
     mut removals: RemovedComponents<InputSequence<E>>,
 ) {
     if removals.iter().next().is_some() {
-        eprintln!("removed");
+        // eprintln!("removed");
         cache.trie = None;
     }
 }
 
 fn consume_input<E: Event + Clone>(trie: &Trie<Act, InputSequence<E>>,
-                                   input: &mut Local<Vec<Act>>) -> impl Iterator<Item = InputSequence<E>> {
+                                   input: &mut Vec<Act>) -> impl Iterator<Item = InputSequence<E>> {
     let mut result = vec![];
     for i in 0..input.len() {
         eprintln!("checking {:?}", &input[i..]);
@@ -200,7 +276,7 @@ fn consume_input<E: Event + Clone>(trie: &Trie<Act, InputSequence<E>>,
 
 #[cfg(test)]
 mod tests {
-    use bevy::app::{App, Update};
+    use bevy::app::{App, Update, PostUpdate};
     use bevy::input::gamepad::{GamepadConnection, GamepadConnectionEvent, GamepadInfo};
     use bevy::input::{Axis, Input};
     use bevy::prelude::{
@@ -213,6 +289,7 @@ mod tests {
     use crate::input_sequence::InputSequence;
     use crate::prelude::TimeLimit;
     use crate::sequence_reader::SequenceReader;
+    use super::*;
     // use crate::{input_system, start_input_system};
 
     #[derive(Event, Clone)]
@@ -225,7 +302,7 @@ mod tests {
     fn one_key() {
         let mut app = new_app();
 
-        app.world.spawn(InputSequence::new(MyEvent, [KeyCode::A]));
+        app.world.spawn(InputSequence::new(MyEvent, [(Modifiers::empty(), KeyCode::A)]));
         press_key(&mut app, KeyCode::A);
         app.update();
         assert!(app
@@ -370,9 +447,9 @@ mod tests {
         app.world.spawn(InputSequence::new(
             MyEvent,
             [
-                Act::Key(KeyCode::A),
-                Act::Key(KeyCode::B),
-                Act::Key(KeyCode::C) | Act::PadButton(GamepadButtonType::North.into()),
+                Act::key(KeyCode::A),
+                Act::key(KeyCode::B),
+                Act::key(KeyCode::C) | Act::PadButton(GamepadButtonType::North.into()),
                 Act::PadButton(GamepadButtonType::C.into()),
             ],
         ));
@@ -519,12 +596,6 @@ mod tests {
             .iter(&app.world)
             .next()
             .is_none());
-        assert!(app
-            .world
-            .query::<&SequenceReader<MyEvent>>()
-            .iter(&app.world)
-            .next()
-            .is_some());
 
         clear_just_pressed(&mut app, KeyCode::B);
         app.update();
@@ -534,23 +605,11 @@ mod tests {
             .iter(&app.world)
             .next()
             .is_none());
-        assert!(app
-            .world
-            .query::<&SequenceReader<MyEvent>>()
-            .iter(&app.world)
-            .next()
-            .is_none());
 
         app.update();
         assert!(app
             .world
             .query::<&EventSent>()
-            .iter(&app.world)
-            .next()
-            .is_none());
-        assert!(app
-            .world
-            .query::<&SequenceReader<MyEvent>>()
             .iter(&app.world)
             .next()
             .is_none());
@@ -587,12 +646,8 @@ mod tests {
     fn new_app() -> App {
         let mut app = App::new();
         app.add_plugins(MinimalPlugins);
-        app.add_systems(Update, read);
-        app.add_event::<MyEvent>();
-        // app.add_systems(
-        //     Update,
-        //     (input_system::<MyEvent>, start_input_system::<MyEvent>).chain(),
-        // );
+        app.add_systems(PostUpdate, read);
+        app.add_input_sequence_event::<MyEvent>();
         app.init_resource::<Gamepads>();
         app.init_resource::<Input<GamepadButton>>();
         app.init_resource::<Input<GamepadAxis>>();
