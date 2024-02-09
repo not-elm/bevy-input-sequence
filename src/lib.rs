@@ -48,11 +48,8 @@ struct InputSequenceCache<E> {
 impl<E: Event + Clone> InputSequenceCache<E> {
     pub fn trie(&mut self, sequences: &Query<&InputSequence<E>>) -> &Trie<Act, InputSequence<E>> {
         self.trie.get_or_insert_with(|| {
-            eprintln!("gen trie");
             let mut builder = TrieBuilder::new();
-            for sequence in sequences.iter()
-            {
-                // builder.push(dbg!(sequence.acts.clone()), sequence.clone());
+            for sequence in sequences.iter() {
                 builder.push(sequence.acts.clone(), sequence.clone());
             }
             builder.build()
@@ -74,8 +71,7 @@ impl AddInputSequenceEvent for App {
     fn add_input_sequence_event<E: Event + Clone>(&mut self) -> &mut App {
         self.init_resource::<InputSequenceCache<E>>()
             .add_event::<E>()
-            // .add_systems(Update, (input_system::<E>, start_input_system::<E>).chain())
-            .add_systems(Update, (detect_removals::<E>, detect_additions::<E>, input_system_trie::<E>).chain())
+            .add_systems(Update, (detect_removals::<E>, detect_additions::<E>, input_sequence_matcher::<E>).chain())
     }
 }
 
@@ -133,7 +129,7 @@ fn is_modifier(key: KeyCode) -> bool {
 }
 
 
-fn input_system_trie<E: Event + Clone>(
+fn input_sequence_matcher<E: Event + Clone>(
     mut writer: EventWriter<E>,
     secrets: Query<&InputSequence<E>>,
     time: Res<Time>,
@@ -147,22 +143,20 @@ fn input_system_trie<E: Event + Clone>(
 ) {
     let mods = Modifiers::from_input(&keys);
     let trie = cache.trie(&secrets);
-    eprintln!("running");
-    let now = FrameTime { time: time.elapsed_seconds(), frame: frame_count.0 };
+    // eprintln!("running");
+    let now = FrameTime { frame: frame_count.0 , time: time.elapsed_seconds()};
     for key_code in keys.get_just_pressed() {
         if is_modifier(*key_code) {
             continue;
         }
         let key = Act::KeyChord(mods, *key_code);
-        // last_inputs.push(key);
-        // last_times.push(time.elapsed_seconds());
         last_inputs.push(key, now.clone());
         let start = last_inputs.1[0].clone();
         for seq in consume_input(&trie, &mut last_inputs.0) {
             if seq.time_limit.map(|limit| (&now - &start).has_timedout(&limit)).unwrap_or(false) {
-                eprintln!("timed out");
+                // eprintln!("timed out");
             } else {
-                eprintln!("fire");
+                // eprintln!("fire");
                 writer.send(seq.event);
             }
         }
@@ -179,7 +173,7 @@ fn input_system_trie<E: Event + Clone>(
 
         pad_buttons.push(button.button_type.into(), now.clone());
         for seq in consume_input(&trie, &mut pad_buttons.0) {
-            eprintln!("fire button");
+            // eprintln!("fire button");
             writer.send(seq.event);
         }
         pad_buttons.drain1_sync();
@@ -191,7 +185,7 @@ fn detect_additions<E: Event + Clone>(
     mut cache: ResMut<InputSequenceCache<E>>,
 ) {
     if secrets.iter().next().is_some() {
-        eprintln!("added");
+        // eprintln!("added");
         cache.trie = None;
     }
 }
@@ -210,12 +204,12 @@ fn consume_input<E: Event + Clone>(trie: &Trie<Act, InputSequence<E>>,
                                    input: &mut Vec<Act>) -> impl Iterator<Item = InputSequence<E>> {
     let mut result = vec![];
     for i in 0..input.len() {
-        eprintln!("checking {:?}", &input[i..]);
+        // eprintln!("checking {:?}", &input[i..]);
         if let Some(seq) = trie.get(&input[i..]) {
-            eprintln!("has match {:?}", &input[i..]);
+            // eprintln!("has match {:?}", &input[i..]);
             result.push(seq.clone());
         } else if ! trie.predictive_search(&input[i..]).is_empty() {
-            eprintln!("has prefix {:?}", &input[i..]);
+            // eprintln!("has prefix {:?}", &input[i..]);
             let _ = input.drain(0..i);
             return result.into_iter();
         }
@@ -223,55 +217,6 @@ fn consume_input<E: Event + Clone>(trie: &Trie<Act, InputSequence<E>>,
     let _ = input.clear();
     return result.into_iter();
 }
-
-// fn start_input_system<E: Event + Clone>(
-//     mut commands: Commands,
-//     mut ew: EventWriter<E>,
-//     secrets: Query<&InputSequence<E>>,
-//     inputs: InputParams,
-// ) {
-//     for seq in secrets.iter() {
-//         let Some(input) = seq.first_input() else {
-//             continue;
-//         };
-//         let (yes, context) = input.just_inputted(&inputs, &None);
-//         if yes {
-//             if seq.one_key() {
-//                 ew.send(seq.event.clone());
-//             } else {
-//                 commands.spawn(SequenceReader::new(seq.clone(), 1, context));
-//             }
-//         }
-//     }
-// }
-
-// fn input_system<E: Event + Clone>(
-//     mut commands: Commands,
-//     mut ew: EventWriter<E>,
-//     mut key_seq: Query<(Entity, &mut SequenceReader<E>)>,
-//     time: Res<Time>,
-//     inputs: InputParams,
-// ) {
-//     for (seq_entity, mut seq) in key_seq.iter_mut() {
-//         let Some(next_input) = seq.next_input() else {
-//             // eprintln!("no more input");
-//             commands.entity(seq_entity).despawn();
-//             continue;
-//         };
-
-//         if next_input.just_inputted(&inputs, &seq.context).0 {
-//             seq.next_act();
-//             if seq.is_last() {
-//                 // eprintln!("send event");
-//                 commands.entity(seq_entity).despawn();
-//                 ew.send(seq.event());
-//             }
-//         } else if seq.just_other_inputted(&inputs, &next_input) || seq.timedout(&time) {
-//             // eprintln!("time_limit or other input");
-//             commands.entity(seq_entity).despawn();
-//         }
-//     }
-// }
 
 
 #[cfg(test)]

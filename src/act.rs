@@ -1,4 +1,4 @@
-use bevy::prelude::{GamepadButton as bevyGamepadButton, GamepadButtonType, Input, KeyCode, Res};
+use bevy::prelude::{GamepadButtonType, Input, KeyCode, Res};
 use bitflags::bitflags;
 use std::ops::BitOr;
 use std::cmp::Ordering;
@@ -100,6 +100,7 @@ impl Ord for GamepadButton {
 }
 
 impl Act {
+    #[allow(dead_code)]
     pub(crate) fn key(key: KeyCode) -> Act {
         key.into()
     }

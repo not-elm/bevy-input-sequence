@@ -38,12 +38,6 @@ where
         self
     }
 
-    /// Return true if there is only one act in the sequence.
-    #[inline(always)]
-    pub(crate) fn one_key(&self) -> bool {
-        1 == self.acts.len()
-    }
-
     /// Return the first act or input.
     pub fn first_input(&self) -> Option<&Act> {
         self.acts.get(0)
