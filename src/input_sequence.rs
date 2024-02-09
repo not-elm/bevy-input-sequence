@@ -42,5 +42,4 @@ where
     pub fn first_input(&self) -> Option<&Act> {
         self.acts.get(0)
     }
-
 }

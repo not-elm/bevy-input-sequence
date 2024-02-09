@@ -1,7 +1,7 @@
 use bevy::prelude::{GamepadButtonType, Input, KeyCode, Res};
 use bitflags::bitflags;
-use std::ops::BitOr;
 use std::cmp::Ordering;
+use std::ops::BitOr;
 
 bitflags! {
     /// A bit flag that stores the modifier keys--alt, control, shift, and super--in a byte.

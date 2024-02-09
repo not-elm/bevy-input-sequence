@@ -1,5 +1,5 @@
+use bevy::prelude::Resource;
 use std::time::Duration;
-use bevy::prelude::{Resource};
 
 /// A time limit specified as frame counts or duration.
 #[derive(Clone, Resource, Debug)]
@@ -16,4 +16,3 @@ impl From<Duration> for TimeLimit {
         Self::Duration(duration)
     }
 }
-

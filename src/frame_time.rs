@@ -21,7 +21,7 @@ impl FrameTime {
     pub(crate) fn has_timedout(&self, time_limit: &TimeLimit) -> bool {
         match time_limit {
             TimeLimit::Frames(f) => self.frame > *f,
-            TimeLimit::Duration(d) => self.time > d.as_secs_f32()
+            TimeLimit::Duration(d) => self.time > d.as_secs_f32(),
         }
     }
 }

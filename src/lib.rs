@@ -1,13 +1,14 @@
 #![doc(html_root_url = "https://docs.rs/bevy-input-sequence/0.2.0")]
 #![doc = include_str!("../README.md")]
 #![forbid(missing_docs)]
-use std::collections::HashMap;
 use bevy::app::{App, Update};
 use bevy::core::FrameCount;
 use bevy::prelude::{
-    Event, EventWriter, GamepadButton, IntoSystemConfigs, KeyCode, Query, Res, Resource, Local, ResMut, Added, RemovedComponents, Input
+    Added, Event, EventWriter, GamepadButton, Input, IntoSystemConfigs, KeyCode, Local, Query,
+    RemovedComponents, Res, ResMut, Resource,
 };
 use bevy::time::Time;
+use std::collections::HashMap;
 use trie_rs::{Trie, TrieBuilder};
 
 pub use crate::act::{Act, Modifiers};
@@ -17,10 +18,10 @@ pub use crate::time_limit::TimeLimit;
 pub use bevy_input_sequence_macro::{key, keyseq};
 
 mod act;
-mod input_sequence;
-mod time_limit;
 mod covec;
 mod frame_time;
+mod input_sequence;
+mod time_limit;
 
 use covec::Covec;
 use frame_time::FrameTime;
@@ -64,19 +65,24 @@ impl<E: Event + Clone> InputSequenceCache<E> {
 
 impl<E> Default for InputSequenceCache<E> {
     fn default() -> Self {
-        Self {
-            trie: None
-        }
+        Self { trie: None }
     }
 }
-
 
 impl AddInputSequenceEvent for App {
     #[inline(always)]
     fn add_input_sequence_event<E: Event + Clone>(&mut self) -> &mut App {
         self.init_resource::<InputSequenceCache<E>>()
             .add_event::<E>()
-            .add_systems(Update, (detect_removals::<E>, detect_additions::<E>, input_sequence_matcher::<E>).chain())
+            .add_systems(
+                Update,
+                (
+                    detect_removals::<E>,
+                    detect_additions::<E>,
+                    input_sequence_matcher::<E>,
+                )
+                    .chain(),
+            )
     }
 }
 
@@ -84,7 +90,6 @@ fn is_modifier(key: KeyCode) -> bool {
     let mods = Modifiers::from(key);
     !mods.is_empty()
 }
-
 
 fn input_sequence_matcher<E: Event + Clone>(
     mut writer: EventWriter<E>,
@@ -100,7 +105,10 @@ fn input_sequence_matcher<E: Event + Clone>(
     let mods = Modifiers::from_input(&keys);
     let trie = cache.trie(&secrets);
     // eprintln!("running");
-    let now = FrameTime { frame: frame_count.0 , time: time.elapsed_seconds()};
+    let now = FrameTime {
+        frame: frame_count.0,
+        time: time.elapsed_seconds(),
+    };
     for key_code in keys.get_just_pressed() {
         if is_modifier(*key_code) {
             continue;
@@ -109,7 +117,11 @@ fn input_sequence_matcher<E: Event + Clone>(
         last_inputs.push(key, now.clone());
         let start = last_inputs.1[0].clone();
         for seq in consume_input(&trie, &mut last_inputs.0) {
-            if seq.time_limit.map(|limit| (&now - &start).has_timedout(&limit)).unwrap_or(false) {
+            if seq
+                .time_limit
+                .map(|limit| (&now - &start).has_timedout(&limit))
+                .unwrap_or(false)
+            {
                 // eprintln!("timed out");
             } else {
                 // eprintln!("fire");
@@ -156,15 +168,17 @@ fn detect_removals<E: Event>(
     }
 }
 
-fn consume_input<E: Event + Clone>(trie: &Trie<Act, InputSequence<E>>,
-                                   input: &mut Vec<Act>) -> impl Iterator<Item = InputSequence<E>> {
+fn consume_input<E: Event + Clone>(
+    trie: &Trie<Act, InputSequence<E>>,
+    input: &mut Vec<Act>,
+) -> impl Iterator<Item = InputSequence<E>> {
     let mut result = vec![];
     for i in 0..input.len() {
         // eprintln!("checking {:?}", &input[i..]);
         if let Some(seq) = trie.get(&input[i..]) {
             // eprintln!("has match {:?}", &input[i..]);
             result.push(seq.clone());
-        } else if ! trie.predictive_search(&input[i..]).is_empty() {
+        } else if !trie.predictive_search(&input[i..]).is_empty() {
             // eprintln!("has prefix {:?}", &input[i..]);
             let _ = input.drain(0..i);
             return result.into_iter();
@@ -173,7 +187,6 @@ fn consume_input<E: Event + Clone>(trie: &Trie<Act, InputSequence<E>>,
     let _ = input.clear();
     return result.into_iter();
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -186,10 +199,10 @@ mod tests {
     };
     use bevy::MinimalPlugins;
 
+    use super::*;
     use crate::act::Act;
     use crate::input_sequence::InputSequence;
     use crate::prelude::TimeLimit;
-    use super::*;
     // use crate::{input_system, start_input_system};
 
     #[derive(Event, Clone)]
@@ -202,7 +215,10 @@ mod tests {
     fn one_key() {
         let mut app = new_app();
 
-        app.world.spawn(InputSequence::new(MyEvent, [(Modifiers::empty(), KeyCode::A)]));
+        app.world.spawn(InputSequence::new(
+            MyEvent,
+            [(Modifiers::empty(), KeyCode::A)],
+        ));
         press_key(&mut app, KeyCode::A);
         app.update();
         assert!(app
@@ -423,9 +439,8 @@ mod tests {
     fn test_modifier() {
         let mut app = new_app();
 
-        app.world.spawn(
-            InputSequence::new(MyEvent, [KeyCode::A, KeyCode::B]),
-        );
+        app.world
+            .spawn(InputSequence::new(MyEvent, [KeyCode::A, KeyCode::B]));
 
         press_key(&mut app, KeyCode::A);
         app.update();
@@ -549,9 +564,7 @@ mod tests {
     }
 
     fn release(app: &mut App, key: KeyCode) {
-        app.world
-            .resource_mut::<Input<KeyCode>>()
-            .release(key);
+        app.world.resource_mut::<Input<KeyCode>>().release(key);
     }
 
     fn press_pad_button(app: &mut App, game_button: GamepadButtonType) {

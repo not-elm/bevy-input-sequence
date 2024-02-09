@@ -1,10 +1,10 @@
 /// Helps keep two correlated vectors in sync.
-pub(crate) struct Covec<T,S>(pub(crate) Vec<T>, pub(crate) Vec<S>);
+pub(crate) struct Covec<T, S>(pub(crate) Vec<T>, pub(crate) Vec<S>);
 
-impl<T, S> Covec<T,S> {
+impl<T, S> Covec<T, S> {
     pub(crate) fn push(&mut self, x: T, y: S) {
-       self.0.push(x);
-       self.1.push(y);
+        self.0.push(x);
+        self.1.push(y);
     }
 
     pub(crate) fn drain1_sync(&mut self) {
@@ -14,7 +14,7 @@ impl<T, S> Covec<T,S> {
     }
 }
 
-impl<T,S> Default for Covec<T,S> {
+impl<T, S> Default for Covec<T, S> {
     fn default() -> Self {
         Self(vec![], vec![])
     }

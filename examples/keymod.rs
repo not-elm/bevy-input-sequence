@@ -24,10 +24,10 @@ fn setup(mut commands: Commands) {
             keyseq!(W D S A),
             // keyseq!(ctrl-W D S A),
             // (Modifiers::Control, KeyCode::W),
-                                   // (Modifiers::empty(), KeyCode::D),
-                                   // (Modifiers::empty(), KeyCode::S),
-                                   // (Modifiers::empty(), KeyCode::A),
-                                   // ],
+            // (Modifiers::empty(), KeyCode::D),
+            // (Modifiers::empty(), KeyCode::S),
+            // (Modifiers::empty(), KeyCode::A),
+            // ],
         )
         .time_limit(Duration::from_secs(1)),
     );
