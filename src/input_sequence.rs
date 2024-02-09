@@ -37,9 +37,4 @@ where
         self.time_limit = Some(time_limit.into());
         self
     }
-
-    /// Return the first act or input.
-    pub fn first_input(&self) -> Option<&Act> {
-        self.acts.get(0)
-    }
 }

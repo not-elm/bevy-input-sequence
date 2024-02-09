@@ -91,6 +91,7 @@ fn is_modifier(key: KeyCode) -> bool {
     !mods.is_empty()
 }
 
+#[allow(clippy::too_many_arguments)]
 fn input_sequence_matcher<E: Event + Clone>(
     mut writer: EventWriter<E>,
     secrets: Query<&InputSequence<E>>,
@@ -116,7 +117,7 @@ fn input_sequence_matcher<E: Event + Clone>(
         let key = Act::KeyChord(mods, *key_code);
         last_inputs.push(key, now.clone());
         let start = last_inputs.1[0].clone();
-        for seq in consume_input(&trie, &mut last_inputs.0) {
+        for seq in consume_input(trie, &mut last_inputs.0) {
             if seq
                 .time_limit
                 .map(|limit| (&now - &start).has_timedout(&limit))
@@ -140,7 +141,7 @@ fn input_sequence_matcher<E: Event + Clone>(
         };
 
         pad_buttons.push(button.button_type.into(), now.clone());
-        for seq in consume_input(&trie, &mut pad_buttons.0) {
+        for seq in consume_input(trie, &mut pad_buttons.0) {
             // eprintln!("fire button");
             writer.send(seq.event);
         }
@@ -184,8 +185,8 @@ fn consume_input<E: Event + Clone>(
             return result.into_iter();
         }
     }
-    let _ = input.clear();
-    return result.into_iter();
+    input.clear();
+    result.into_iter()
 }
 
 #[cfg(test)]

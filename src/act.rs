@@ -64,18 +64,6 @@ pub enum Act {
     Any(Vec<Act>),
 }
 
-// impl PartialEq for Act {
-//     fn eq(&self, other: &Self) -> bool {
-//         match (self, other) {
-//             (Key(a), Key(b)) => a == b,
-//             (KeyChord(_, a), Key(b)) => a == b,
-//             (Key(a), KeyChord(_, b)) => a == b,
-//         }
-//         self.isbn == other.isbn
-//     }
-// }
-// impl Eq for Act { }
-
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct GamepadButton(GamepadButtonType);
 
@@ -85,10 +73,11 @@ impl From<GamepadButtonType> for GamepadButton {
     }
 }
 
+#[allow(clippy::non_canonical_partial_ord_impl)]
 impl PartialOrd for GamepadButton {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         use bevy::reflect::Enum;
-        self.0.variant_index().partial_cmp(&other.0.variant_index())
+        Some(self.0.variant_index().cmp(&other.0.variant_index()))
     }
 }
 
