@@ -3,24 +3,21 @@
 #![forbid(missing_docs)]
 use std::collections::HashMap;
 use bevy::app::{App, Update};
-use bevy::ecs::{system::SystemParam, world::{FromWorld, World}};
 use bevy::core::FrameCount;
 use bevy::prelude::{
-    Commands, Entity, Event, EventWriter, GamepadButton, IntoSystemConfigs, KeyCode, Query, Res, Resource, Local, ResMut, Added, RemovedComponents, Input
+    Event, EventWriter, GamepadButton, IntoSystemConfigs, KeyCode, Query, Res, Resource, Local, ResMut, Added, RemovedComponents, Input
 };
 use bevy::time::Time;
 use trie_rs::{Trie, TrieBuilder};
 
 pub use crate::act::{Act, Modifiers};
 pub use crate::input_sequence::InputSequence;
-use crate::sequence_reader::SequenceReader;
 pub use crate::timeout::TimeLimit;
 
 pub use bevy_input_sequence_macro::{key, keyseq};
 
 mod act;
 mod input_sequence;
-mod sequence_reader;
 mod timeout;
 
 /// Convenient glob imports module
@@ -82,12 +79,6 @@ impl AddInputSequenceEvent for App {
     }
 }
 
-#[derive(SystemParam)]
-struct InputParams<'w> {
-    pub key: Res<'w, Input<KeyCode>>,
-    pub button_inputs: Res<'w, Input<GamepadButton>>,
-}
-
 // #[derive(Default)]
 struct Covec<T,S>(Vec<T>, Vec<S>);
 
@@ -136,6 +127,12 @@ impl FrameTime {
     }
 }
 
+fn is_modifier(key: KeyCode) -> bool {
+    let mods = Modifiers::from(key);
+    !mods.is_empty()
+}
+
+
 fn input_system_trie<E: Event + Clone>(
     mut writer: EventWriter<E>,
     secrets: Query<&InputSequence<E>>,
@@ -153,6 +150,9 @@ fn input_system_trie<E: Event + Clone>(
     eprintln!("running");
     let now = FrameTime { time: time.elapsed_seconds(), frame: frame_count.0 };
     for key_code in keys.get_just_pressed() {
+        if is_modifier(*key_code) {
+            continue;
+        }
         let key = Act::KeyChord(mods, *key_code);
         // last_inputs.push(key);
         // last_times.push(time.elapsed_seconds());
@@ -200,7 +200,7 @@ fn detect_removals<E: Event>(
     mut cache: ResMut<InputSequenceCache<E>>,
     mut removals: RemovedComponents<InputSequence<E>>,
 ) {
-    if removals.iter().next().is_some() {
+    if removals.read().next().is_some() {
         // eprintln!("removed");
         cache.trie = None;
     }
@@ -276,19 +276,18 @@ fn consume_input<E: Event + Clone>(trie: &Trie<Act, InputSequence<E>>,
 
 #[cfg(test)]
 mod tests {
-    use bevy::app::{App, Update, PostUpdate};
+    use bevy::app::{App, PostUpdate};
     use bevy::input::gamepad::{GamepadConnection, GamepadConnectionEvent, GamepadInfo};
     use bevy::input::{Axis, Input};
     use bevy::prelude::{
         Commands, Component, Event, EventReader, Gamepad, GamepadAxis, GamepadButton,
-        GamepadButtonType, Gamepads, IntoSystemConfigs, KeyCode,
+        GamepadButtonType, Gamepads, KeyCode,
     };
     use bevy::MinimalPlugins;
 
     use crate::act::Act;
     use crate::input_sequence::InputSequence;
     use crate::prelude::TimeLimit;
-    use crate::sequence_reader::SequenceReader;
     use super::*;
     // use crate::{input_system, start_input_system};
 
@@ -374,12 +373,6 @@ mod tests {
         assert!(app
             .world
             .query::<&EventSent>()
-            .iter(&app.world)
-            .next()
-            .is_none());
-        assert!(app
-            .world
-            .query::<&SequenceReader<MyEvent>>()
             .iter(&app.world)
             .next()
             .is_none());
@@ -523,12 +516,47 @@ mod tests {
             .iter(&app.world)
             .next()
             .is_none());
+    }
+
+    #[test]
+    fn test_modifier() {
+        let mut app = new_app();
+
+        app.world.spawn(
+            InputSequence::new(MyEvent, [KeyCode::A, KeyCode::B]),
+        );
+
+        press_key(&mut app, KeyCode::A);
+        app.update();
         assert!(app
             .world
-            .query::<&SequenceReader<MyEvent>>()
+            .query::<&EventSent>()
             .iter(&app.world)
             .next()
             .is_none());
+
+        clear_just_pressed(&mut app, KeyCode::A);
+        app.update();
+
+        press_key(&mut app, KeyCode::ControlLeft);
+        app.update();
+        assert!(app
+            .world
+            .query::<&EventSent>()
+            .iter(&app.world)
+            .next()
+            .is_none());
+        release(&mut app, KeyCode::ControlLeft);
+        app.update();
+
+        press_key(&mut app, KeyCode::B);
+        app.update();
+        assert!(app
+            .world
+            .query::<&EventSent>()
+            .iter(&app.world)
+            .next()
+            .is_some());
     }
 
     #[test]
@@ -559,12 +587,6 @@ mod tests {
             .iter(&app.world)
             .next()
             .is_some());
-        assert!(app
-            .world
-            .query::<&SequenceReader<MyEvent>>()
-            .iter(&app.world)
-            .next()
-            .is_none());
     }
 
     #[test]
@@ -623,6 +645,12 @@ mod tests {
         app.world
             .resource_mut::<Input<KeyCode>>()
             .clear_just_pressed(key);
+    }
+
+    fn release(app: &mut App, key: KeyCode) {
+        app.world
+            .resource_mut::<Input<KeyCode>>()
+            .release(key);
     }
 
     fn press_pad_button(app: &mut App, game_button: GamepadButtonType) {

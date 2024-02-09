@@ -3,8 +3,6 @@ use bitflags::bitflags;
 use std::ops::BitOr;
 use std::cmp::Ordering;
 
-use crate::InputParams;
-
 bitflags! {
     /// A bit flag that stores the modifier keys--alt, control, shift, and super--in a byte.
     #[derive(Clone, Copy, Debug, PartialOrd, PartialEq, Eq, Hash, Ord)]
@@ -65,7 +63,8 @@ pub enum Act {
     /// Any collection of Acts
     Any(Vec<Act>),
 }
-// impl PartialEq for Book {
+
+// impl PartialEq for Act {
 //     fn eq(&self, other: &Self) -> bool {
 //         match (self, other) {
 //             (Key(a), Key(b)) => a == b,
@@ -78,7 +77,7 @@ pub enum Act {
 // impl Eq for Act { }
 
 #[derive(PartialEq, Eq, Clone, Debug)]
-pub(crate) struct GamepadButton(GamepadButtonType);
+pub struct GamepadButton(GamepadButtonType);
 
 impl From<GamepadButtonType> for GamepadButton {
     fn from(a: GamepadButtonType) -> Self {
@@ -89,83 +88,18 @@ impl From<GamepadButtonType> for GamepadButton {
 impl PartialOrd for GamepadButton {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         use bevy::reflect::Enum;
-        self.0.variant_index().partial_cmp(&self.0.variant_index())
+        self.0.variant_index().partial_cmp(&other.0.variant_index())
     }
 }
 
 impl Ord for GamepadButton {
     fn cmp(&self, other: &Self) -> Ordering {
         use bevy::reflect::Enum;
-        self.0.variant_index().cmp(&self.0.variant_index())
+        self.0.variant_index().cmp(&other.0.variant_index())
     }
 }
 
-fn is_modifier(key: KeyCode) -> bool {
-    let mods = Modifiers::from(key);
-    !mods.is_empty()
-}
-
 impl Act {
-    // #[inline]
-    // pub(crate) fn other_pressed_keycode<'a>(
-    //     &self,
-    //     mut keys: impl Iterator<Item = &'a KeyCode>,
-    // ) -> bool {
-    //     if let Self::Key(key) = self {
-    //         // keys.any(|k| k != key)
-    //         // Make it insensitive to modifier key presses.
-    //         keys.any(|k| k != key && !is_modifier(*k))
-    //     } else {
-    //         0 < keys.count()
-    //     }
-    // }
-
-    // #[inline]
-    // pub(crate) fn other_pressed_pad_button<'a>(
-    //     &self,
-    //     buttons: impl Iterator<Item = &'a GamepadButton>,
-    // ) -> bool {
-    //     let button = self.button_type();
-    //     0 < buttons
-    //         .filter(|input| !button.contains(&&input.button_type.into()))
-    //         .count()
-    // }
-
-    // /// Check whether anything was inputted for this act. Return result and possible context.
-    // pub(crate) fn just_inputted(&self, inputs: &InputParams, context: &Option<usize>) -> (bool, Option<usize>) {
-    //     let mut c: Option<usize> = None;
-    //     let result = match self {
-    //         Self::Key(keycode) => inputs.key.just_pressed(*keycode),
-    //         Self::KeyChord(modifiers, keycode) => {
-    //             let current_modifiers = Modifiers::from_input(&inputs.key);
-    //             inputs.key.just_pressed(*keycode) && &current_modifiers == modifiers
-    //         }
-
-    //         Self::PadButton(button) => inputs
-    //             .button_inputs
-    //             .get_just_pressed()
-    //             .filter(|button| {
-    //                 c = Some(button.gamepad.id);
-    //                 context.map_or(true, |x| x == button.gamepad.id)
-    //             })
-    //             .any(|pressed| pressed.button_type == *button),
-
-    //         Self::Any(any) => any.iter().any(|input| input.just_inputted(inputs, context).0),
-    //     };
-    //     (result, c)
-    // }
-
-    // fn button_type(&self) -> Vec<&GamepadButtonType> {
-    //     match self {
-    //         Act::PadButton(button) => {
-    //             vec![button]
-    //         }
-    //         Act::Any(acts) => acts.iter().flat_map(|act| act.button_type()).collect(),
-    //         _ => {
-    //             vec![]
-    //         }
-    //     }
-    // }
     pub(crate) fn key(key: KeyCode) -> Act {
         key.into()
     }
