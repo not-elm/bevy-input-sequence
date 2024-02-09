@@ -5,21 +5,22 @@ use proc_macro2::{Delimiter, Group, Ident, Punct, Spacing, TokenStream, TokenTre
 use quote::quote;
 use std::borrow::Cow;
 
-/// Uses a short hand notation to describe a key chord, returns a [Act::KeyChord](::bevy_input_sequence::Act::KeyChord).
+/// Use short hand notation to describe a key chord; returns a tuple of
+/// `(modifiers, key_code)`.
 ///
 /// Specify a key and any modifiers.
 ///
 /// ```ignore
-/// assert_eq(key!(A), KeyChord(Modifiers::empty(), KeyCode::A));
-/// assert_eq(key!(ctrl-A), KeyChord(Modifiers::Control, KeyCode::A));
-/// assert_eq(key!(alt-ctrl-A), KeyChord(Modifiers::Alt | Modifiers::Control, KeyCode::A));
+/// assert_eq(key!(A), (Modifiers::empty(), KeyCode::A));
+/// assert_eq(key!(ctrl-A), (Modifiers::Control, KeyCode::A));
+/// assert_eq(key!(alt-ctrl-A), (Modifiers::Alt | Modifiers::Control, KeyCode::A));
 /// ```
 ///
 /// Can use symbols or their given name in KeyCode enum, e.g. ';' or "Semicolon".
 ///
 /// ```ignore
-/// assert_eq(key!(ctrl-;), KeyChord(Modifiers::Control, KeyCode::Semicolon));
-/// assert_eq(key!(ctrl-Semicolon), KeyChord(Modifiers::Control, KeyCode::Semicolon));
+/// assert_eq(key!(ctrl-;), (Modifiers::Control, KeyCode::Semicolon));
+/// assert_eq(key!(ctrl-Semicolon), (Modifiers::Control, KeyCode::Semicolon));
 /// ```
 ///
 /// More than one key will cause a panic at compile-time. Use keyseq! for that.
@@ -40,21 +41,21 @@ pub fn key(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 }
 
 /// Uses a short hand notation to describe a sequence of key chords, returns an
-/// array of [Act::KeyChord](::bevy_input_sequence::Act::KeyChord).
+/// array of tuples `(modifiers, key_code)`.
 ///
 /// Specify a key and any modifiers.
 ///
 /// ```ignore
-/// assert_eq!(keyseq!(A B), [KeyChord(Modifiers::empty(), KeyCode::A), KeyChord(Modifiers::empty(), KeyCode::B)]);
-/// assert_eq!(keyseq!(ctrl-A B), [KeyChord(Modifiers::Control, KeyCode::A), KeyChord(Modifiers::empty(), KeyCode::B)]);
-/// assert_eq!(keyseq!(alt-ctrl-A Escape), [KeyChord(Modifiers::Alt | Modifiers::Control, KeyCode::A), KeyChord(Modifiers::empty(), KeyCode::Escape)]);
+/// assert_eq!(keyseq!(A B), [(Modifiers::empty(), KeyCode::A), (Modifiers::empty(), KeyCode::B)]);
+/// assert_eq!(keyseq!(ctrl-A B), [(Modifiers::Control, KeyCode::A), (Modifiers::empty(), KeyCode::B)]);
+/// assert_eq!(keyseq!(alt-ctrl-A Escape), [(Modifiers::Alt | Modifiers::Control, KeyCode::A), (Modifiers::empty(), KeyCode::Escape)]);
 /// ```
 ///
 /// One can use symbols or their given name in KeyCode enum, e.g. ';' or "Semicolon".
 ///
 /// ```ignore
-/// assert_eq!(keyseq!(ctrl-;), [KeyChord(Modifiers::Control, KeyCode::Semicolon)]);
-/// assert_eq!(keyseq!(ctrl-Semicolon), [KeyChord(Modifiers::Control, KeyCode::Semicolon)]);
+/// assert_eq!(keyseq!(ctrl-;), [(Modifiers::Control, KeyCode::Semicolon)]);
+/// assert_eq!(keyseq!(ctrl-Semicolon), [(Modifiers::Control, KeyCode::Semicolon)]);
 /// ```
 #[proc_macro_error]
 #[proc_macro]
@@ -76,7 +77,6 @@ pub fn keyseq(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 }
 
 fn partial_key(input: TokenStream) -> (TokenStream, TokenStream) {
-    // let input: TokenStream = input.into();
     let mut r = TokenStream::new();
     let mut i = input.into_iter().peekable();
     let mut key_code: Option<TokenStream> = None;
@@ -110,8 +110,13 @@ fn partial_key(input: TokenStream) -> (TokenStream, TokenStream) {
                     let name: Option<&str> = match punct.as_char() {
                         ';' => Some("Semicolon"),
                         ':' => {
-                            add_shift = true;
-                            Some("Semicolon")
+                            // TODO: `ctrl-:` Can't be entered on a US ANSI
+                            // keyboard only `shift-;` can. Make docs clear this
+                            // is the key and not the symbol?
+
+                            // add_shift = true;
+                            // Some("Semicolon")
+                            Some("Colon")
                         }
                         ',' => Some("Comma"),
                         '.' => Some("Period"),
@@ -208,7 +213,8 @@ fn partial_key(input: TokenStream) -> (TokenStream, TokenStream) {
 
     (
         quote! {
-            ::bevy_input_sequence::prelude::Act::KeyChord(#r, #key_code)
+            // ::bevy_input_sequence::prelude::Act::(#r, #key_code)
+            (#r, #key_code)
         },
         TokenStream::from_iter(i),
     )
