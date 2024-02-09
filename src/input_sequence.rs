@@ -1,7 +1,7 @@
 use bevy::prelude::{Component, Event};
 
 use crate::act::Act;
-use crate::timeout::TimeLimit;
+use crate::time_limit::TimeLimit;
 
 /// An input sequence is a series of [Act]s that fires an event when matched
 /// with inputs within the given time limit.

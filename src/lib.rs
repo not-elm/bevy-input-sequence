@@ -12,13 +12,18 @@ use trie_rs::{Trie, TrieBuilder};
 
 pub use crate::act::{Act, Modifiers};
 pub use crate::input_sequence::InputSequence;
-pub use crate::timeout::TimeLimit;
+pub use crate::time_limit::TimeLimit;
 
 pub use bevy_input_sequence_macro::{key, keyseq};
 
 mod act;
 mod input_sequence;
-mod timeout;
+mod time_limit;
+mod covec;
+mod frame_time;
+
+use covec::Covec;
+use frame_time::FrameTime;
 
 /// Convenient glob imports module
 ///
@@ -28,7 +33,7 @@ mod timeout;
 pub mod prelude {
     pub use crate::act::{Act, Modifiers};
     pub use crate::input_sequence::InputSequence;
-    pub use crate::timeout::TimeLimit;
+    pub use crate::time_limit::TimeLimit;
     pub use crate::AddInputSequenceEvent;
     pub use bevy_input_sequence_macro::{key, keyseq};
 }
@@ -75,54 +80,6 @@ impl AddInputSequenceEvent for App {
     }
 }
 
-// #[derive(Default)]
-struct Covec<T,S>(Vec<T>, Vec<S>);
-
-impl<T, S> Covec<T,S> {
-    fn push(&mut self, x: T, y: S) {
-       self.0.push(x);
-       self.1.push(y);
-    }
-
-    fn drain1_sync(&mut self) {
-        let len0 = self.0.len();
-        let len1 = self.1.len();
-        let _ = self.1.drain(0..len1.saturating_sub(len0));
-    }
-}
-
-impl<T,S> Default for Covec<T,S> {
-    fn default() -> Self {
-        Self(vec![], vec![])
-    }
-}
-
-#[derive(Clone)]
-struct FrameTime {
-    frame: u32,
-    time: f32,
-}
-
-impl std::ops::Sub for &FrameTime {
-    type Output = FrameTime;
-
-    fn sub(self, other: Self) -> Self::Output {
-        FrameTime {
-            frame: self.frame - other.frame,
-            time: self.time - other.time,
-        }
-    }
-}
-
-impl FrameTime {
-    fn has_timedout(&self, time_limit: &TimeLimit) -> bool {
-        match time_limit {
-            TimeLimit::Frames(f) => self.frame > *f,
-            TimeLimit::Duration(d) => self.time > d.as_secs_f32()
-        }
-    }
-}
-
 fn is_modifier(key: KeyCode) -> bool {
     let mods = Modifiers::from(key);
     !mods.is_empty()
@@ -136,7 +93,6 @@ fn input_sequence_matcher<E: Event + Clone>(
     keys: Res<Input<KeyCode>>,
     buttons: Res<Input<GamepadButton>>,
     mut last_inputs: Local<Covec<Act, FrameTime>>,
-    // mut last_times: Local<Vec<f32>>,
     mut last_buttons: Local<HashMap<usize, Covec<Act, FrameTime>>>,
     mut cache: ResMut<InputSequenceCache<E>>,
     frame_count: Res<FrameCount>,
