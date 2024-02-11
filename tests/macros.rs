@@ -13,23 +13,23 @@ fn test_keyseq_doc() {
     assert_eq!(
         keyseq!(ctrl-A B),
         [
-            (Modifiers::Control, KeyCode::A),
+            (Modifiers::CONTROL, KeyCode::A),
             (Modifiers::empty(), KeyCode::B)
         ]
     );
     assert_eq!(
         keyseq!(alt-ctrl-A Escape),
         [
-            (Modifiers::Alt | Modifiers::Control, KeyCode::A),
+            (Modifiers::ALT | Modifiers::CONTROL, KeyCode::A),
             (Modifiers::empty(), KeyCode::Escape)
         ]
     );
     assert_eq!(
         keyseq!(ctrl-;),
-        [(Modifiers::Control, KeyCode::Semicolon)]
+        [(Modifiers::CONTROL, KeyCode::Semicolon)]
     );
     assert_eq!(
         keyseq!(ctrl - Semicolon),
-        [(Modifiers::Control, KeyCode::Semicolon)]
+        [(Modifiers::CONTROL, KeyCode::Semicolon)]
     );
 }

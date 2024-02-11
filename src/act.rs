@@ -8,13 +8,13 @@ bitflags! {
     #[derive(Clone, Copy, Debug, PartialOrd, PartialEq, Eq, Hash, Ord)]
     pub struct Modifiers: u8 {
         /// Represents the alt key, left or right.
-        const Alt     = 0b00000001;
+        const ALT     = 0b00000001;
         /// Represents the control key, left or right.
-        const Control = 0b00000010;
+        const CONTROL = 0b00000010;
         /// Represents the shift key, left or right.
-        const Shift   = 0b00000100;
+        const SHIFT   = 0b00000100;
         /// Represents the macOS command or Windows key, left or right.
-        const Super   = 0b00001000;
+        const SUPER   = 0b00001000;
     }
 }
 
@@ -23,16 +23,16 @@ impl Modifiers {
     pub fn from_input(input: &Res<Input<KeyCode>>) -> Modifiers {
         let mut mods = Modifiers::empty();
         if input.any_pressed([KeyCode::ShiftLeft, KeyCode::ShiftRight]) {
-            mods |= Modifiers::Shift;
+            mods |= Modifiers::SHIFT;
         }
         if input.any_pressed([KeyCode::ControlLeft, KeyCode::ControlRight]) {
-            mods |= Modifiers::Control;
+            mods |= Modifiers::CONTROL;
         }
         if input.any_pressed([KeyCode::AltLeft, KeyCode::AltRight]) {
-            mods |= Modifiers::Alt;
+            mods |= Modifiers::ALT;
         }
         if input.any_pressed([KeyCode::SuperLeft, KeyCode::SuperRight]) {
-            mods |= Modifiers::Super;
+            mods |= Modifiers::SUPER;
         }
         mods
     }
@@ -42,10 +42,10 @@ impl From<KeyCode> for Modifiers {
     #[inline(always)]
     fn from(key: KeyCode) -> Self {
         match key {
-            KeyCode::ShiftLeft | KeyCode::ShiftRight => Modifiers::Shift,
-            KeyCode::ControlLeft | KeyCode::ControlRight => Modifiers::Control,
-            KeyCode::AltLeft | KeyCode::AltRight => Modifiers::Alt,
-            KeyCode::SuperLeft | KeyCode::SuperRight => Modifiers::Super,
+            KeyCode::ShiftLeft | KeyCode::ShiftRight => Modifiers::SHIFT,
+            KeyCode::ControlLeft | KeyCode::ControlRight => Modifiers::CONTROL,
+            KeyCode::AltLeft | KeyCode::AltRight => Modifiers::ALT,
+            KeyCode::SuperLeft | KeyCode::SuperRight => Modifiers::SUPER,
             _ => Modifiers::empty(),
         }
     }

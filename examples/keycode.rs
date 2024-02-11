@@ -38,7 +38,7 @@ fn setup(mut commands: Commands) {
     commands.spawn(
         InputSequence::new(
             MyEvent(Direction::Clockwise),
-            [KeyChord(Modifiers::Shift, KeyCode::Semicolon)],
+            [KeyChord(Modifiers::SHIFT, KeyCode::Semicolon)],
         )
         .time_limit(Duration::from_secs(1)),
     );

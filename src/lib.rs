@@ -9,13 +9,13 @@ use bevy::prelude::{
 };
 use bevy::time::Time;
 use std::collections::HashMap;
-use trie_rs::{Trie, TrieBuilder};
+use trie_rs::map::{Trie, TrieBuilder};
 
 pub use crate::act::{Act, Modifiers};
 pub use crate::input_sequence::InputSequence;
 pub use crate::time_limit::TimeLimit;
 
-pub use bevy_input_sequence_macro::{key, keyseq};
+pub use keyseq_macro::{key, keyseq};
 
 mod act;
 mod covec;
@@ -36,7 +36,7 @@ pub mod prelude {
     pub use crate::input_sequence::InputSequence;
     pub use crate::time_limit::TimeLimit;
     pub use crate::AddInputSequenceEvent;
-    pub use bevy_input_sequence_macro::{key, keyseq};
+    pub use keyseq_macro::{key, keyseq};
 }
 
 /// App extension trait
@@ -176,7 +176,7 @@ fn consume_input<E: Event + Clone>(
     let mut result = vec![];
     for i in 0..input.len() {
         // eprintln!("checking {:?}", &input[i..]);
-        if let Some(seq) = trie.get(&input[i..]) {
+        if let Some(seq) = trie.exact_match(&input[i..]) {
             // eprintln!("has match {:?}", &input[i..]);
             result.push(seq.clone());
         } else if !trie.predictive_search(&input[i..]).is_empty() {

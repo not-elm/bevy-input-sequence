@@ -1,8 +1,9 @@
 [package]
 name = "bevy-input-sequence"
+description = "Recognizes input sequences and send events"
 version = "0.2.0"
 edition = "2021"
-authors = ["elm"]
+authors = ["elm", "Shane Celis <shane.celis@gmail.com>"]
 keywords = [
     "game",
     "gamedev",
@@ -18,7 +19,6 @@ categories = [
 readme = "README.md"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/elm-register/bevy-input-sequence"
-description = "Recognizes input sequences and send events"
 
 
 [[example]]
@@ -38,9 +38,9 @@ path = "examples/multiple_input.rs"
 
 [dependencies]
 bevy = { version = "0.12.1", default-features = false, features = [] }
-trie-rs = { git = "https://github.com/sudarshan-reddy/kv-trie-rs.git", branch = "sudarshan-reddy/split-label-to-kv" }
+trie-rs = { git = "https://github.com/shanecelis/trie-rs.git", branch = "dict" }
 bitflags = "2.4.2"
-bevy-input-sequence-macro = { version = "0.1.0", path = "macro" }
+keyseq_macro = { version = "0.1.0", path = "macro", features = [ "bevy-input-sequence" ] }
 
 [dev-dependencies]
 bevy = "0.12.1"
