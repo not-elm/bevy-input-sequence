@@ -28,9 +28,9 @@ fn main() -> Result<(), impl std::error::Error> {
 
     let mut modifiers = ModifiersState::default();
     let mut binds = HashMap::new();
-    for (mods, key) in [ key! { 2 }, key! { shift-1 } ] {
-        binds.insert(key, mods);
-    }
+
+    binds.insert(key! { 1 }, "number 1");
+    binds.insert(key! { shift-1 }, "!!!!");
 
     event_loop.run(move |event, elwt| {
         if let Event::WindowEvent { event, .. } = event {
@@ -41,27 +41,21 @@ fn main() -> Result<(), impl std::error::Error> {
                 }
                 WindowEvent::KeyboardInput { event, .. } => {
                     if event.state == ElementState::Pressed && !event.repeat {
-                        match event.key_without_modifiers().as_ref() {
-                            Key::Character("1") => {
-                                if modifiers.shift_key() {
-                                    println!("Shift + 1 | logical_key: {:?}", event.logical_key);
-                                } else {
-                                    println!("1");
-                                }
-                            }
-                            _ => (),
-                        }
+                        println!("Got key {:?}", event.logical_key);
+                        // match event.key_without_modifiers().as_ref() {
+                        //     Key::Character("1") => {
+                        //         if modifiers.shift_key() {
+                        //             println!("Shift + 1 | logical_key: {:?}", event.logical_key);
+                        //         } else {
+                        //             println!("1");
+                        //         }
+                        //     }
+                        //     _ => (),
+                        // }
                         if let PhysicalKey::Code(key_code) = event.physical_key {
-                            if let Some(mods) = binds.get(&key_code) {
-                                if mods == &modifiers {
-                                    println!("Got key");
-                                } else {
-                                    println!("No key {:?}", modifiers);
-
-                                }
-
+                            if let Some(j) = binds.get(&(modifiers, key_code)) {
+                                println!("Got key binding {:?}", j);
                             }
-
                         }
                     }
                 }
