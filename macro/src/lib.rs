@@ -4,61 +4,68 @@ use proc_macro_error::{abort, proc_macro_error};
 use quote::quote;
 use std::borrow::Cow;
 
-/// Use short hand notation to describe a key chord; returns a tuple of
+/// Use short hand notation to describe a physical key chord; returns a tuple of
 /// `(modifiers, key_code)`.
 ///
 /// Specify a key and any modifiers.
 ///
 #[cfg_attr(not(any(feature = "winit", feature = "bevy")), doc = r##"
-Paragraph that only appears when feature is enabled.
-
 ```
-# use keyseq_macro::key;
-assert_eq!(key!(A), (0, "A"));
-assert_eq!(key!(shift-A), (1, "A"));
-assert_eq!(key!(ctrl-A), (2, "A"));
-assert_eq!(key!(alt-A), (4, "A"));
-assert_eq!(key!(super-A), (8, "A"));
-assert_eq!(key!(alt-ctrl-;), (6, "Semicolon"));
-assert_eq!(key!(1), (0, "Key1"));
-assert_eq!(key!(alt-1), (4, "Key1"));
+# use keyseq_macro::pkey;
+assert_eq!(pkey!(A), (0, "A"));
+assert_eq!(pkey!(shift-A), (1, "A"));
+assert_eq!(pkey!(ctrl-A), (2, "A"));
+assert_eq!(pkey!(alt-A), (4, "A"));
+assert_eq!(pkey!(super-A), (8, "A"));
+assert_eq!(pkey!(alt-ctrl-;), (6, "Semicolon"));
+assert_eq!(pkey!(1), (0, "Key1"));
+assert_eq!(pkey!(alt-1), (4, "Key1"));
 ```
 "##)]
 #[cfg_attr(feature = "bevy", doc = r##"
-Paragraph that only appears when feature is enabled.
-
 ```
-# use keyseq_macro::key;
+# use keyseq_macro::pkey;
 use bevy::prelude::KeyCode;
-assert_eq!(key!(A), (0, KeyCode::A));
-assert_eq!(key!(shift-A), (1, KeyCode::A));
-assert_eq!(key!(ctrl-A), (2, KeyCode::A));
-assert_eq!(key!(alt-A), (4, KeyCode::A));
-assert_eq!(key!(super-A), (8, KeyCode::A));
-assert_eq!(key!(shift-ctrl-A), (3, KeyCode::A));
-assert_eq!(key!(alt-ctrl-;), (6, KeyCode::Semicolon));
-assert_eq!(key!(1), (0, KeyCode::Key1));
-assert_eq!(key!(alt-1), (4, KeyCode::Key1));
+assert_eq!(pkey!(A), (0, KeyCode::A));
+assert_eq!(pkey!(shift-A), (1, KeyCode::A));
+assert_eq!(pkey!(ctrl-A), (2, KeyCode::A));
+assert_eq!(pkey!(alt-A), (4, KeyCode::A));
+assert_eq!(pkey!(super-A), (8, KeyCode::A));
+assert_eq!(pkey!(shift-ctrl-A), (3, KeyCode::A));
+assert_eq!(pkey!(alt-ctrl-;), (6, KeyCode::Semicolon));
+assert_eq!(pkey!(alt-ctrl-Semicolon), (6, KeyCode::Semicolon));
+assert_eq!(pkey!(1), (0, KeyCode::Key1));
+assert_eq!(pkey!(alt-1), (4, KeyCode::Key1));
 ```
 "##)]
 /// Can use symbols or their given name in KeyCode enum, e.g. ';' or "Semicolon".
 ///
 /// ```ignore
-/// assert_eq!(key!(ctrl-;), (Modifiers::Control, KeyCode::Semicolon));
-/// assert_eq!(key!(ctrl-Semicolon), (Modifiers::Control, KeyCode::Semicolon));
+/// assert_eq!(pkey!(ctrl-;), (Modifiers::Control, KeyCode::Semicolon));
+/// assert_eq!(pkey!(ctrl-Semicolon), (Modifiers::Control, KeyCode::Semicolon));
 /// ```
 ///
 /// More than one key will cause a panic at compile-time. Use keyseq! for that.
 ///
-/// ```ignore
+/// ```compile_fail
 /// fn too_many_keys() {
-///     let _ = key!(A B);
+///     let _ = pkey!(A B);
 /// }
 /// ```
+///
+/// This macro does not ensure the key names exist but the compiler will.
+///
+#[cfg_attr(feature = "bevy", doc = r##"
+```compile_fail
+# use keyseq_macro::pkey;
+use bevy::prelude::KeyCode;
+let (mods, key) = pkey!(alt-NoSuchKey); // KeyCode::NoSuchKey does not exist.
+```
+"##)]
 #[proc_macro_error]
 #[proc_macro]
-pub fn key(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    let (result, leftover) = partial_key_code(input.into());
+pub fn pkey(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let (result, leftover) = partial_pkey(input.into());
     if !leftover.is_empty() {
         abort!(leftover, "Too many tokens; use keyseq! for multiple keys");
     }
@@ -66,7 +73,7 @@ pub fn key(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 }
 
 /// Use short hand notation to describe a logical key chord; returns a tuple of
-/// `(modifiers, key_code)`.
+/// `(modifiers, key)`.
 ///
 /// Specify a key and any modifiers.
 ///
@@ -88,20 +95,33 @@ assert_eq!(lkey!(alt-1), (4, "1"));
 /// Can use symbols or their given name in KeyCode enum, e.g. ';' or "Semicolon".
 ///
 /// ```ignore
-/// assert_eq!(key!(ctrl-;), (Modifiers::Control, KeyCode::Semicolon));
-/// assert_eq!(key!(ctrl-Semicolon), (Modifiers::Control, KeyCode::Semicolon));
+/// assert_eq!(pkey!(ctrl-;), (Modifiers::Control, KeyCode::Semicolon));
+/// assert_eq!(pkey!(ctrl-Semicolon), (Modifiers::Control, KeyCode::Semicolon));
 /// ```
+#[cfg_attr(feature = "winit", doc = r##"
+```
+# use keyseq_macro::lkey;
+use winit::keyboard::{ModifiersState, Key};
+assert_eq!(lkey!(ctrl-;), (ModifiersState::CONTROL, Key::Character(';')));
+```
+
+This does have a limitation though because the macro does not do reverse look ups from character to name.
+
+```compile_fail
+# use keyseq_macro::lkey;
+use winit::keyboard::{ModifiersState, Key};
+assert_eq!(lkey!(ctrl-Semicolon), (ModifiersState::CONTROL, Key::Character(';')));
+```
+"##)]
 ///
 /// More than one key will cause a panic at compile-time. Use keyseq! for that.
 ///
 /// ```compile_fail
 /// fn too_many_keys() {
-///     let _ = key!(A B);
+///     let _ = lkey!(A B);
 /// }
 /// ```
 #[cfg_attr(feature = "winit", doc = r##"
-Paragraph that only appears when feature is enabled.
-
 ```
 # use keyseq_macro::lkey;
 use winit::keyboard::{ModifiersState, Key};
@@ -137,6 +157,21 @@ pub fn lkey(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 /// assert_eq!!(keyseq!(ctrl-A B), [(Modifiers::Control, KeyCode::A), (Modifiers::empty(), KeyCode::B)]);
 /// assert_eq!!(keyseq!(alt-ctrl-A Escape), [(Modifiers::Alt | Modifiers::Control, KeyCode::A), (Modifiers::empty(), KeyCode::Escape)]);
 /// ```
+#[cfg_attr(not(any(feature = "winit", feature = "bevy")), doc = r##"
+```
+# use keyseq_macro::pkeyseq;
+assert_eq!(pkeyseq!(A B), [(0, "A"), (0, "B")]);
+assert_eq!(pkeyseq!(shift-A ctrl-B), [(1, "A"), (2, "B")]);
+```
+
+When no features are enabled, there are no smarts to check whether a key is real
+or not.
+
+```
+# use keyseq_macro::pkeyseq;
+assert_eq!(pkeyseq!(A NoSuchKey), [(0, "A"), (0, "NoSuchKey")]);
+```
+"##)]
 ///
 /// One can use symbols or their given name in KeyCode enum, e.g. ';' or "Semicolon".
 ///
@@ -146,12 +181,12 @@ pub fn lkey(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 /// ```
 #[proc_macro_error]
 #[proc_macro]
-pub fn keyseq(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+pub fn pkeyseq(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let mut input: TokenStream = input.into();
     let mut keys = vec![];
 
     loop {
-        let (result, leftover) = partial_key_code(input);
+        let (result, leftover) = partial_pkey(input);
         keys.push(result);
         if leftover.is_empty() {
             break;
@@ -280,7 +315,7 @@ fn get_key_raw(tree: TokenTree) -> Option<Result<char, Cow<'static, str>>> {
 }
 
 #[cfg(feature = "winit")]
-fn get_key_code(tree: TokenTree) -> Option<Ident> {
+fn get_pkey(tree: TokenTree) -> Option<Ident> {
     match tree {
         TokenTree::Literal(ref literal) => {
             let x = literal.span().source_text().unwrap();
@@ -352,7 +387,7 @@ fn get_key_code(tree: TokenTree) -> Option<Ident> {
 }
 
 #[cfg(not(feature = "winit"))]
-fn get_key_code(tree: TokenTree) -> Option<Ident> {
+fn get_pkey(tree: TokenTree) -> Option<Ident> {
     match tree {
         TokenTree::Literal(ref literal) => {
             let x = literal.span().source_text().unwrap();
@@ -478,11 +513,11 @@ fn read_modifiers(input: TokenStream) -> (TokenStream, TokenStream) {
     )
 }
 
-fn partial_key_code(input: TokenStream) -> (TokenStream, TokenStream) {
+fn partial_pkey(input: TokenStream) -> (TokenStream, TokenStream) {
     let (mods, rest) = read_modifiers(input);
     let mut i = rest.into_iter();
     let tree = i.next().expect("No tree");
-    let key_code = get_key_code(tree).expect("No key code found");
+    let key_code = get_pkey(tree).expect("No physical key found");
     let key_code_path = key_code_path(key_code);
     (
         quote! {
@@ -496,7 +531,7 @@ fn partial_key(input: TokenStream) -> (TokenStream, TokenStream) {
     let (mods, rest) = read_modifiers(input);
     let mut i = rest.into_iter();
     let tree = i.next().expect("No tree");
-    let key = get_key(tree).expect("No key code found");
+    let key = get_key(tree).expect("No logical key found");
     // let key_path = key_path(key);
     (
         quote! {
