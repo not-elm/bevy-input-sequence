@@ -1,7 +1,7 @@
 use proc_macro2::{Ident, TokenStream, TokenTree, Span, Literal};
 use quote::quote;
 use std::borrow::Cow;
-use proc_macro_error::{abort, proc_macro_error};
+use proc_macro_error::abort;
 use super::{Modifier, get_key_raw};
 
 pub fn get_key(tree: TokenTree) -> Option<TokenStream> {
@@ -17,7 +17,7 @@ pub fn get_key(tree: TokenTree) -> Option<TokenStream> {
     })
 }
 
-fn get_pkey(tree: TokenTree) -> Option<TokenStream> {
+pub fn get_pkey(tree: TokenTree) -> Option<TokenStream> {
     match tree {
         TokenTree::Literal(ref literal) => {
             let x = literal.span().source_text().unwrap();
@@ -97,7 +97,3 @@ pub fn modifiers_id(modifier: Modifier) -> TokenStream {
 fn key_code_path(id: Ident) -> TokenStream {
     quote! { ::winit::keyboard::KeyCode::#id }
 }
-
-// fn key_path(id: Ident) -> TokenStream {
-//     quote! { ::winit::keyboard::Key::#id }
-// }

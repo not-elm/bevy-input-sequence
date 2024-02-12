@@ -87,22 +87,33 @@ pub fn bevy_pkey(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     result.into()
 }
 
+#[cfg(feature = "winit")]
+#[proc_macro_error]
+#[proc_macro]
+pub fn winit_pkey(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let (result, leftover) = read_key_chord(input.into(), winit::modifiers_id, winit::get_pkey);
+    if !leftover.is_empty() {
+        abort!(leftover, "Too many tokens; use keyseq! for multiple keys");
+    }
+    result.into()
+}
+
 /// Use short hand notation to describe a logical key chord; returns a tuple of
 /// `(modifiers, key)`.
 ///
 /// Specify a key and any modifiers.
 ///
 /// ```
-/// # use keyseq_macro::lkey;
-/// assert_eq!(lkey!(a), (0, "a"));
-/// assert_eq!(lkey!(A), (0, "A"));
-/// assert_eq!(lkey!(shift-A), (1, "A"));
-/// assert_eq!(lkey!(ctrl-A), (2, "A"));
-/// assert_eq!(lkey!(alt-A), (4, "A"));
-/// assert_eq!(lkey!(super-A), (8, "A"));
-/// assert_eq!(lkey!(alt-ctrl-;), (6, ";"));
-/// assert_eq!(lkey!(1), (0, "1"));
-/// assert_eq!(lkey!(alt-1), (4, "1"));
+/// # use keyseq_macro::key;
+/// assert_eq!(key!(a), (0, "a"));
+/// assert_eq!(key!(A), (0, "A"));
+/// assert_eq!(key!(shift-A), (1, "A"));
+/// assert_eq!(key!(ctrl-A), (2, "A"));
+/// assert_eq!(key!(alt-A), (4, "A"));
+/// assert_eq!(key!(super-A), (8, "A"));
+/// assert_eq!(key!(alt-ctrl-;), (6, ";"));
+/// assert_eq!(key!(1), (0, "1"));
+/// assert_eq!(key!(alt-1), (4, "1"));
 /// ```
 ///
 /// Can use symbols or their given name in KeyCode enum, e.g. ';' or "Semicolon".
@@ -113,19 +124,19 @@ pub fn bevy_pkey(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 /// ```
 #[cfg_attr(feature = "winit", doc = r##"
 ```
-use keyseq_macro::winit_lkey as lkey;
+use keyseq_macro::winit_key as key;
 use winit::keyboard::{ModifiersState, Key};
-assert_eq!(lkey!(;), (ModifiersState::empty(), Key::Character(';')));
-assert_eq!(lkey!(ctrl-;), (ModifiersState::CONTROL, Key::Character(';')));
+assert_eq!(key!(;), (ModifiersState::empty(), Key::Character(';')));
+assert_eq!(key!(ctrl-;), (ModifiersState::CONTROL, Key::Character(';')));
 ```
 
 This does have a limitation though because the macro does not do reverse look
 ups from character to name.
 
 ```compile_fail
-# use keyseq_macro::winit_lkey as lkey;
+# use keyseq_macro::winit_key as key;
 use winit::keyboard::{ModifiersState, Key};
-assert_eq!(lkey!(ctrl-Semicolon), (ModifiersState::CONTROL, Key::Character(';')));
+assert_eq!(key!(ctrl-Semicolon), (ModifiersState::CONTROL, Key::Character(';')));
 ```
 "##)]
 ///
@@ -133,28 +144,28 @@ assert_eq!(lkey!(ctrl-Semicolon), (ModifiersState::CONTROL, Key::Character(';'))
 ///
 /// ```compile_fail
 /// fn too_many_keys() {
-///     let _ = lkey!(A B);
+///     let _ = key!(A B);
 /// }
 /// ```
 #[cfg_attr(feature = "winit", doc = r##"
 ```
-use keyseq_macro::winit_lkey as lkey;
+use keyseq_macro::winit_key as key;
 use winit::keyboard::{ModifiersState, Key};
-assert_eq!(lkey!(a), (ModifiersState::empty(), Key::Character('a')));
-assert_eq!(lkey!(A), (ModifiersState::empty(), Key::Character('A')));
-assert_eq!(lkey!(shift-A), (ModifiersState::SHIFT, Key::Character('A')));
-assert_eq!(lkey!(shift-a), (ModifiersState::SHIFT, Key::Character('a')));
-assert_eq!(lkey!(ctrl-A), (ModifiersState::CONTROL, Key::Character('A')));
-assert_eq!(lkey!(alt-A), (ModifiersState::ALT, Key::Character('A')));
-assert_eq!(lkey!(super-A), (ModifiersState::SUPER, Key::Character('A')));
-assert_eq!(lkey!(alt-ctrl-;), (ModifiersState::ALT | ModifiersState::CONTROL, Key::Character(';')));
-assert_eq!(lkey!(1), (ModifiersState::empty(), Key::Character('1')));
-assert_eq!(lkey!(!), (ModifiersState::empty(), Key::Character('!')));
+assert_eq!(key!(a), (ModifiersState::empty(), Key::Character('a')));
+assert_eq!(key!(A), (ModifiersState::empty(), Key::Character('A')));
+assert_eq!(key!(shift-A), (ModifiersState::SHIFT, Key::Character('A')));
+assert_eq!(key!(shift-a), (ModifiersState::SHIFT, Key::Character('a')));
+assert_eq!(key!(ctrl-A), (ModifiersState::CONTROL, Key::Character('A')));
+assert_eq!(key!(alt-A), (ModifiersState::ALT, Key::Character('A')));
+assert_eq!(key!(super-A), (ModifiersState::SUPER, Key::Character('A')));
+assert_eq!(key!(alt-ctrl-;), (ModifiersState::ALT | ModifiersState::CONTROL, Key::Character(';')));
+assert_eq!(key!(1), (ModifiersState::empty(), Key::Character('1')));
+assert_eq!(key!(!), (ModifiersState::empty(), Key::Character('!')));
 ```
 "##)]
 #[proc_macro_error]
 #[proc_macro]
-pub fn lkey(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+pub fn key(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let (result, leftover) = read_key_chord(input.into(), modifiers_id, get_key);
     if !leftover.is_empty() {
         abort!(leftover, "Too many tokens; use keyseq! for multiple keys");
@@ -165,7 +176,7 @@ pub fn lkey(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 #[cfg(feature = "winit")]
 #[proc_macro_error]
 #[proc_macro]
-pub fn winit_lkey(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+pub fn winit_key(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let (result, leftover) = read_key_chord(input.into(), winit::modifiers_id, winit::get_key);
     if !leftover.is_empty() {
         abort!(leftover, "Too many tokens; use keyseq! for multiple keys");
@@ -218,17 +229,47 @@ pub fn winit_lkey(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 #[proc_macro_error]
 #[proc_macro]
 pub fn pkeyseq(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let keys = read_key_chords(input.into(), modifiers_id, get_pkey);
+    quote! {
+        [#(#keys),*]
+    }
+    .into()
+}
+
+fn read_key_chords<F,G>(input: TokenStream, modifiers_id: F, get_key: G) -> Vec<TokenStream>
+    where F: Fn(Modifier) -> TokenStream,
+    G: Fn(TokenTree) -> Option<TokenStream>
+{
     let mut input: TokenStream = input.into();
     let mut keys = vec![];
 
     loop {
-        let (result, leftover) = read_key_chord(input, modifiers_id, get_key);
+        let (result, leftover) = read_key_chord(input, &modifiers_id, &get_key);
         keys.push(result);
         if leftover.is_empty() {
             break;
         }
         input = leftover;
     }
+    keys
+}
+
+#[cfg(feature = "bevy")]
+#[proc_macro_error]
+#[proc_macro]
+pub fn bevy_pkeyseq(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let keys = read_key_chords(input.into(), modifiers_id, bevy::get_pkey);
+    quote! {
+        [#(#keys),*]
+    }
+    .into()
+}
+
+#[cfg(feature = "winit")]
+#[proc_macro_error]
+#[proc_macro]
+pub fn winit_pkeyseq(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let keys = read_key_chords(input.into(), winit::modifiers_id, winit::get_pkey);
     quote! {
         [#(#keys),*]
     }
