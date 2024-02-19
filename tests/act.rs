@@ -166,7 +166,7 @@ fn test_keyseq() {
             (Modifiers::CONTROL, KeyCode::A),
             (Modifiers::ALT, KeyCode::B)
         ],
-        keyseq! { ctrl-A alt-B}
+        keyseq! { ctrl-A alt-B }
     );
 
     assert_eq!(
@@ -174,7 +174,7 @@ fn test_keyseq() {
             (Modifiers::empty(), KeyCode::A),
             (Modifiers::empty(), KeyCode::B)
         ],
-        keyseq! { A B}
+        keyseq! { A B }
     );
 }
 

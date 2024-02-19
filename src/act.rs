@@ -89,7 +89,20 @@ impl BitOr for Act {
 
     #[inline(always)]
     fn bitor(self, rhs: Self) -> Self::Output {
-        // TODO: Consider specializing for Self::Any.
-        Self::Any(vec![self, rhs])
+        match (self, rhs) {
+            (Self::Any(mut v), Self::Any(w)) => {
+                v.extend(w);
+                Self::Any(v)
+            },
+            (Self::Any(mut v), y) => {
+                v.push(y);
+                Self::Any(v)
+            },
+            (x, Self::Any(mut v)) => {
+                v.push(x);
+                Self::Any(v)
+            },
+            (x, y) => Self::Any(vec![x, y])
+        }
     }
 }

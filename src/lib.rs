@@ -7,6 +7,7 @@ use bevy::prelude::{
     Added, Event, EventWriter, GamepadButton, Input, IntoSystemConfigs, KeyCode, Local, Query,
     RemovedComponents, Res, ResMut, Resource,
 };
+use bevy::ecs::schedule::Condition;
 use bevy::time::Time;
 use std::collections::HashMap;
 use trie_rs::map::{Trie, TrieBuilder};
@@ -41,9 +42,13 @@ pub mod prelude {
 
 /// App extension trait
 pub trait AddInputSequenceEvent {
-    /// Setup event `E` so that it may fire when a component `InputSequence` is
+    /// Setup event `E` so that it may fire when a component `InputSequence<E>` is
     /// present in the app.
     fn add_input_sequence_event<E: Event + Clone>(&mut self) -> &mut App;
+
+    /// Setup event `E` so that it may fire when a component `InputSequence<E>` is
+    /// present and the condition is met.
+    fn add_input_sequence_event_run_if<E: Event + Clone, M>(&mut self, condition: impl Condition<M>) -> &mut App;
 }
 
 #[derive(Resource)]
@@ -83,6 +88,19 @@ impl AddInputSequenceEvent for App {
                 ).chain(),
             )
     }
+
+    fn add_input_sequence_event_run_if<E: Event + Clone, M>(&mut self, condition: impl Condition<M>) -> &mut App {
+        self.init_resource::<InputSequenceCache<E>>()
+            .add_event::<E>()
+            .add_systems(
+                Update,
+                (
+                    detect_removals::<E>,
+                    detect_additions::<E>,
+                    input_sequence_matcher::<E>,
+                ).chain().run_if(condition),
+            )
+    }
 }
 
 fn is_modifier(key: KeyCode) -> bool {
@@ -97,7 +115,8 @@ fn input_sequence_matcher<E: Event + Clone>(
     time: Res<Time>,
     keys: Res<Input<KeyCode>>,
     buttons: Res<Input<GamepadButton>>,
-    mut last_inputs: Local<Covec<Act, FrameTime>>,
+    // mut last_inputs: Local<Covec<Act, FrameTime>>,
+    mut last_keys: Local<Covec<Act, FrameTime>>,
     mut last_buttons: Local<HashMap<usize, Covec<Act, FrameTime>>>,
     mut cache: ResMut<InputSequenceCache<E>>,
     frame_count: Res<FrameCount>,
@@ -114,9 +133,10 @@ fn input_sequence_matcher<E: Event + Clone>(
             continue;
         }
         let key = Act::KeyChord(mods, *key_code);
-        last_inputs.push(key, now.clone());
-        let start = last_inputs.1[0].clone();
-        for seq in consume_input(trie, &mut last_inputs.0) {
+        last_keys.push(key.clone(), now.clone());
+        // last_inputs.push(key, now.clone());
+        let start = last_keys.1[0].clone();
+        for seq in consume_input(trie, &mut last_keys.0) {
             if seq
                 .time_limit
                 .map(|limit| (&now - &start).has_timedout(&limit))
@@ -128,7 +148,7 @@ fn input_sequence_matcher<E: Event + Clone>(
                 writer.send(seq.event);
             }
         }
-        last_inputs.drain1_sync();
+        last_keys.drain1_sync();
     }
     for button in buttons.get_just_pressed() {
         let pad_buttons = match last_buttons.get_mut(&button.gamepad.id) {
@@ -140,6 +160,7 @@ fn input_sequence_matcher<E: Event + Clone>(
         };
 
         pad_buttons.push(button.button_type.into(), now.clone());
+        // last_inputs.push(button.button_type.into(), now.clone());
         for seq in consume_input(trie, &mut pad_buttons.0) {
             // eprintln!("fire button");
             writer.send(seq.event);
@@ -153,7 +174,6 @@ fn detect_additions<E: Event + Clone>(
     mut cache: ResMut<InputSequenceCache<E>>,
 ) {
     if secrets.iter().next().is_some() {
-        // eprintln!("added");
         cache.trie = None;
     }
 }
@@ -163,7 +183,6 @@ fn detect_removals<E: Event>(
     mut removals: RemovedComponents<InputSequence<E>>,
 ) {
     if removals.read().next().is_some() {
-        // eprintln!("removed");
         cache.trie = None;
     }
 }
@@ -178,7 +197,8 @@ fn consume_input<E: Event + Clone>(
         if let Some(seq) = trie.exact_match(&input[i..]) {
             // eprintln!("has match {:?}", &input[i..]);
             result.push(seq.clone());
-        } else if !trie.predictive_search(&input[i..]).is_empty() {
+        // } else if !trie.predictive_search(&input[i..]).is_empty() {
+        } else if trie.is_prefix(&input[i..]) {
             // eprintln!("has prefix {:?}", &input[i..]);
             let _ = input.drain(0..i);
             return result.into_iter();
@@ -203,7 +223,6 @@ mod tests {
     // use crate::act::Act;
     use crate::input_sequence::InputSequence;
     use crate::prelude::TimeLimit;
-    // use crate::{input_system, start_input_system};
 
     #[derive(Event, Clone)]
     struct MyEvent;
@@ -596,7 +615,6 @@ mod tests {
         app.init_resource::<Axis<GamepadButton>>();
         app.init_resource::<Axis<GamepadAxis>>();
         app.init_resource::<Input<KeyCode>>();
-
         app
     }
 }
