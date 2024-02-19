@@ -1,55 +1,7 @@
-use bevy::prelude::{GamepadButtonType, Input, KeyCode, Res};
-use bitflags::bitflags;
+use bevy::prelude::{GamepadButtonType, KeyCode};
 use std::cmp::Ordering;
 use std::ops::BitOr;
-
-bitflags! {
-    /// A bit flag that stores the modifier keys--alt, control, shift, and super--in a byte.
-    #[derive(Clone, Copy, Debug, PartialOrd, PartialEq, Eq, Hash, Ord)]
-    pub struct Modifiers: u8 {
-        /// Represents the alt key, left or right.
-        const ALT     = 0b00000001;
-        /// Represents the control key, left or right.
-        const CONTROL = 0b00000010;
-        /// Represents the shift key, left or right.
-        const SHIFT   = 0b00000100;
-        /// Represents the macOS command or Windows key, left or right.
-        const SUPER   = 0b00001000;
-    }
-}
-
-impl Modifiers {
-    /// Check modifier keys for `any_pressed()` to populate bit flags.
-    pub fn from_input(input: &Res<Input<KeyCode>>) -> Modifiers {
-        let mut mods = Modifiers::empty();
-        if input.any_pressed([KeyCode::ShiftLeft, KeyCode::ShiftRight]) {
-            mods |= Modifiers::SHIFT;
-        }
-        if input.any_pressed([KeyCode::ControlLeft, KeyCode::ControlRight]) {
-            mods |= Modifiers::CONTROL;
-        }
-        if input.any_pressed([KeyCode::AltLeft, KeyCode::AltRight]) {
-            mods |= Modifiers::ALT;
-        }
-        if input.any_pressed([KeyCode::SuperLeft, KeyCode::SuperRight]) {
-            mods |= Modifiers::SUPER;
-        }
-        mods
-    }
-}
-
-impl From<KeyCode> for Modifiers {
-    #[inline(always)]
-    fn from(key: KeyCode) -> Self {
-        match key {
-            KeyCode::ShiftLeft | KeyCode::ShiftRight => Modifiers::SHIFT,
-            KeyCode::ControlLeft | KeyCode::ControlRight => Modifiers::CONTROL,
-            KeyCode::AltLeft | KeyCode::AltRight => Modifiers::ALT,
-            KeyCode::SuperLeft | KeyCode::SuperRight => Modifiers::SUPER,
-            _ => Modifiers::empty(),
-        }
-    }
-}
+use keyseq::Modifiers;
 
 /// An act represents a key press, button press, key chord, or some combination.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
@@ -88,10 +40,26 @@ impl Ord for GamepadButton {
     }
 }
 
+bitflags::bitflags! {
+    #[derive(Debug, Clone)]
+    pub(crate) struct InputKind: u8 {
+        const KEYBOARD = 0b0000_0001;
+        const GAMEPAD  = 0b0000_0010;
+    }
+}
+
 impl Act {
     #[allow(dead_code)]
     pub(crate) fn key(key: KeyCode) -> Act {
         key.into()
+    }
+
+    pub(crate) fn input_kind(&self) -> InputKind {
+        match self {
+            &Act::KeyChord(_, _) => InputKind::KEYBOARD,
+            &Act::PadButton(_) => InputKind::GAMEPAD,
+            &Act::Any(ref a) => a.iter().fold(InputKind::empty(), |a, b| a | b.input_kind()),
+        }
     }
 }
 

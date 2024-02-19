@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use bevy_input_sequence::prelude::Act::*;
 use bevy_input_sequence::prelude::*;
 
 #[allow(unused_must_use)]
@@ -73,9 +72,8 @@ fn test_key_macro() {
         (Modifiers::CONTROL, KeyCode::Underline),
         key! { ctrl-_ }
     );
-    // assert_eq!((Modifiers::CONTROL, KeyCode::Colon), key! { ctrl-: });
     assert_eq!(
-        (Modifiers::CONTROL | Modifiers::SHIFT, KeyCode::Semicolon),
+        (Modifiers::CONTROL, KeyCode::Colon),
         key! { ctrl-: }
     );
     assert_eq!(
@@ -141,8 +139,8 @@ fn test_key_macro() {
     );
     assert_eq!(
         (
-            Modifiers::CONTROL | Modifiers::ALT | Modifiers::SHIFT,
-            KeyCode::Semicolon
+            Modifiers::CONTROL | Modifiers::ALT,
+            KeyCode::Colon
         ),
         key! { ctrl-alt-: }
     );

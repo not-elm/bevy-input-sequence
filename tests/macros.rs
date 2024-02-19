@@ -18,7 +18,7 @@ fn test_keyseq_doc() {
         ]
     );
     assert_eq!(
-        keyseq!(alt-ctrl-A Escape),
+        keyseq!(ctrl-alt-A Escape),
         [
             (Modifiers::ALT | Modifiers::CONTROL, KeyCode::A),
             (Modifiers::empty(), KeyCode::Escape)

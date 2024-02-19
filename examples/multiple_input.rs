@@ -24,10 +24,10 @@ fn setup(mut commands: Commands) {
         InputSequence::new(
             MyEvent,
             [
-                Act::Key(KeyCode::W) | Act::PadButton(GamepadButtonType::North),
-                Act::Key(KeyCode::D) | Act::PadButton(GamepadButtonType::East),
-                Act::Key(KeyCode::S) | Act::PadButton(GamepadButtonType::South),
-                Act::Key(KeyCode::A) | Act::PadButton(GamepadButtonType::West),
+                Act::from(KeyCode::W) | Act::from(GamepadButtonType::North),
+                Act::from(KeyCode::D) | Act::from(GamepadButtonType::East),
+                Act::from(KeyCode::S) | Act::from(GamepadButtonType::South),
+                Act::from(KeyCode::A) | Act::from(GamepadButtonType::West),
             ],
         )
         .time_limit(Duration::from_secs(5)),

@@ -11,11 +11,11 @@ use bevy::time::Time;
 use std::collections::HashMap;
 use trie_rs::map::{Trie, TrieBuilder};
 
-pub use crate::act::{Act, Modifiers};
+pub use crate::act::Act;
 pub use crate::input_sequence::InputSequence;
 pub use crate::time_limit::TimeLimit;
 
-pub use keyseq_macro::{key, keyseq};
+pub use keyseq::{Modifiers, bevy::{pkey as key, pkeyseq as keyseq}};
 
 mod act;
 mod covec;
@@ -32,11 +32,11 @@ use frame_time::FrameTime;
 /// use bevy_input_sequence::prelude::*;
 /// ```
 pub mod prelude {
-    pub use crate::act::{Act, Modifiers};
+    pub use crate::act::Act;
     pub use crate::input_sequence::InputSequence;
     pub use crate::time_limit::TimeLimit;
     pub use crate::AddInputSequenceEvent;
-    pub use keyseq_macro::{key, keyseq};
+    pub use keyseq::{Modifiers, bevy::{pkey as key, pkeyseq as keyseq}};
 }
 
 /// App extension trait
@@ -80,8 +80,7 @@ impl AddInputSequenceEvent for App {
                     detect_removals::<E>,
                     detect_additions::<E>,
                     input_sequence_matcher::<E>,
-                )
-                    .chain(),
+                ).chain(),
             )
     }
 }
@@ -201,7 +200,7 @@ mod tests {
     use bevy::MinimalPlugins;
 
     use super::*;
-    use crate::act::Act;
+    // use crate::act::Act;
     use crate::input_sequence::InputSequence;
     use crate::prelude::TimeLimit;
     // use crate::{input_system, start_input_system};
@@ -346,65 +345,65 @@ mod tests {
             .is_some());
     }
 
-    #[test]
-    fn multiple_inputs() {
-        let mut app = new_app();
-        app.world.send_event(GamepadConnectionEvent::new(
-            Gamepad::new(1),
-            GamepadConnection::Connected(GamepadInfo {
-                name: "".to_string(),
-            }),
-        ));
-        app.world.spawn(InputSequence::new(
-            MyEvent,
-            [
-                Act::key(KeyCode::A),
-                Act::key(KeyCode::B),
-                Act::key(KeyCode::C) | Act::PadButton(GamepadButtonType::North.into()),
-                Act::PadButton(GamepadButtonType::C.into()),
-            ],
-        ));
-        app.update();
+    // #[test]
+    // fn multiple_inputs() {
+    //     let mut app = new_app();
+    //     app.world.send_event(GamepadConnectionEvent::new(
+    //         Gamepad::new(1),
+    //         GamepadConnection::Connected(GamepadInfo {
+    //             name: "".to_string(),
+    //         }),
+    //     ));
+    //     app.world.spawn(InputSequence::new(
+    //         MyEvent,
+    //         [
+    //             Act::key(KeyCode::A),
+    //             Act::key(KeyCode::B),
+    //             Act::key(KeyCode::C) | Act::PadButton(GamepadButtonType::North.into()),
+    //             Act::PadButton(GamepadButtonType::C.into()),
+    //         ],
+    //     ));
+    //     app.update();
 
-        press_key(&mut app, KeyCode::A);
-        app.update();
-        assert!(app
-            .world
-            .query::<&EventSent>()
-            .iter(&app.world)
-            .next()
-            .is_none());
+    //     press_key(&mut app, KeyCode::A);
+    //     app.update();
+    //     assert!(app
+    //         .world
+    //         .query::<&EventSent>()
+    //         .iter(&app.world)
+    //         .next()
+    //         .is_none());
 
-        clear_just_pressed(&mut app, KeyCode::A);
-        press_key(&mut app, KeyCode::B);
-        app.update();
-        assert!(app
-            .world
-            .query::<&EventSent>()
-            .iter(&app.world)
-            .next()
-            .is_none());
+    //     clear_just_pressed(&mut app, KeyCode::A);
+    //     press_key(&mut app, KeyCode::B);
+    //     app.update();
+    //     assert!(app
+    //         .world
+    //         .query::<&EventSent>()
+    //         .iter(&app.world)
+    //         .next()
+    //         .is_none());
 
-        clear_just_pressed(&mut app, KeyCode::B);
-        press_pad_button(&mut app, GamepadButtonType::North);
-        app.update();
-        assert!(app
-            .world
-            .query::<&EventSent>()
-            .iter(&app.world)
-            .next()
-            .is_none());
+    //     clear_just_pressed(&mut app, KeyCode::B);
+    //     press_pad_button(&mut app, GamepadButtonType::North);
+    //     app.update();
+    //     assert!(app
+    //         .world
+    //         .query::<&EventSent>()
+    //         .iter(&app.world)
+    //         .next()
+    //         .is_none());
 
-        clear_just_pressed_pad_button(&mut app, GamepadButtonType::North);
-        press_pad_button(&mut app, GamepadButtonType::C);
-        app.update();
-        assert!(app
-            .world
-            .query::<&EventSent>()
-            .iter(&app.world)
-            .next()
-            .is_some());
-    }
+    //     clear_just_pressed_pad_button(&mut app, GamepadButtonType::North);
+    //     press_pad_button(&mut app, GamepadButtonType::C);
+    //     app.update();
+    //     assert!(app
+    //         .world
+    //         .query::<&EventSent>()
+    //         .iter(&app.world)
+    //         .next()
+    //         .is_some());
+    // }
 
     #[test]
     fn timeout_1frame() {

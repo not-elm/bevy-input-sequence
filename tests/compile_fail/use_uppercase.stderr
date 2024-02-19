@@ -1,4 +1,4 @@
-error: Use uppercase key names
+error: Use uppercase key names for physical keys
  --> tests/compile_fail/use_uppercase.rs:4:13
   |
 4 |     let _ = key!(a);

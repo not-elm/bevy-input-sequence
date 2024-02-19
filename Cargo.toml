@@ -5,13 +5,11 @@ version = "0.2.0"
 edition = "2021"
 authors = ["elm", "Shane Celis <shane.celis@gmail.com>"]
 keywords = [
-    "game",
     "gamedev",
     "bevy",
-    "input-sequence",
     "hotkey",
     "cheat-code",
-    "key-sequence"
+    "input"
 ]
 categories = [
     "game-engines",
@@ -39,8 +37,8 @@ path = "examples/multiple_input.rs"
 [dependencies]
 bevy = { version = "0.12.1", default-features = false, features = [] }
 trie-rs = { git = "https://github.com/shanecelis/trie-rs.git", branch = "dict" }
+keyseq = { version = "0.1", features = [ "bevy" ] }
 bitflags = "2.4.2"
-keyseq_macro = { version = "0.1.0", path = "macro", features = [ "bevy-input-sequence" ] }
 
 [dev-dependencies]
 bevy = "0.12.1"
