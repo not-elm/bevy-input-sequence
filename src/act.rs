@@ -50,15 +50,11 @@ bitflags::bitflags! {
 
 impl Act {
     #[allow(dead_code)]
-    pub(crate) fn key(key: KeyCode) -> Act {
-        key.into()
-    }
-
     pub(crate) fn input_kind(&self) -> InputKind {
-        match self {
-            &Act::KeyChord(_, _) => InputKind::KEYBOARD,
-            &Act::PadButton(_) => InputKind::GAMEPAD,
-            &Act::Any(ref a) => a.iter().fold(InputKind::empty(), |a, b| a | b.input_kind()),
+        match *self {
+            Act::KeyChord(_, _) => InputKind::KEYBOARD,
+            Act::PadButton(_) => InputKind::GAMEPAD,
+            Act::Any(ref a) => a.iter().fold(InputKind::empty(), |a, b| a | b.input_kind()),
         }
     }
 }
