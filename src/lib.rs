@@ -240,6 +240,53 @@ mod tests {
     }
 
     #[test]
+    fn two_components_one_event() {
+        let mut app = new_app();
+
+        app.world.spawn(InputSequence::new(
+            MyEvent,
+            [KeyCode::A],
+        ));
+        app.world.spawn(InputSequence::new(
+            MyEvent,
+            [KeyCode::A],
+        ));
+        press_key(&mut app, KeyCode::A);
+        app.update();
+        assert_eq!(app
+                   .world
+                   .query::<&EventSent>()
+                   .iter(&app.world)
+                   .count(),
+                   1);
+
+    }
+
+    #[test]
+    fn two_presses_two_events() {
+        let mut app = new_app();
+
+        app.world.spawn(InputSequence::new(
+            MyEvent,
+            [KeyCode::A],
+        ));
+        app.world.spawn(InputSequence::new(
+            MyEvent,
+            [KeyCode::B],
+        ));
+        press_key(&mut app, KeyCode::A);
+        press_key(&mut app, KeyCode::B);
+        app.update();
+        assert_eq!(app
+                   .world
+                   .query::<&EventSent>()
+                   .iter(&app.world)
+                   .count(),
+                   2);
+
+    }
+
+    #[test]
     fn two_keycodes() {
         let mut app = new_app();
 
