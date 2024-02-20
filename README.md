@@ -18,14 +18,14 @@ cargo install bevy-input-sequence
 
 ## Import symbols
 
-```compile
+```rust
 use bevy::prelude::*;
 use bevy_input_sequence::*;
 ```
 
 ## Define an event
 
-```ignore
+```ignore rust
 #[derive(Event, Clone, Debug)]
 struct MyEvent;
 ```
