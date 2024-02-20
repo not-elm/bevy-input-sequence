@@ -25,7 +25,7 @@ use bevy_input_sequence::*;
 
 ## Define an event
 
-```ignore rust
+```rust ignore
 #[derive(Event, Clone, Debug)]
 struct MyEvent;
 ```
