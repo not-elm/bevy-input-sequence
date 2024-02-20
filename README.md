@@ -18,7 +18,7 @@ cargo install bevy-input-sequence
 
 ## Import symbols
 
-```rust
+```rust ignore
 use bevy::prelude::*;
 use bevy_input_sequence::*;
 ```
@@ -32,7 +32,7 @@ struct MyEvent;
 
 ## Add event as an input_sequence
 
-```ignore
+```rust ignore
 fn main() {
     App::new()
         .add_input_sequence_event::<MyEvent>()
@@ -45,7 +45,7 @@ fn main() {
 So long as one component is present, it will fire one event when the input
 sequence is entered. This crate re-exports the `keyseq!` macro for bevy from the [keyseq](https://crates.io/crates/keyseq) crate.
 
-```ignore
+```rust ignore
 fn setup(mut commands: Commands) {
     commands.spawn(
         InputSequence::new(MyEvent, keyseq! { alt-X M })
@@ -127,7 +127,7 @@ Some key sequences you may only what to fire in particular modes. You can supply
 a condition that will only run if it's met. This works nicely with bevy `States`
 for example.
 
-```ignore
+```rust ignore
 #[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States)]
 enum AppState {
     #[default]
@@ -149,7 +149,7 @@ See the "run_if" example for more details.
 Input sequences can have time limits. Sequences must be completed within the
 time limit in order to fire the event.
 
-```ignore
+```rust ignore
 fn setup(mut commands: Commands) {
     commands.spawn(
         InputSequence::new(MyEvent, keyseq! { alt-X M })
