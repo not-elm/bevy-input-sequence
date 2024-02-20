@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy_input_sequence::prelude::*;
+use bevy_input_sequence::*;
 use std::time::Duration;
 
 #[derive(Clone, Debug)]

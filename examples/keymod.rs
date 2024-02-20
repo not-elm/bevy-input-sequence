@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use bevy::prelude::*;
 
-use bevy_input_sequence::prelude::*;
+use bevy_input_sequence::*;
 
 #[derive(Event, Clone, Debug)]
 struct MyEvent;

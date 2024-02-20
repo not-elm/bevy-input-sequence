@@ -30,22 +30,6 @@ mod time_limit;
 use covec::Covec;
 use frame_time::FrameTime;
 
-/// Convenient glob imports module
-///
-/// ```
-/// use bevy_input_sequence::prelude::*;
-/// ```
-pub mod prelude {
-    pub use crate::act::Act;
-    pub use crate::input_sequence::InputSequence;
-    pub use crate::time_limit::TimeLimit;
-    pub use crate::AddInputSequenceEvent;
-    pub use keyseq::{
-        bevy::{pkey as key, pkeyseq as keyseq},
-        Modifiers,
-    };
-}
-
 /// App extension trait
 pub trait AddInputSequenceEvent {
     /// Setup event `E` so that it may fire when a component `InputSequence<E>` is
@@ -66,7 +50,7 @@ struct InputSequenceCache<E> {
 }
 
 impl<E: Event + Clone> InputSequenceCache<E> {
-    pub fn trie(&mut self, sequences: &Query<&InputSequence<E>>) -> &Trie<Act, InputSequence<E>> {
+    pub(crate) fn trie(&mut self, sequences: &Query<&InputSequence<E>>) -> &Trie<Act, InputSequence<E>> {
         self.trie.get_or_insert_with(|| {
             let mut builder = TrieBuilder::new();
             for sequence in sequences.iter() {
@@ -130,7 +114,6 @@ fn input_sequence_matcher<E: Event + Clone>(
     time: Res<Time>,
     keys: Res<Input<KeyCode>>,
     buttons: Res<Input<GamepadButton>>,
-    // mut last_inputs: Local<Covec<Act, FrameTime>>,
     mut last_keys: Local<Covec<Act, FrameTime>>,
     mut last_buttons: Local<HashMap<usize, Covec<Act, FrameTime>>>,
     mut cache: ResMut<InputSequenceCache<E>>,
@@ -138,7 +121,6 @@ fn input_sequence_matcher<E: Event + Clone>(
 ) {
     let mods = Modifiers::from_input(&keys);
     let trie = cache.trie(&secrets);
-    // eprintln!("running");
     let now = FrameTime {
         frame: frame_count.0,
         time: time.elapsed_seconds(),
@@ -149,7 +131,6 @@ fn input_sequence_matcher<E: Event + Clone>(
         }
         let key = Act::KeyChord(mods, *key_code);
         last_keys.push(key.clone(), now.clone());
-        // last_inputs.push(key, now.clone());
         let start = last_keys.1[0].clone();
         for seq in consume_input(trie, &mut last_keys.0) {
             if seq
@@ -157,9 +138,8 @@ fn input_sequence_matcher<E: Event + Clone>(
                 .map(|limit| (&now - &start).has_timedout(&limit))
                 .unwrap_or(false)
             {
-                // eprintln!("timed out");
+                // Sequence timed out.
             } else {
-                // eprintln!("fire");
                 writer.send(seq.event);
             }
         }
@@ -175,9 +155,7 @@ fn input_sequence_matcher<E: Event + Clone>(
         };
 
         pad_buttons.push(button.button_type.into(), now.clone());
-        // last_inputs.push(button.button_type.into(), now.clone());
         for seq in consume_input(trie, &mut pad_buttons.0) {
-            // eprintln!("fire button");
             writer.send(seq.event);
         }
         pad_buttons.drain1_sync();
@@ -208,13 +186,9 @@ fn consume_input<E: Event + Clone>(
 ) -> impl Iterator<Item = InputSequence<E>> {
     let mut result = vec![];
     for i in 0..input.len() {
-        // eprintln!("checking {:?}", &input[i..]);
         if let Some(seq) = trie.exact_match(&input[i..]) {
-            // eprintln!("has match {:?}", &input[i..]);
             result.push(seq.clone());
-        // } else if !trie.predictive_search(&input[i..]).is_empty() {
         } else if trie.is_prefix(&input[i..]) {
-            // eprintln!("has prefix {:?}", &input[i..]);
             let _ = input.drain(0..i);
             return result.into_iter();
         }
@@ -235,9 +209,8 @@ mod tests {
     use bevy::MinimalPlugins;
 
     use super::*;
-    // use crate::act::Act;
     use crate::input_sequence::InputSequence;
-    use crate::prelude::TimeLimit;
+    use crate::TimeLimit;
 
     #[derive(Event, Clone)]
     struct MyEvent;
@@ -379,6 +352,7 @@ mod tests {
             .is_some());
     }
 
+    //
     // #[test]
     // fn multiple_inputs() {
     //     let mut app = new_app();

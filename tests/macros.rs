@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy_input_sequence::prelude::*;
+use bevy_input_sequence::*;
 
 #[test]
 fn test_keyseq_doc() {

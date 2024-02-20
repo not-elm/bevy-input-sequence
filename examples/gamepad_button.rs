@@ -2,7 +2,7 @@ use bevy::app::{App, Startup, Update};
 use bevy::prelude::{Commands, Event, EventReader, GamepadButtonType};
 use bevy::DefaultPlugins;
 
-use bevy_input_sequence::prelude::InputSequence;
+use bevy_input_sequence::InputSequence;
 use bevy_input_sequence::AddInputSequenceEvent;
 
 #[derive(Event, Clone, Debug)]

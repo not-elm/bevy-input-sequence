@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy_input_sequence::prelude::*;
+use bevy_input_sequence::*;
 
 #[allow(unused_must_use)]
 #[test]
