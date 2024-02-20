@@ -32,6 +32,7 @@ fn setup(mut commands: Commands) {
         )
         .time_limit(Duration::from_secs(5)),
     );
+    println!("Press W D S A or north east south west to emit event.");
 }
 
 fn input_sequence_event_system(mut er: EventReader<MyEvent>) {

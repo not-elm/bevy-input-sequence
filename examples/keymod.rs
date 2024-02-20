@@ -20,21 +20,15 @@ fn setup(mut commands: Commands) {
     commands.spawn(
         InputSequence::new(
             MyEvent,
-            // [
-            keyseq!(W D S A),
-            // keyseq!(ctrl-W D S A),
-            // (Modifiers::Control, KeyCode::W),
-            // (Modifiers::empty(), KeyCode::D),
-            // (Modifiers::empty(), KeyCode::S),
-            // (Modifiers::empty(), KeyCode::A),
-            // ],
+            keyseq!(ctrl-W ctrl-D ctrl-S ctrl-A),
         )
         .time_limit(Duration::from_secs(1)),
     );
+    println!("Press ctrl-W ctrl-D ctrl-S ctrl-A to emit event.");
 }
 
 fn input_sequence_event_system(mut er: EventReader<MyEvent>) {
     for e in er.read() {
-        println!("{e:?} emitted ");
+        println!("{e:?} emitted.");
     }
 }

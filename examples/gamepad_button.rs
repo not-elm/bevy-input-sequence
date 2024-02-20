@@ -27,6 +27,7 @@ fn setup(mut commands: Commands) {
             GamepadButtonType::West,
         ],
     ));
+    println!("Press north, east, south, west to emit MyEvent.");
 }
 
 fn input_sequence_event_system(mut er: EventReader<MyEvent>) {
