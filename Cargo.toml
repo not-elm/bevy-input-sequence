@@ -43,3 +43,4 @@ bitflags = "2.4.2"
 [dev-dependencies]
 bevy = "0.12.1"
 trybuild = "1.0"
+version-sync = "0.9"
