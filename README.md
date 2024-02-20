@@ -55,69 +55,55 @@ fn setup(mut commands: Commands) {
 
 # Examples
 
-This is the `keycode` example. It will recognize the key sequences `W D S A` and
-`W A S D` and fire an event. 
+## keycode
+
+The `keycode` example recognizes the key sequences `W D S A` and `W A S D` and
+fires a distinct event.
 
 ``` sh
 cargo run --example keycode
 ```
 
-```compile
-use bevy::prelude::*;
-use bevy_input_sequence::*;
-use std::time::Duration;
+## keymod
 
-#[derive(Clone, Debug)]
-enum Direction {
-    Clockwise,
-    CounterClockwise,
-}
+The `keymod` example recognizes `ctrl-W ctrl-D ctrl-S ctrl-A` and fires an event.
 
-#[derive(Event, Clone, Debug)]
-struct MyEvent(Direction);
-
-fn main() {
-    App::new()
-        .add_plugins(DefaultPlugins)
-        .add_input_sequence_event::<MyEvent>()
-        .add_systems(Startup, setup)
-        .add_systems(Update, event_listener)
-        .run();
-}
-
-fn setup(mut commands: Commands) {
-    // Use keyseq! macro.
-    commands.spawn(
-        InputSequence::new(
-            MyEvent(Direction::CounterClockwise),
-            keyseq! { W A S D },
-        )
-        .time_limit(Duration::from_secs(1)),
-    );
-
-    // Specify key codes directly.
-    commands.spawn(
-        InputSequence::new(
-            MyEvent(Direction::Clockwise),
-            [KeyCode::W,
-             KeyCode::D,
-             KeyCode::S,
-             KeyCode::A],
-        )
-    );
-
-    println!("Press W D S A to emit clockwise event.");
-    println!("Press W A S D to emit counter clockwise event.");
-}
-
-fn event_listener(mut er: EventReader<MyEvent>) {
-    for e in er.read() {
-        println!("{e:?} emitted.");
-    }
-}
+``` sh
+cargo run --example keymod
 ```
 
-See [`here`](./examples/) for more examples.
+## gamepad_button
+
+The `gamepad_button` example recognizes gamepad buttons `North East South West`
+or `Y B A X` on an Xbox controller and fires an event.
+
+``` sh
+cargo run --example gamepad_button
+```
+
+## multiple_input
+
+The `multiple_input` example recognizes gamepad buttons `North East South West`,
+or `Y B A X` on an Xbox controller, or `W D S A` on a keyboard and fires an
+event.
+
+``` sh
+cargo run --example multiple_input
+```
+
+Note: Either `W D S A` will be recognized from the keyboard, or `Y B A X` will
+be recognized from the controller. But a mixed sequence like `W D A X` will not
+currently be recognized. If this should be done and how exactly one should do it
+are under consideration. Please open an issue or PR if you have thoughts on this.
+
+## run_if
+
+The `run_if` example recognizes `Space` and fires an event if it's in game mode.
+The `Escape` key toggles the app betwee n menu and game mode.
+
+``` sh
+cargo run --example run_if
+```
 
 # Advanced Usage
 
