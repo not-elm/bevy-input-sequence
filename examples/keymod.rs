@@ -18,11 +18,8 @@ fn main() {
 
 fn setup(mut commands: Commands) {
     commands.spawn(
-        InputSequence::new(
-            MyEvent,
-            keyseq!(ctrl-W ctrl-D ctrl-S ctrl-A),
-        )
-        .time_limit(Duration::from_secs(1)),
+        InputSequence::new(MyEvent, keyseq!(ctrl-W ctrl-D ctrl-S ctrl-A))
+            .time_limit(Duration::from_secs(1)),
     );
     println!("Press ctrl-W ctrl-D ctrl-S ctrl-A to emit event.");
 }

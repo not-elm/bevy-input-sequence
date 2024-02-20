@@ -4,32 +4,32 @@ use bevy_input_sequence::prelude::*;
 #[test]
 fn test_keyseq_doc() {
     assert_eq!(
-        keyseq!{ A B },
+        keyseq! { A B },
         [
             (Modifiers::empty(), KeyCode::A),
             (Modifiers::empty(), KeyCode::B)
         ]
     );
     assert_eq!(
-        keyseq!{ ctrl-A B },
+        keyseq! { ctrl-A B },
         [
             (Modifiers::CONTROL, KeyCode::A),
             (Modifiers::empty(), KeyCode::B)
         ]
     );
     assert_eq!(
-        keyseq!{ ctrl-alt-A Escape },
+        keyseq! { ctrl-alt-A Escape },
         [
             (Modifiers::ALT | Modifiers::CONTROL, KeyCode::A),
             (Modifiers::empty(), KeyCode::Escape)
         ]
     );
     assert_eq!(
-        keyseq!{ ctrl-; },
+        keyseq! { ctrl-; },
         [(Modifiers::CONTROL, KeyCode::Semicolon)]
     );
     assert_eq!(
-        keyseq!{ ctrl-Semicolon },
+        keyseq! { ctrl-Semicolon },
         [(Modifiers::CONTROL, KeyCode::Semicolon)]
     );
 }

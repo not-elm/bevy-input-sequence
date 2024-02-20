@@ -3,11 +3,11 @@
 #![forbid(missing_docs)]
 use bevy::app::{App, Update};
 use bevy::core::FrameCount;
+use bevy::ecs::schedule::Condition;
 use bevy::prelude::{
     Added, Event, EventWriter, GamepadButton, Input, IntoSystemConfigs, KeyCode, Local, Query,
     RemovedComponents, Res, ResMut, Resource,
 };
-use bevy::ecs::schedule::Condition;
 use bevy::time::Time;
 use std::collections::HashMap;
 use trie_rs::map::{Trie, TrieBuilder};
@@ -16,7 +16,10 @@ pub use crate::act::Act;
 pub use crate::input_sequence::InputSequence;
 pub use crate::time_limit::TimeLimit;
 
-pub use keyseq::{Modifiers, bevy::{pkey as key, pkeyseq as keyseq}};
+pub use keyseq::{
+    bevy::{pkey as key, pkeyseq as keyseq},
+    Modifiers,
+};
 
 mod act;
 mod covec;
@@ -37,7 +40,10 @@ pub mod prelude {
     pub use crate::input_sequence::InputSequence;
     pub use crate::time_limit::TimeLimit;
     pub use crate::AddInputSequenceEvent;
-    pub use keyseq::{Modifiers, bevy::{pkey as key, pkeyseq as keyseq}};
+    pub use keyseq::{
+        bevy::{pkey as key, pkeyseq as keyseq},
+        Modifiers,
+    };
 }
 
 /// App extension trait
@@ -48,7 +54,10 @@ pub trait AddInputSequenceEvent {
 
     /// Setup event `E` so that it may fire when a component `InputSequence<E>` is
     /// present and the condition is met.
-    fn add_input_sequence_event_run_if<E: Event + Clone, M>(&mut self, condition: impl Condition<M>) -> &mut App;
+    fn add_input_sequence_event_run_if<E: Event + Clone, M>(
+        &mut self,
+        condition: impl Condition<M>,
+    ) -> &mut App;
 }
 
 #[derive(Resource)]
@@ -85,11 +94,15 @@ impl AddInputSequenceEvent for App {
                     detect_removals::<E>,
                     detect_additions::<E>,
                     input_sequence_matcher::<E>,
-                ).chain(),
+                )
+                    .chain(),
             )
     }
 
-    fn add_input_sequence_event_run_if<E: Event + Clone, M>(&mut self, condition: impl Condition<M>) -> &mut App {
+    fn add_input_sequence_event_run_if<E: Event + Clone, M>(
+        &mut self,
+        condition: impl Condition<M>,
+    ) -> &mut App {
         self.init_resource::<InputSequenceCache<E>>()
             .add_event::<E>()
             .add_systems(
@@ -98,7 +111,9 @@ impl AddInputSequenceEvent for App {
                     detect_removals::<E>,
                     detect_additions::<E>,
                     input_sequence_matcher::<E>,
-                ).chain().run_if(condition),
+                )
+                    .chain()
+                    .run_if(condition),
             )
     }
 }

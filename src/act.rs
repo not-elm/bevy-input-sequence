@@ -1,7 +1,7 @@
 use bevy::prelude::{GamepadButtonType, KeyCode};
+use keyseq::Modifiers;
 use std::cmp::Ordering;
 use std::ops::BitOr;
-use keyseq::Modifiers;
 
 /// An act represents a key press, button press, key chord, or some combination.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
@@ -93,16 +93,16 @@ impl BitOr for Act {
             (Self::Any(mut v), Self::Any(w)) => {
                 v.extend(w);
                 Self::Any(v)
-            },
+            }
             (Self::Any(mut v), y) => {
                 v.push(y);
                 Self::Any(v)
-            },
+            }
             (x, Self::Any(mut v)) => {
                 v.push(x);
                 Self::Any(v)
-            },
-            (x, y) => Self::Any(vec![x, y])
+            }
+            (x, y) => Self::Any(vec![x, y]),
         }
     }
 }
