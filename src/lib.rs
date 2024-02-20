@@ -50,7 +50,10 @@ struct InputSequenceCache<E> {
 }
 
 impl<E: Event + Clone> InputSequenceCache<E> {
-    pub(crate) fn trie(&mut self, sequences: &Query<&InputSequence<E>>) -> &Trie<Act, InputSequence<E>> {
+    pub(crate) fn trie(
+        &mut self,
+        sequences: &Query<&InputSequence<E>>,
+    ) -> &Trie<Act, InputSequence<E>> {
         self.trie.get_or_insert_with(|| {
             let mut builder = TrieBuilder::new();
             for sequence in sequences.iter() {

@@ -4,8 +4,8 @@ use bevy::app::{App, Startup, Update};
 use bevy::prelude::{Commands, Event, EventReader, GamepadButtonType, KeyCode};
 use bevy::DefaultPlugins;
 
-use bevy_input_sequence::{Act, InputSequence};
 use bevy_input_sequence::AddInputSequenceEvent;
+use bevy_input_sequence::{Act, InputSequence};
 
 #[derive(Event, Clone, Debug)]
 struct MyEvent;
