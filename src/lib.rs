@@ -12,7 +12,7 @@ use bevy::time::Time;
 use std::collections::HashMap;
 use trie_rs::map::{Trie, TrieBuilder};
 
-pub use crate::act::Act;
+pub use crate::act::{Act, ActPattern};
 pub use crate::input_sequence::InputSequence;
 pub use crate::time_limit::TimeLimit;
 
@@ -46,14 +46,14 @@ pub trait AddInputSequenceEvent {
 
 #[derive(Resource)]
 struct InputSequenceCache<E> {
-    trie: Option<Trie<Act, InputSequence<E>>>,
+    trie: Option<Trie<ActPattern, InputSequence<E>>>,
 }
 
 impl<E: Event + Clone> InputSequenceCache<E> {
     pub(crate) fn trie(
         &mut self,
         sequences: &Query<&InputSequence<E>>,
-    ) -> &Trie<Act, InputSequence<E>> {
+    ) -> &Trie<ActPattern, InputSequence<E>> {
         self.trie.get_or_insert_with(|| {
             let mut builder = TrieBuilder::new();
             for sequence in sequences.iter() {
@@ -117,8 +117,8 @@ fn input_sequence_matcher<E: Event + Clone>(
     time: Res<Time>,
     keys: Res<Input<KeyCode>>,
     buttons: Res<Input<GamepadButton>>,
-    mut last_keys: Local<Covec<Act, FrameTime>>,
-    mut last_buttons: Local<HashMap<usize, Covec<Act, FrameTime>>>,
+    mut last_keys: Local<Covec<ActPattern, FrameTime>>,
+    mut last_buttons: Local<HashMap<usize, Covec<ActPattern, FrameTime>>>,
     mut cache: ResMut<InputSequenceCache<E>>,
     frame_count: Res<FrameCount>,
 ) {
@@ -133,7 +133,7 @@ fn input_sequence_matcher<E: Event + Clone>(
             continue;
         }
         let key = Act::KeyChord(mods, *key_code);
-        last_keys.push(key.clone(), now.clone());
+        last_keys.push(ActPattern::One(key), now.clone());
         let start = last_keys.1[0].clone();
         for seq in consume_input(trie, &mut last_keys.0) {
             if seq
@@ -157,7 +157,7 @@ fn input_sequence_matcher<E: Event + Clone>(
             }
         };
 
-        pad_buttons.push(button.button_type.into(), now.clone());
+        pad_buttons.push(ActPattern::One(button.button_type.into()), now.clone());
         for seq in consume_input(trie, &mut pad_buttons.0) {
             writer.send(seq.event);
         }
@@ -184,8 +184,8 @@ fn detect_removals<E: Event>(
 }
 
 fn consume_input<E: Event + Clone>(
-    trie: &Trie<Act, InputSequence<E>>,
-    input: &mut Vec<Act>,
+    trie: &Trie<ActPattern, InputSequence<E>>,
+    input: &mut Vec<ActPattern>,
 ) -> impl Iterator<Item = InputSequence<E>> {
     let mut result = vec![];
     for i in 0..input.len() {
@@ -291,7 +291,7 @@ mod tests {
         let mut app = new_app();
 
         app.world
-            .spawn(InputSequence::new(MyEvent, [Act::from(KeyCode::A), Act::from(KeyCode::B) | Act::from(KeyCode::C)]));
+            .spawn(InputSequence::new(MyEvent, [ActPattern::from(KeyCode::A), Act::from(KeyCode::B) | Act::from(KeyCode::C)]));
 
         press_key(&mut app, KeyCode::A);
         app.update();
@@ -318,9 +318,9 @@ mod tests {
         let mut app = new_app();
 
         app.world
-            .spawn(InputSequence::new(MyEvent, [Act::from(KeyCode::A), Act::from(KeyCode::B) | Act::from(KeyCode::C)]));
+            .spawn(InputSequence::new(MyEvent, [ActPattern::from(KeyCode::A), Act::from(KeyCode::B) | Act::from(KeyCode::C)]));
         app.world
-            .spawn(InputSequence::new(MyEvent, [Act::from(KeyCode::A), Act::from(KeyCode::C) | Act::from(KeyCode::D)]));
+            .spawn(InputSequence::new(MyEvent, [ActPattern::from(KeyCode::A), Act::from(KeyCode::C) | Act::from(KeyCode::D)]));
         press_key(&mut app, KeyCode::A);
         app.update();
         assert!(app
@@ -346,9 +346,9 @@ mod tests {
         let mut app = new_app();
 
         app.world
-            .spawn(InputSequence::new(MyEvent, [Act::from(KeyCode::A), Act::from(KeyCode::B) | Act::from(KeyCode::C)]));
+            .spawn(InputSequence::new(MyEvent, [ActPattern::from(KeyCode::A), Act::from(KeyCode::B) | Act::from(KeyCode::C)]));
         app.world
-            .spawn(InputSequence::new(MyEvent, [Act::from(KeyCode::A), Act::from(KeyCode::C) | Act::from(KeyCode::D)]));
+            .spawn(InputSequence::new(MyEvent, [ActPattern::from(KeyCode::A), Act::from(KeyCode::C) | Act::from(KeyCode::D)]));
         press_key(&mut app, KeyCode::A);
         app.update();
         assert!(app
@@ -374,7 +374,7 @@ mod tests {
         let mut app = new_app();
 
         app.world
-            .spawn(InputSequence::new(MyEvent, [Act::from(KeyCode::A), Act::from(KeyCode::B) | Act::from(KeyCode::C)]));
+            .spawn(InputSequence::new(MyEvent, [ActPattern::from(KeyCode::A), Act::from(KeyCode::B) | Act::from(KeyCode::C)]));
 
         press_key(&mut app, KeyCode::A);
         app.update();

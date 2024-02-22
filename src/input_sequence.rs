@@ -1,16 +1,16 @@
 use bevy::prelude::{Component, Event};
 
-use crate::act::Act;
+use crate::act::ActPattern;
 use crate::time_limit::TimeLimit;
 
-/// An input sequence is a series of [Act]s that fires an event when matched
-/// with inputs within the given time limit.
+/// An input sequence is a series of [ActPattern]s that fires an event when
+/// matched with inputs within the given time limit.
 #[derive(Component, Debug, Clone)]
 pub struct InputSequence<E> {
     /// Event emitted
     pub event: E,
     /// Sequence of acts that trigger input sequence
-    pub acts: Vec<Act>,
+    pub acts: Vec<ActPattern>,
     /// Optional time limit after first match
     pub time_limit: Option<TimeLimit>,
 }
@@ -23,12 +23,12 @@ where
     #[inline(always)]
     pub fn new<T>(event: E, acts: impl IntoIterator<Item = T>) -> InputSequence<E>
     where
-        Act: From<T>,
+        ActPattern: From<T>,
     {
         Self {
             event,
             time_limit: None,
-            acts: Vec::from_iter(acts.into_iter().map(Act::from)),
+            acts: Vec::from_iter(acts.into_iter().map(ActPattern::from)),
         }
     }
 
