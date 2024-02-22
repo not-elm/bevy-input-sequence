@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use bevy_input_sequence::*;
+use std::cmp::Ordering;
 
 #[allow(unused_must_use)]
 #[test]
@@ -21,6 +22,31 @@ fn test_keyseq_macro() {
         ],
         keyseq! { A B }
     );
+}
+
+#[test]
+fn eq_if_contains_key_in_lhs(){
+    let key = Act::KeyChord(Modifiers::CONTROL, KeyCode::A);
+    let lhs = Act::Any(vec![key.clone()]);
+    let rhs = key;
+    assert!(lhs == rhs);
+    assert!(rhs == lhs);
+}
+
+#[test]
+fn ord_eq_if_contains_key_in_lhs(){
+    let key = Act::KeyChord(Modifiers::CONTROL, KeyCode::A);
+    let lhs = Act::Any(vec![key.clone()]);
+    let rhs = key;
+    assert_eq!(lhs.cmp(&rhs), Ordering::Equal);
+}
+
+#[test]
+fn ord_not_eq_if_non_contains_key_in_lhs(){
+    let lhs = Act::Any(vec![Act::KeyChord(Modifiers::CONTROL, KeyCode::A)]);
+    let rhs = Act::KeyChord(Modifiers::CONTROL, KeyCode::B);
+    // If not Equal, `lhs` is Greater or Less? It needs to be implemented with consistency.
+    assert_eq!(lhs.cmp(&rhs), Ordering::Less);
 }
 
 /// XXX: This doc test isn't working.
