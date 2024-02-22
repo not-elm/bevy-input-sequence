@@ -2,9 +2,10 @@ use bevy::prelude::{GamepadButtonType, KeyCode};
 use keyseq::Modifiers;
 use std::cmp::Ordering;
 use std::ops::BitOr;
+// use std::collections::HashSet;
 
 /// An act represents a key press, button press, key chord, or some combination.
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Eq, Hash)]
 pub enum Act {
     // A simple key input, e.g. `Act::Key(KeyCode::A)` for the `A` key.
     // Key(KeyCode),
@@ -13,10 +14,72 @@ pub enum Act {
     /// A controller input
     PadButton(GamepadButton),
     /// Any collection of Acts
+    // Any(HashSet<Act>),
     Any(Vec<Act>),
 }
 
-#[derive(PartialEq, Eq, Clone, Debug)]
+/// Note: [Act::Any] == [Act::Any] is not supported and will panic. It's
+/// expected that there will be one concrete sequence of acts being compared to
+/// an "act pattern" which may have [Act::Any].
+impl PartialEq for Act {
+    fn eq(&self, other: &Self) -> bool {
+        use Act::*;
+        match (self, other) {
+            (Act::Any(_), Act::Any(_)) => panic!("Any == Any not supported"),
+            (Act::Any(v), b) => v.contains(b),
+            (a, Act::Any(w)) => w.contains(a),
+            (KeyChord(am, ak), KeyChord(bm, bk)) => am == bm && ak == bk,
+            (PadButton(a), PadButton(b)) => a == b,
+            (_, _) => false
+        }
+    }
+}
+
+/// Note: [Act::Any] < [Act::Any] is not supported and will panic. It's expected
+/// that there will be one concrete sequence of acts being compared to an "act
+/// pattern" which may have [Act::Any].
+impl PartialOrd for Act {
+    fn partial_cmp(&self, other: &Act) -> Option<Ordering> {
+        use Act::*;
+        match (self, other) {
+            (Act::Any(_), Act::Any(_)) => panic!("Any < Any not supported"),
+            (Act::Any(v), b) => {
+                if v.contains(b) {
+                    Some(Ordering::Equal)
+                } else {
+                    v.first().and_then(|x| x.partial_cmp(b))
+                }
+            },
+            (a, Act::Any(w)) => {
+                if w.contains(a) {
+                    Some(Ordering::Equal)
+                } else {
+                    w.first().and_then(|x| x.partial_cmp(a))
+                }
+            },
+            // compare on key first, modifiers second.
+            (KeyChord(am, ak), KeyChord(bm, bk)) =>
+                ak.partial_cmp(bk)
+                  .and_then(|x|
+                            if x == Ordering::Equal {
+                                am.partial_cmp(bm)
+                            } else {
+                                Some(x)
+                            }),
+            (PadButton(a), PadButton(b)) => a.partial_cmp(b),
+            (KeyChord(_, _), PadButton(_)) => Some(Ordering::Less),
+            (PadButton(_), KeyChord(_, _)) => Some(Ordering::Greater),
+        }
+    }
+}
+
+impl Ord for Act {
+    fn cmp(&self, other: &Act) -> Ordering {
+        self.partial_cmp(other).expect("Should have an ordering")
+    }
+}
+
+#[derive(PartialEq, Eq, Clone, Debug, Hash)]
 pub struct GamepadButton(GamepadButtonType);
 
 impl From<GamepadButtonType> for GamepadButton {

@@ -32,6 +32,19 @@ fn setup(mut commands: Commands) {
         )
         .time_limit(Duration::from_secs(5)),
     );
+
+    commands.spawn(
+        InputSequence::new(
+            MyEvent,
+            [
+                Act::from(KeyCode::W) | Act::from(KeyCode::I),
+                Act::from(KeyCode::D) | Act::from(KeyCode::L),
+                Act::from(KeyCode::S) | Act::from(KeyCode::K),
+                Act::from(KeyCode::A) | Act::from(KeyCode::J),
+            ],
+        )
+        .time_limit(Duration::from_secs(5)),
+    );
     println!("Press W D S A or north east south west to emit event.");
 }
 
