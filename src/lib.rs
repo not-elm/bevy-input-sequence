@@ -342,6 +342,34 @@ mod tests {
     }
 
     #[test]
+    fn two_any_patterns_match_2nd() {
+        let mut app = new_app();
+
+        app.world
+            .spawn(InputSequence::new(MyEvent, [Act::from(KeyCode::A), Act::from(KeyCode::B) | Act::from(KeyCode::C)]));
+        app.world
+            .spawn(InputSequence::new(MyEvent, [Act::from(KeyCode::A), Act::from(KeyCode::C) | Act::from(KeyCode::D)]));
+        press_key(&mut app, KeyCode::A);
+        app.update();
+        assert!(app
+            .world
+            .query::<&EventSent>()
+            .iter(&app.world)
+            .next()
+            .is_none());
+
+        clear_just_pressed(&mut app, KeyCode::A);
+        press_key(&mut app, KeyCode::D);
+        app.update();
+        assert!(app
+            .world
+            .query::<&EventSent>()
+            .iter(&app.world)
+            .next()
+            .is_some());
+    }
+
+    #[test]
     fn two_keycodes_match_second() {
         let mut app = new_app();
 

@@ -15,8 +15,9 @@ pub enum Act {
     /// A controller input
     PadButton(GamepadButton),
     /// Any collection of Acts
-    // Any(HashSet<Act>),
     Any(Vec<Act>),
+    // It'd be nice to use a hashset but these are small numbers.
+    // Any(HashSet<Act>),
 }
 
 // #[derive(Debug, Clone, Eq)]
