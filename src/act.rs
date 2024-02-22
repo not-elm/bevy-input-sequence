@@ -2,6 +2,7 @@ use bevy::prelude::{GamepadButtonType, KeyCode};
 use keyseq::Modifiers;
 use std::cmp::Ordering;
 use std::ops::BitOr;
+use bevy::utils::HashSet;
 // use std::collections::HashSet;
 
 /// An act represents a key press, button press, key chord, or some combination.
@@ -18,6 +19,12 @@ pub enum Act {
     Any(Vec<Act>),
 }
 
+// #[derive(Debug, Clone, Eq)]
+// pub enum ActPattern {
+//     One(Act),
+//     Any(HashSet<Act>)
+// }
+
 /// Note: [Act::Any] == [Act::Any] is not supported and will panic. It's
 /// expected that there will be one concrete sequence of acts being compared to
 /// an "act pattern" which may have [Act::Any].
@@ -25,7 +32,11 @@ impl PartialEq for Act {
     fn eq(&self, other: &Self) -> bool {
         use Act::*;
         match (self, other) {
-            (Act::Any(_), Act::Any(_)) => panic!("Any == Any not supported"),
+            (Act::Any(v), Act::Any(w)) => {
+                let a = HashSet::from_iter(v);
+                let b = HashSet::from_iter(w);
+                a.intersection(&b).next().is_some()
+            },
             (Act::Any(v), b) => v.contains(b),
             (a, Act::Any(w)) => w.contains(a),
             (KeyChord(am, ak), KeyChord(bm, bk)) => am == bm && ak == bk,
@@ -42,7 +53,16 @@ impl PartialOrd for Act {
     fn partial_cmp(&self, other: &Act) -> Option<Ordering> {
         use Act::*;
         match (self, other) {
-            (Act::Any(_), Act::Any(_)) => panic!("Any < Any not supported"),
+
+            (Act::Any(v), Act::Any(w)) => {
+                let a = HashSet::from_iter(v);
+                let b = HashSet::from_iter(w);
+                if a.intersection(&b).next().is_some() {
+                    Some(Ordering::Equal)
+                } else {
+                    v.first().and_then(|x| w.first().and_then(|y| x.partial_cmp(y)))
+                }
+            },
             (Act::Any(v), b) => {
                 if v.contains(b) {
                     Some(Ordering::Equal)
