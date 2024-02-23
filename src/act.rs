@@ -121,25 +121,6 @@ impl Ord for GamepadButton {
     }
 }
 
-bitflags::bitflags! {
-    #[derive(Debug, Clone)]
-    pub(crate) struct InputKind: u8 {
-        const KEYBOARD = 0b0000_0001;
-        const GAMEPAD  = 0b0000_0010;
-    }
-}
-
-impl Act {
-    #[allow(dead_code)]
-    pub(crate) fn input_kind(&self) -> InputKind {
-        match *self {
-            Act::KeyChord(_, _) => InputKind::KEYBOARD,
-            Act::PadButton(_) => InputKind::GAMEPAD,
-            // Act::Any(ref a) => a.iter().fold(InputKind::empty(), |a, b| a | b.input_kind()),
-        }
-    }
-}
-
 impl From<(Modifiers, KeyCode)> for ActPattern {
     #[inline(always)]
     fn from((mods, key): (Modifiers, KeyCode)) -> Self {
