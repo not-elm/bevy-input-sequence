@@ -8,7 +8,7 @@ use bevy_input_sequence::AddInputSequenceEvent;
 use bevy_input_sequence::{Act, InputSequence};
 
 #[derive(Event, Clone, Debug)]
-struct MyEvent;
+struct MyEvent(u8);
 
 fn main() {
     App::new()
@@ -22,30 +22,32 @@ fn main() {
 fn setup(mut commands: Commands) {
     commands.spawn(
         InputSequence::new(
-            MyEvent,
+            MyEvent(1),
             [
-                Act::from(KeyCode::W) | Act::from(GamepadButtonType::North),
-                Act::from(KeyCode::D) | Act::from(GamepadButtonType::East),
-                Act::from(KeyCode::S) | Act::from(GamepadButtonType::South),
-                Act::from(KeyCode::A) | Act::from(GamepadButtonType::West),
+                Act::from(KeyCode::KeyW) | Act::from(GamepadButtonType::North),
+                Act::from(KeyCode::KeyD) | Act::from(GamepadButtonType::East),
+                Act::from(KeyCode::KeyS) | Act::from(GamepadButtonType::South),
+                Act::from(KeyCode::KeyA) | Act::from(GamepadButtonType::West),
             ],
         )
         .time_limit(Duration::from_secs(5)),
     );
 
+    // BUG: W A S D does not work!
     commands.spawn(
         InputSequence::new(
-            MyEvent,
+            MyEvent(2),
             [
-                Act::from(KeyCode::W) | Act::from(KeyCode::I),
-                Act::from(KeyCode::A) | Act::from(KeyCode::J),
-                Act::from(KeyCode::D) | Act::from(KeyCode::K),
-                Act::from(KeyCode::S) | Act::from(KeyCode::L),
+                Act::from(KeyCode::KeyW) | Act::from(KeyCode::KeyI),
+                Act::from(KeyCode::KeyA) | Act::from(KeyCode::KeyJ),
+                Act::from(KeyCode::KeyS) | Act::from(KeyCode::KeyK),
+                Act::from(KeyCode::KeyD) | Act::from(KeyCode::KeyL),
             ],
         )
         .time_limit(Duration::from_secs(5)),
     );
-    println!("Press W D S A or north east south west to emit event.");
+    println!("Press W D S A or north east south west to emit event 1.");
+    println!("Press W A S D or I J K L to emit event 2.");
 }
 
 fn input_sequence_event_system(mut er: EventReader<MyEvent>) {

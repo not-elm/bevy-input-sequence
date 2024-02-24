@@ -26,10 +26,10 @@ fn setup(mut commands: Commands) {
     commands.spawn(
         InputSequence::new(
             MyEvent(Direction::Clockwise),
-            [KeyCode::W,
-             KeyCode::D,
-             KeyCode::S,
-             KeyCode::A],
+            [KeyCode::KeyW,
+             KeyCode::KeyD,
+             KeyCode::KeyS,
+             KeyCode::KeyA],
         )
         .time_limit(Duration::from_secs(1)),
     );

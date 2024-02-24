@@ -5,7 +5,7 @@ use bevy::app::{App, Update};
 use bevy::core::FrameCount;
 use bevy::ecs::schedule::Condition;
 use bevy::prelude::{
-    Added, Event, EventWriter, GamepadButton, Input, IntoSystemConfigs, KeyCode, Local, Query,
+    Added, Event, EventWriter, GamepadButton, ButtonInput as Input, IntoSystemConfigs, KeyCode, Local, Query,
     RemovedComponents, Res, ResMut, Resource,
 };
 use bevy::time::Time;
@@ -204,7 +204,7 @@ fn consume_input<E: Event + Clone>(
 mod tests {
     use bevy::app::{App, PostUpdate};
     use bevy::input::gamepad::{GamepadConnection, GamepadConnectionEvent, GamepadInfo};
-    use bevy::input::{Axis, Input};
+    use bevy::input::{Axis, ButtonInput as Input};
     use bevy::prelude::{
         Commands, Component, Event, EventReader, Gamepad, GamepadAxis, GamepadButton,
         GamepadButtonType, Gamepads, KeyCode,
@@ -227,9 +227,9 @@ mod tests {
 
         app.world.spawn(InputSequence::new(
             MyEvent,
-            [(Modifiers::empty(), KeyCode::A)],
+            [(Modifiers::empty(), KeyCode::KeyA)],
         ));
-        press_key(&mut app, KeyCode::A);
+        press_key(&mut app, KeyCode::KeyA);
         app.update();
         assert!(app
             .world
@@ -245,13 +245,13 @@ mod tests {
 
         app.world.spawn(InputSequence::new(
             MyEvent,
-            [KeyCode::A],
+            [KeyCode::KeyA],
         ));
         app.world.spawn(InputSequence::new(
             MyEvent,
-            [KeyCode::A],
+            [KeyCode::KeyA],
         ));
-        press_key(&mut app, KeyCode::A);
+        press_key(&mut app, KeyCode::KeyA);
         app.update();
         assert_eq!(app
                    .world
@@ -268,14 +268,14 @@ mod tests {
 
         app.world.spawn(InputSequence::new(
             MyEvent,
-            [KeyCode::A],
+            [KeyCode::KeyA],
         ));
         app.world.spawn(InputSequence::new(
             MyEvent,
-            [KeyCode::B],
+            [KeyCode::KeyB],
         ));
-        press_key(&mut app, KeyCode::A);
-        press_key(&mut app, KeyCode::B);
+        press_key(&mut app, KeyCode::KeyA);
+        press_key(&mut app, KeyCode::KeyB);
         app.update();
         assert_eq!(app
                    .world
@@ -291,9 +291,9 @@ mod tests {
         let mut app = new_app();
 
         app.world
-            .spawn(InputSequence::new(MyEvent, [ActPattern::from(KeyCode::A), Act::from(KeyCode::B) | Act::from(KeyCode::C)]));
+            .spawn(InputSequence::new(MyEvent, [ActPattern::from(KeyCode::KeyA), Act::from(KeyCode::KeyB) | Act::from(KeyCode::KeyC)]));
 
-        press_key(&mut app, KeyCode::A);
+        press_key(&mut app, KeyCode::KeyA);
         app.update();
         assert!(app
             .world
@@ -302,8 +302,8 @@ mod tests {
             .next()
             .is_none());
 
-        clear_just_pressed(&mut app, KeyCode::A);
-        press_key(&mut app, KeyCode::B);
+        clear_just_pressed(&mut app, KeyCode::KeyA);
+        press_key(&mut app, KeyCode::KeyB);
         app.update();
         assert!(app
             .world
@@ -318,10 +318,10 @@ mod tests {
         let mut app = new_app();
 
         app.world
-            .spawn(InputSequence::new(MyEvent, [ActPattern::from(KeyCode::A), Act::from(KeyCode::B) | Act::from(KeyCode::C)]));
+            .spawn(InputSequence::new(MyEvent, [ActPattern::from(KeyCode::KeyA), Act::from(KeyCode::KeyB) | Act::from(KeyCode::KeyC)]));
         app.world
-            .spawn(InputSequence::new(MyEvent, [ActPattern::from(KeyCode::A), Act::from(KeyCode::C) | Act::from(KeyCode::D)]));
-        press_key(&mut app, KeyCode::A);
+            .spawn(InputSequence::new(MyEvent, [ActPattern::from(KeyCode::KeyA), Act::from(KeyCode::KeyC) | Act::from(KeyCode::KeyD)]));
+        press_key(&mut app, KeyCode::KeyA);
         app.update();
         assert!(app
             .world
@@ -330,8 +330,8 @@ mod tests {
             .next()
             .is_none());
 
-        clear_just_pressed(&mut app, KeyCode::A);
-        press_key(&mut app, KeyCode::B);
+        clear_just_pressed(&mut app, KeyCode::KeyA);
+        press_key(&mut app, KeyCode::KeyB);
         app.update();
         assert!(app
             .world
@@ -346,10 +346,10 @@ mod tests {
         let mut app = new_app();
 
         app.world
-            .spawn(InputSequence::new(MyEvent, [ActPattern::from(KeyCode::A), Act::from(KeyCode::B) | Act::from(KeyCode::C)]));
+            .spawn(InputSequence::new(MyEvent, [ActPattern::from(KeyCode::KeyA), Act::from(KeyCode::KeyB) | Act::from(KeyCode::KeyC)]));
         app.world
-            .spawn(InputSequence::new(MyEvent, [ActPattern::from(KeyCode::A), Act::from(KeyCode::C) | Act::from(KeyCode::D)]));
-        press_key(&mut app, KeyCode::A);
+            .spawn(InputSequence::new(MyEvent, [ActPattern::from(KeyCode::KeyA), Act::from(KeyCode::KeyC) | Act::from(KeyCode::KeyD)]));
+        press_key(&mut app, KeyCode::KeyA);
         app.update();
         assert!(app
             .world
@@ -358,8 +358,8 @@ mod tests {
             .next()
             .is_none());
 
-        clear_just_pressed(&mut app, KeyCode::A);
-        press_key(&mut app, KeyCode::D);
+        clear_just_pressed(&mut app, KeyCode::KeyA);
+        press_key(&mut app, KeyCode::KeyD);
         app.update();
         assert!(app
             .world
@@ -374,9 +374,9 @@ mod tests {
         let mut app = new_app();
 
         app.world
-            .spawn(InputSequence::new(MyEvent, [ActPattern::from(KeyCode::A), Act::from(KeyCode::B) | Act::from(KeyCode::C)]));
+            .spawn(InputSequence::new(MyEvent, [ActPattern::from(KeyCode::KeyA), Act::from(KeyCode::KeyB) | Act::from(KeyCode::KeyC)]));
 
-        press_key(&mut app, KeyCode::A);
+        press_key(&mut app, KeyCode::KeyA);
         app.update();
         assert!(app
             .world
@@ -385,8 +385,8 @@ mod tests {
             .next()
             .is_none());
 
-        clear_just_pressed(&mut app, KeyCode::A);
-        press_key(&mut app, KeyCode::C);
+        clear_just_pressed(&mut app, KeyCode::KeyA);
+        press_key(&mut app, KeyCode::KeyC);
         app.update();
         assert!(app
             .world
@@ -400,9 +400,9 @@ mod tests {
         let mut app = new_app();
 
         app.world
-            .spawn(InputSequence::new(MyEvent, [KeyCode::A, KeyCode::B]));
+            .spawn(InputSequence::new(MyEvent, [KeyCode::KeyA, KeyCode::KeyB]));
 
-        press_key(&mut app, KeyCode::A);
+        press_key(&mut app, KeyCode::KeyA);
         app.update();
         assert!(app
             .world
@@ -411,8 +411,8 @@ mod tests {
             .next()
             .is_none());
 
-        clear_just_pressed(&mut app, KeyCode::A);
-        press_key(&mut app, KeyCode::B);
+        clear_just_pressed(&mut app, KeyCode::KeyA);
+        press_key(&mut app, KeyCode::KeyB);
         app.update();
         assert!(app
             .world
@@ -428,10 +428,10 @@ mod tests {
 
         app.world.spawn(InputSequence::new(
             MyEvent,
-            [KeyCode::A, KeyCode::B, KeyCode::C],
+            [KeyCode::KeyA, KeyCode::KeyB, KeyCode::KeyC],
         ));
 
-        press_key(&mut app, KeyCode::A);
+        press_key(&mut app, KeyCode::KeyA);
         app.update();
         assert!(app
             .world
@@ -440,8 +440,8 @@ mod tests {
             .next()
             .is_none());
 
-        clear_just_pressed(&mut app, KeyCode::A);
-        press_key(&mut app, KeyCode::B);
+        clear_just_pressed(&mut app, KeyCode::KeyA);
+        press_key(&mut app, KeyCode::KeyB);
         app.update();
         assert!(app
             .world
@@ -450,8 +450,8 @@ mod tests {
             .next()
             .is_none());
 
-        clear_just_pressed(&mut app, KeyCode::B);
-        press_key(&mut app, KeyCode::D);
+        clear_just_pressed(&mut app, KeyCode::KeyB);
+        press_key(&mut app, KeyCode::KeyD);
         app.update();
         assert!(app
             .world
@@ -524,15 +524,15 @@ mod tests {
     //     app.world.spawn(InputSequence::new(
     //         MyEvent,
     //         [
-    //             Act::key(KeyCode::A),
-    //             Act::key(KeyCode::B),
-    //             Act::key(KeyCode::C) | Act::PadButton(GamepadButtonType::North.into()),
+    //             Act::key(KeyCode::KeyA),
+    //             Act::key(KeyCode::KeyB),
+    //             Act::key(KeyCode::KeyC) | Act::PadButton(GamepadButtonType::North.into()),
     //             Act::PadButton(GamepadButtonType::C.into()),
     //         ],
     //     ));
     //     app.update();
 
-    //     press_key(&mut app, KeyCode::A);
+    //     press_key(&mut app, KeyCode::KeyA);
     //     app.update();
     //     assert!(app
     //         .world
@@ -541,8 +541,8 @@ mod tests {
     //         .next()
     //         .is_none());
 
-    //     clear_just_pressed(&mut app, KeyCode::A);
-    //     press_key(&mut app, KeyCode::B);
+    //     clear_just_pressed(&mut app, KeyCode::KeyA);
+    //     press_key(&mut app, KeyCode::KeyB);
     //     app.update();
     //     assert!(app
     //         .world
@@ -551,7 +551,7 @@ mod tests {
     //         .next()
     //         .is_none());
 
-    //     clear_just_pressed(&mut app, KeyCode::B);
+    //     clear_just_pressed(&mut app, KeyCode::KeyB);
     //     press_pad_button(&mut app, GamepadButtonType::North);
     //     app.update();
     //     assert!(app
@@ -577,10 +577,10 @@ mod tests {
         let mut app = new_app();
 
         app.world.spawn(
-            InputSequence::new(MyEvent, [KeyCode::A, KeyCode::B]).time_limit(TimeLimit::Frames(1)),
+            InputSequence::new(MyEvent, [KeyCode::KeyA, KeyCode::KeyB]).time_limit(TimeLimit::Frames(1)),
         );
 
-        press_key(&mut app, KeyCode::A);
+        press_key(&mut app, KeyCode::KeyA);
         app.update();
         assert!(app
             .world
@@ -589,10 +589,10 @@ mod tests {
             .next()
             .is_none());
 
-        clear_just_pressed(&mut app, KeyCode::A);
+        clear_just_pressed(&mut app, KeyCode::KeyA);
         app.update();
 
-        press_key(&mut app, KeyCode::B);
+        press_key(&mut app, KeyCode::KeyB);
         app.update();
         assert!(app
             .world
@@ -607,9 +607,9 @@ mod tests {
         let mut app = new_app();
 
         app.world
-            .spawn(InputSequence::new(MyEvent, [KeyCode::A, KeyCode::B]));
+            .spawn(InputSequence::new(MyEvent, [KeyCode::KeyA, KeyCode::KeyB]));
 
-        press_key(&mut app, KeyCode::A);
+        press_key(&mut app, KeyCode::KeyA);
         app.update();
         assert!(app
             .world
@@ -618,7 +618,7 @@ mod tests {
             .next()
             .is_none());
 
-        clear_just_pressed(&mut app, KeyCode::A);
+        clear_just_pressed(&mut app, KeyCode::KeyA);
         app.update();
 
         press_key(&mut app, KeyCode::ControlLeft);
@@ -632,7 +632,7 @@ mod tests {
         release(&mut app, KeyCode::ControlLeft);
         app.update();
 
-        press_key(&mut app, KeyCode::B);
+        press_key(&mut app, KeyCode::KeyB);
         app.update();
         assert!(app
             .world
@@ -647,10 +647,10 @@ mod tests {
         let mut app = new_app();
 
         app.world.spawn(
-            InputSequence::new(MyEvent, [KeyCode::A, KeyCode::B]).time_limit(TimeLimit::Frames(2)),
+            InputSequence::new(MyEvent, [KeyCode::KeyA, KeyCode::KeyB]).time_limit(TimeLimit::Frames(2)),
         );
 
-        press_key(&mut app, KeyCode::A);
+        press_key(&mut app, KeyCode::KeyA);
         app.update();
         assert!(app
             .world
@@ -659,10 +659,10 @@ mod tests {
             .next()
             .is_none());
 
-        clear_just_pressed(&mut app, KeyCode::A);
+        clear_just_pressed(&mut app, KeyCode::KeyA);
         app.update();
 
-        press_key(&mut app, KeyCode::B);
+        press_key(&mut app, KeyCode::KeyB);
         app.update();
         assert!(app
             .world
@@ -677,11 +677,11 @@ mod tests {
         let mut app = new_app();
 
         app.world.spawn(
-            InputSequence::new(MyEvent, [KeyCode::A, KeyCode::B, KeyCode::C])
+            InputSequence::new(MyEvent, [KeyCode::KeyA, KeyCode::KeyB, KeyCode::KeyC])
                 .time_limit(TimeLimit::Frames(2)),
         );
 
-        press_key(&mut app, KeyCode::A);
+        press_key(&mut app, KeyCode::KeyA);
         app.update();
         assert!(app
             .world
@@ -690,10 +690,10 @@ mod tests {
             .next()
             .is_none());
 
-        clear_just_pressed(&mut app, KeyCode::A);
+        clear_just_pressed(&mut app, KeyCode::KeyA);
         app.update();
 
-        press_key(&mut app, KeyCode::B);
+        press_key(&mut app, KeyCode::KeyB);
         app.update();
         assert!(app
             .world
@@ -702,7 +702,7 @@ mod tests {
             .next()
             .is_none());
 
-        clear_just_pressed(&mut app, KeyCode::B);
+        clear_just_pressed(&mut app, KeyCode::KeyB);
         app.update();
         assert!(app
             .world

@@ -35,11 +35,11 @@ path = "examples/multiple_input.rs"
 
 
 [dependencies]
-bevy = { version = "0.12.1", default-features = false, features = [] }
+bevy = { version = "0.13", default-features = false, features = [] }
 trie-rs = "0.2"
-keyseq = { version = "0.1.1", features = [ "bevy" ] }
+keyseq = { version = "0.2", features = [ "bevy" ], path = "../keyseq" }
 
 [dev-dependencies]
-bevy = "0.12.1"
+bevy = "0.13"
 trybuild = "1.0"
 version-sync = "0.9"

@@ -18,7 +18,7 @@ enum AppState {
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        .add_state::<AppState>()
+        .init_state::<AppState>()
         .add_input_sequence_event::<GlobalEvent>()
         .add_input_sequence_event_run_if::<MyEvent, _>(in_state(AppState::Game))
         .add_systems(Startup, setup)
