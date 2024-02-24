@@ -1,13 +1,12 @@
 use bevy::app::{App, Startup, Update};
-use bevy::DefaultPlugins;
 use bevy::prelude::{Commands, Event, EventReader, GamepadButtonType};
+use bevy::DefaultPlugins;
 
 use bevy_input_sequence::AddInputSequenceEvent;
-use bevy_input_sequence::prelude::{InputSequence, Timeout};
+use bevy_input_sequence::InputSequence;
 
 #[derive(Event, Clone, Debug)]
 struct MyEvent;
-
 
 fn main() {
     App::new()
@@ -18,25 +17,21 @@ fn main() {
         .run();
 }
 
-
 fn setup(mut commands: Commands) {
-    commands.spawn(InputSequence::from_pad_buttons(
+    commands.spawn(InputSequence::new(
         MyEvent,
-        Timeout::None,
-        &[
+        [
             GamepadButtonType::North,
             GamepadButtonType::East,
             GamepadButtonType::South,
             GamepadButtonType::West,
         ],
     ));
+    println!("Press north, east, south, west to emit MyEvent.");
 }
 
-
-fn input_sequence_event_system(
-    mut er: EventReader<MyEvent>
-) {
-    for e in er.iter() {
-        println!("{e:?} Coming ");
+fn input_sequence_event_system(mut er: EventReader<MyEvent>) {
+    for e in er.read() {
+        println!("{e:?} emitted ");
     }
 }

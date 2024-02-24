@@ -1,13 +1,15 @@
 [package]
 name = "bevy-input-sequence"
-version = "0.1.0"
+description = "Recognizes input sequences and send events"
+version = "0.2.0"
 edition = "2021"
-authors = ["elm"]
+authors = ["elm", "Shane Celis <shane.celis@gmail.com>"]
 keywords = [
-    "game",
     "gamedev",
     "bevy",
-    "input-sequence"
+    "hotkey",
+    "cheat-code",
+    "input"
 ]
 categories = [
     "game-engines",
@@ -15,7 +17,6 @@ categories = [
 readme = "README.md"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/elm-register/bevy-input-sequence"
-description = "This crate provides reading user input sequences, and sending event"
 
 
 [[example]]
@@ -34,4 +35,11 @@ path = "examples/multiple_input.rs"
 
 
 [dependencies]
-bevy = "0.11.2"
+bevy = { version = "0.12.1", default-features = false, features = [] }
+trie-rs = "0.2"
+keyseq = { version = "0.1.1", features = [ "bevy" ] }
+
+[dev-dependencies]
+bevy = "0.12.1"
+trybuild = "1.0"
+version-sync = "0.9"

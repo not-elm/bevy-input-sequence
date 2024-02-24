@@ -1,66 +1,40 @@
-use bevy::prelude::{Component, Event, GamepadButtonType, KeyCode};
+use bevy::prelude::{Component, Event};
 
-use crate::act::Act;
-use crate::key_sequence::KeySequence;
-use crate::prelude::Timeout;
+use crate::act::ActPattern;
+use crate::time_limit::TimeLimit;
 
-#[derive(Component)]
-pub struct InputSequence<E>(KeySequence<E>);
-
-
-impl<E: Event + Clone> InputSequence<E> {
-    #[inline(always)]
-    pub fn from_keycodes(
-        event: E,
-        timeout: Timeout,
-        keycodes: &[KeyCode],
-    ) -> InputSequence<E> {
-        Self(KeySequence::from_keycodes(event, timeout, keycodes))
-    }
-
-
-    #[inline(always)]
-    pub fn from_pad_buttons(
-        event: E,
-        timeout: Timeout,
-        buttons: &[GamepadButtonType],
-    ) -> InputSequence<E> {
-        Self(KeySequence::from_pad_buttons(event, timeout, buttons))
-    }
-
-
-    #[inline(always)]
-    pub fn new(
-        event: E,
-        timeout: Timeout,
-        inputs: &[Act],
-    ) -> InputSequence<E> {
-        Self(KeySequence::new(event, inputs, timeout))
-    }
-
-
-    #[inline(always)]
-    pub(crate) fn event(&self) -> E {
-        self.0.event()
-    }
-
-
-    #[inline(always)]
-    pub(crate) fn next_input(&self) -> Option<Act> {
-        self.0.next_input()
-    }
-
-
-    #[inline(always)]
-    pub(crate) fn next_sequence(&self) -> KeySequence<E> {
-        self.0.next_sequence()
-    }
-
-
-    #[inline(always)]
-    pub(crate) fn once_key(&self) -> bool {
-        self.0.is_last()
-    }
+/// An input sequence is a series of [ActPattern]s that fires an event when
+/// matched with inputs within the given time limit.
+#[derive(Component, Debug, Clone)]
+pub struct InputSequence<E> {
+    /// Event emitted
+    pub event: E,
+    /// Sequence of acts that trigger input sequence
+    pub acts: Vec<ActPattern>,
+    /// Optional time limit after first match
+    pub time_limit: Option<TimeLimit>,
 }
 
+impl<E> InputSequence<E>
+where
+    E: Event + Clone,
+{
+    /// Create new input sequence. Not operant until added to an entity.
+    #[inline(always)]
+    pub fn new<T>(event: E, acts: impl IntoIterator<Item = T>) -> InputSequence<E>
+    where
+        ActPattern: From<T>,
+    {
+        Self {
+            event,
+            time_limit: None,
+            acts: Vec::from_iter(acts.into_iter().map(ActPattern::from)),
+        }
+    }
 
+    /// Specify a time limit from the start of the first matching input.
+    pub fn time_limit(mut self, time_limit: impl Into<TimeLimit>) -> Self {
+        self.time_limit = Some(time_limit.into());
+        self
+    }
+}

@@ -1,16 +1,14 @@
 use std::time::Duration;
 
 use bevy::app::{App, Startup, Update};
-use bevy::DefaultPlugins;
 use bevy::prelude::{Commands, Event, EventReader, GamepadButtonType, KeyCode};
+use bevy::DefaultPlugins;
 
 use bevy_input_sequence::AddInputSequenceEvent;
-use bevy_input_sequence::prelude::{Act, InputSequence, Timeout};
-
+use bevy_input_sequence::{Act, InputSequence};
 
 #[derive(Event, Clone, Debug)]
 struct MyEvent;
-
 
 fn main() {
     App::new()
@@ -21,25 +19,37 @@ fn main() {
         .run();
 }
 
-
 fn setup(mut commands: Commands) {
-    commands.spawn(InputSequence::new(
-        MyEvent,
-        Timeout::from_duration(Duration::from_secs(5)),
-        &[
-            Act::Key(KeyCode::W) | Act::PadButton(GamepadButtonType::North),
-            Act::Key(KeyCode::D) | Act::PadButton(GamepadButtonType::East),
-            Act::Key(KeyCode::S) | Act::PadButton(GamepadButtonType::South),
-            Act::Key(KeyCode::A) | Act::PadButton(GamepadButtonType::West)
-        ],
-    ));
+    commands.spawn(
+        InputSequence::new(
+            MyEvent,
+            [
+                Act::from(KeyCode::W) | Act::from(GamepadButtonType::North),
+                Act::from(KeyCode::D) | Act::from(GamepadButtonType::East),
+                Act::from(KeyCode::S) | Act::from(GamepadButtonType::South),
+                Act::from(KeyCode::A) | Act::from(GamepadButtonType::West),
+            ],
+        )
+        .time_limit(Duration::from_secs(5)),
+    );
+
+    commands.spawn(
+        InputSequence::new(
+            MyEvent,
+            [
+                Act::from(KeyCode::W) | Act::from(KeyCode::I),
+                Act::from(KeyCode::A) | Act::from(KeyCode::J),
+                Act::from(KeyCode::D) | Act::from(KeyCode::K),
+                Act::from(KeyCode::S) | Act::from(KeyCode::L),
+            ],
+        )
+        .time_limit(Duration::from_secs(5)),
+    );
+    println!("Press W D S A or north east south west to emit event.");
 }
 
-
-fn input_sequence_event_system(
-    mut er: EventReader<MyEvent>
-) {
-    for e in er.iter() {
-        println!("{e:?} Coming ");
+fn input_sequence_event_system(mut er: EventReader<MyEvent>) {
+    for e in er.read() {
+        println!("{e:?} emitted ");
     }
 }

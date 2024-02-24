@@ -1,39 +1,53 @@
+use bevy::prelude::*;
+use bevy_input_sequence::*;
 use std::time::Duration;
 
-use bevy::prelude::*;
-
-use bevy_input_sequence::prelude::*;
+#[derive(Clone, Debug)]
+enum Direction {
+    Clockwise,
+    CounterClockwise,
+}
 
 #[derive(Event, Clone, Debug)]
-struct MyEvent;
+struct MyEvent(Direction);
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .add_input_sequence_event::<MyEvent>()
         .add_systems(Startup, setup)
-        .add_systems(Update, input_sequence_event_system)
+        .add_systems(Update, event_listener)
         .run();
 }
 
+#[rustfmt::skip]
 fn setup(mut commands: Commands) {
-    commands.spawn(InputSequence::from_keycodes(
-        MyEvent,
-        Timeout::from_duration(Duration::from_secs(1)),
-        &[
-            KeyCode::W,
-            KeyCode::D,
-            KeyCode::S,
-            KeyCode::A
-        ],
-    ));
+    // Specify key codes directly.
+    commands.spawn(
+        InputSequence::new(
+            MyEvent(Direction::Clockwise),
+            [KeyCode::W,
+             KeyCode::D,
+             KeyCode::S,
+             KeyCode::A],
+        )
+        .time_limit(Duration::from_secs(1)),
+    );
+
+    // Use keyseq! macro.
+    commands.spawn(
+        InputSequence::new(
+            MyEvent(Direction::CounterClockwise),
+            keyseq!(W A S D),
+        )
+        .time_limit(Duration::from_secs(1)),
+    );
+    println!("Press W D S A to emit clockwise event.");
+    println!("Press W A S D to emit counter clockwise event.");
 }
 
-
-fn input_sequence_event_system(
-    mut er: EventReader<MyEvent>
-) {
-    for e in er.iter() {
-        println!("{e:?} Coming ");
+fn event_listener(mut er: EventReader<MyEvent>) {
+    for e in er.read() {
+        println!("{e:?} emitted.");
     }
 }

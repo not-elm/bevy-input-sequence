@@ -1,0 +1,7 @@
+error: Use uppercase key names for physical keys
+ --> tests/compile_fail/use_uppercase.rs:4:13
+  |
+4 |     let _ = key!(a);
+  |             ^^^^^^^
+  |
+  = note: this error originates in the macro `key` (in Nightly builds, run with -Z macro-backtrace for more info)
