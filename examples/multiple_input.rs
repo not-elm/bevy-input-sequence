@@ -1,11 +1,11 @@
 use std::time::Duration;
 
 use bevy::app::{App, Startup, Update};
-use bevy::prelude::{Commands, Event, EventReader, GamepadButtonType, KeyCode, Gamepad};
+use bevy::prelude::{Commands, Event, EventReader, Gamepad, GamepadButtonType, KeyCode};
 use bevy::DefaultPlugins;
 
 use bevy_input_sequence::AddInputSequenceEvent;
-use bevy_input_sequence::{Act, KeySequence, ButtonSequence, GamepadEvent, keyseq};
+use bevy_input_sequence::{keyseq, Act, ButtonSequence, GamepadEvent, KeySequence};
 
 #[derive(Event, Clone, Debug)]
 struct MyEvent(u8, Option<Gamepad>);
@@ -32,11 +32,7 @@ fn main() {
 
 fn setup(mut commands: Commands) {
     commands.spawn(
-        KeySequence::new(
-            MyEvent(1, None),
-            keyseq!(W D S A)
-        )
-        .time_limit(Duration::from_secs(5)),
+        KeySequence::new(MyEvent(1, None), keyseq!(W D S A)).time_limit(Duration::from_secs(5)),
     );
 
     commands.spawn(
@@ -53,11 +49,7 @@ fn setup(mut commands: Commands) {
     );
 
     commands.spawn(
-        KeySequence::new(
-            MyEvent(3, None),
-            keyseq!(W A S D)
-        )
-        .time_limit(Duration::from_secs(5)),
+        KeySequence::new(MyEvent(3, None), keyseq!(W A S D)).time_limit(Duration::from_secs(5)),
     );
 
     commands.spawn(

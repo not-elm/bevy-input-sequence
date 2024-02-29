@@ -1,13 +1,13 @@
 use bevy::prelude::*;
+use bevy::utils::HashSet;
 use bevy_input_sequence::*;
 use std::cmp::Ordering;
-use bevy::utils::HashSet;
 
 #[allow(unused_must_use)]
 #[test]
 fn test_key_eq() {
-    let a: Act = KeyCode::KeyA.into();
-    let b: Act = KeyCode::KeyA.into();
+    let a: KeyChord = KeyCode::KeyA.into();
+    let b: KeyChord = KeyCode::KeyA.into();
     assert_eq!(a, b);
     assert!(a == b);
 }
@@ -26,30 +26,11 @@ fn test_keyseq_macro() {
 }
 
 #[test]
-fn eq_if_contains_key_in_lhs(){
-    let key = Act::KeyChord(Modifiers::CONTROL, KeyCode::KeyA);
-    let lhs = ActPattern::Any(HashSet::from_iter([key.clone()]));
-    let rhs = ActPattern::One(key);
+fn eq_if_contains_key_in_lhs() {
+    let lhs = KeyChord(Modifiers::CONTROL, KeyCode::KeyA);
+    let rhs = KeyChord(Modifiers::CONTROL, KeyCode::KeyA);
     assert!(lhs == rhs);
     assert!(rhs == lhs);
-}
-
-#[test]
-fn ord_eq_if_contains_key_in_lhs(){
-    let key = Act::KeyChord(Modifiers::CONTROL, KeyCode::KeyA);
-    let lhs = ActPattern::Any(HashSet::from_iter([key.clone()]));
-    let rhs = ActPattern::One(key);
-    assert_eq!(lhs.cmp(&rhs), Ordering::Equal);
-}
-
-#[test]
-fn ord_not_eq_if_non_contains_key_in_lhs(){
-    let a = Act::KeyChord(Modifiers::CONTROL, KeyCode::KeyA);
-    let b = Act::KeyChord(Modifiers::CONTROL, KeyCode::KeyB);
-    let lhs = ActPattern::Any(HashSet::from_iter([a]));
-    let rhs = ActPattern::One(b);
-    // If not Equal, `lhs` is Greater or Less? It needs to be implemented with consistency.
-    assert_eq!(lhs.cmp(&rhs), Ordering::Less);
 }
 
 // #[test]
@@ -86,15 +67,18 @@ fn test_key_macro() {
     assert_eq!((Modifiers::CONTROL, KeyCode::Tab), key! { ctrl-Tab });
     assert_eq!((Modifiers::CONTROL, KeyCode::Delete), key! { ctrl-Delete });
     assert_eq!((Modifiers::CONTROL, KeyCode::Minus), key! { ctrl-- });
-    assert_eq!((Modifiers::CONTROL | Modifiers::SHIFT, KeyCode::Minus), key! { ctrl-shift-- });
+    assert_eq!(
+        (Modifiers::CONTROL | Modifiers::SHIFT, KeyCode::Minus),
+        key! { ctrl-shift-- }
+    );
     // assert_eq!((Modifiers::CONTROL, KeyCode::Underline), key! { ctrl-_ });
     // No colon key.
     // assert_eq!((Modifiers::CONTROL, KeyCode::Colon), key! { ctrl-: });
-    assert_eq!((Modifiers::CONTROL | Modifiers::SHIFT, KeyCode::Semicolon), key! { ctrl-shift-; });
     assert_eq!(
-        (Modifiers::CONTROL, KeyCode::Quote),
-        key! { ctrl-'\'' }
+        (Modifiers::CONTROL | Modifiers::SHIFT, KeyCode::Semicolon),
+        key! { ctrl-shift-; }
     );
+    assert_eq!((Modifiers::CONTROL, KeyCode::Quote), key! { ctrl-'\'' });
 
     assert_eq!(
         (Modifiers::CONTROL | Modifiers::SHIFT, KeyCode::KeyA),
@@ -123,11 +107,23 @@ fn test_key_macro() {
     // assert_eq!((Modifiers::CONTROL, KeyCode::Asterisk), key! { ctrl-* }); // with some short hand.
 
     // assert_eq!((Modifiers::CONTROL, KeyCode::Plus), key! { ctrl-+ });
-    assert_eq!((Modifiers::CONTROL | Modifiers::SHIFT, KeyCode::Equal), key! { ctrl-shift-= });
+    assert_eq!(
+        (Modifiers::CONTROL | Modifiers::SHIFT, KeyCode::Equal),
+        key! { ctrl-shift-= }
+    );
     // assert_eq!((Modifiers::CONTROL, KeyCode::At), key! { ctrl-@ });
-    assert_eq!((Modifiers::CONTROL, KeyCode::BracketLeft), key! { ctrl-'[' });
-    assert_eq!((Modifiers::CONTROL, KeyCode::BracketRight), key! { ctrl-']' });
-    assert_eq!((Modifiers::CONTROL, KeyCode::BracketRight), key! { ctrl-']' });
+    assert_eq!(
+        (Modifiers::CONTROL, KeyCode::BracketLeft),
+        key! { ctrl-'[' }
+    );
+    assert_eq!(
+        (Modifiers::CONTROL, KeyCode::BracketRight),
+        key! { ctrl-']' }
+    );
+    assert_eq!(
+        (Modifiers::CONTROL, KeyCode::BracketRight),
+        key! { ctrl-']' }
+    );
     assert_eq!((Modifiers::CONTROL, KeyCode::Backquote), key! { ctrl-'`' });
     assert_eq!((Modifiers::CONTROL, KeyCode::Backslash), key! { ctrl-'\\' });
     assert_eq!((Modifiers::CONTROL, KeyCode::Escape), key! { ctrl-Escape });
@@ -155,7 +151,10 @@ fn test_key_macro() {
         key! { ctrl-alt-; }
     );
     assert_eq!(
-        (Modifiers::CONTROL | Modifiers::ALT | Modifiers::SHIFT, KeyCode::Semicolon),
+        (
+            Modifiers::CONTROL | Modifiers::ALT | Modifiers::SHIFT,
+            KeyCode::Semicolon
+        ),
         key! { ctrl-alt-shift-; } // ctrl-alt-:
     );
     assert_eq!(
@@ -167,7 +166,10 @@ fn test_key_macro() {
 #[allow(unused_must_use)]
 #[test]
 fn test_keyseq() {
-    assert_eq!(vec![(Modifiers::CONTROL, KeyCode::KeyA)], keyseq! { ctrl-A });
+    assert_eq!(
+        vec![(Modifiers::CONTROL, KeyCode::KeyA)],
+        keyseq! { ctrl-A }
+    );
     assert_eq!(
         vec![(Modifiers::CONTROL, KeyCode::KeyA)],
         keyseq! { ctrl-ctrl-A }
@@ -191,17 +193,17 @@ fn test_keyseq() {
 
 #[test]
 fn test_key_eq_not() {
-    let a: Act = KeyCode::KeyA.into();
-    let b: Act = KeyCode::KeyB.into();
+    let a: KeyChord = KeyCode::KeyA.into();
+    let b: KeyChord = KeyCode::KeyB.into();
     assert!(a != b);
 }
 
 #[test]
 fn test_key_eq_vec() {
-    let a: Vec<Act> = vec![KeyCode::KeyA.into()];
-    let b: Vec<Act> = vec![KeyCode::KeyB.into()];
-    let c: Vec<Act> = vec![KeyCode::KeyA.into()];
-    let e: Vec<Act> = vec![];
+    let a: Vec<KeyChord> = vec![KeyCode::KeyA.into()];
+    let b: Vec<KeyChord> = vec![KeyCode::KeyB.into()];
+    let c: Vec<KeyChord> = vec![KeyCode::KeyA.into()];
+    let e: Vec<KeyChord> = vec![];
     assert!(a != b);
     assert!(a == c);
     assert_eq!(a, c);

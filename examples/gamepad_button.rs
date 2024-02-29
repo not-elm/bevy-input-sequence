@@ -1,5 +1,5 @@
 use bevy::app::{App, Startup, Update};
-use bevy::prelude::{Commands, Event, EventReader, GamepadButtonType, Gamepad};
+use bevy::prelude::{Commands, Event, EventReader, Gamepad, GamepadButtonType};
 use bevy::DefaultPlugins;
 
 use bevy_input_sequence::AddInputSequenceEvent;

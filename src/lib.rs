@@ -5,15 +5,14 @@ use bevy::app::{App, Update};
 use bevy::core::FrameCount;
 use bevy::ecs::schedule::Condition;
 use bevy::prelude::{
-    Added, Event, EventWriter, Gamepad, GamepadButton, GamepadButtonType, ButtonInput as Input, IntoSystemConfigs, KeyCode, Local, Query,
-    RemovedComponents, Res, ResMut, Resource,
+    Added, ButtonInput as Input, Event, EventWriter, Gamepad, GamepadButton, GamepadButtonType,
+    IntoSystemConfigs, KeyCode, Local, Query, RemovedComponents, Res, ResMut, Resource,
 };
 use bevy::time::Time;
 use std::collections::HashMap;
 use trie_rs::map::{Trie, TrieBuilder};
 
-pub use crate::act::{Act, ActPattern, KeyChord};
-pub use crate::input_sequence::{InputSequence, KeySequence, ButtonSequence};
+pub use crate::input_sequence::{ButtonSequence, InputSequence, KeySequence};
 pub use crate::time_limit::TimeLimit;
 
 pub use keyseq::{
@@ -21,18 +20,31 @@ pub use keyseq::{
     Modifiers,
 };
 
-mod act;
 mod covec;
 mod frame_time;
 mod input_sequence;
-// mod button_sequence;
 mod time_limit;
 
 use covec::Covec;
 use frame_time::FrameTime;
 
+/// Represents a key chord, a set of modifiers and a key code.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct KeyChord(pub Modifiers, pub KeyCode);
 
+impl From<(Modifiers, KeyCode)> for KeyChord {
+    #[inline(always)]
+    fn from((mods, key): (Modifiers, KeyCode)) -> Self {
+        KeyChord(mods, key)
+    }
+}
 
+impl From<KeyCode> for KeyChord {
+    #[inline(always)]
+    fn from(key: KeyCode) -> Self {
+        KeyChord(Modifiers::empty(), key)
+    }
+}
 /// A gamepad event includes what gamepad the event came from.
 pub trait GamepadEvent: Event {
     /// Return gamepad if available.
@@ -57,19 +69,30 @@ pub trait AddInputSequenceEvent {
         &mut self,
         condition: impl Condition<M>,
     ) -> &mut App;
+
+    /// Setup event `E` so that it may fire when a component `ButtonSequence<E>` is
+    /// present in the app.
+    fn add_button_sequence_event_run_if<E: GamepadEvent + Clone, M>(
+        &mut self,
+        condition: impl Condition<M>,
+    ) -> &mut App;
 }
 
 #[derive(Resource)]
-struct InputSequenceCache<E,A> {
+struct InputSequenceCache<E, A> {
     trie: Option<Trie<A, InputSequence<E, A>>>,
 }
 
-impl<E: Event + Clone,A: Ord + Clone + Send + Sync + 'static> InputSequenceCache<E,A> {
+impl<E, A> InputSequenceCache<E, A>
+where
+    E: Event + Clone,
+    A: Ord + Clone + Send + Sync + 'static,
+{
     pub(crate) fn trie<'a>(
         &mut self,
         // sequences: &Query<&InputSequence<E,A>>,
-        mut sequences: impl Iterator<Item = &'a InputSequence<E,A>>,
-    ) -> &Trie<A, InputSequence<E,A>> {
+        sequences: impl Iterator<Item = &'a InputSequence<E, A>>,
+    ) -> &Trie<A, InputSequence<E, A>> {
         self.trie.get_or_insert_with(|| {
             let mut builder = TrieBuilder::new();
             for sequence in sequences {
@@ -80,7 +103,7 @@ impl<E: Event + Clone,A: Ord + Clone + Send + Sync + 'static> InputSequenceCache
     }
 }
 
-impl<E,A> Default for InputSequenceCache<E, A> {
+impl<E, A> Default for InputSequenceCache<E, A> {
     fn default() -> Self {
         Self { trie: None }
     }
@@ -97,20 +120,6 @@ impl AddInputSequenceEvent for App {
                     detect_removals::<E, KeyChord>,
                     detect_additions::<E, KeyChord>,
                     key_sequence_matcher::<E>,
-                )
-                    .chain(),
-            )
-    }
-
-    fn add_button_sequence_event<E: GamepadEvent + Clone>(&mut self) -> &mut App {
-        self.add_event::<E>()
-            .init_resource::<InputSequenceCache<E, GamepadButtonType>>()
-            .add_systems(
-                Update,
-                (
-                    detect_removals::<E, GamepadButtonType>,
-                    detect_additions::<E, GamepadButtonType>,
-                    button_sequence_matcher::<E>,
                 )
                     .chain(),
             )
@@ -133,6 +142,38 @@ impl AddInputSequenceEvent for App {
                     .run_if(condition),
             )
     }
+
+    fn add_button_sequence_event<E: GamepadEvent + Clone>(&mut self) -> &mut App {
+        self.add_event::<E>()
+            .init_resource::<InputSequenceCache<E, GamepadButtonType>>()
+            .add_systems(
+                Update,
+                (
+                    detect_removals::<E, GamepadButtonType>,
+                    detect_additions::<E, GamepadButtonType>,
+                    button_sequence_matcher::<E>,
+                )
+                    .chain(),
+            )
+    }
+
+    fn add_button_sequence_event_run_if<E: GamepadEvent + Clone, M>(
+        &mut self,
+        condition: impl Condition<M>,
+    ) -> &mut App {
+        self.add_event::<E>()
+            .init_resource::<InputSequenceCache<E, GamepadButtonType>>()
+            .add_systems(
+                Update,
+                (
+                    detect_removals::<E, GamepadButtonType>,
+                    detect_additions::<E, GamepadButtonType>,
+                    button_sequence_matcher::<E>,
+                )
+                    .chain()
+                    .run_if(condition),
+            )
+    }
 }
 
 fn is_modifier(key: KeyCode) -> bool {
@@ -142,7 +183,7 @@ fn is_modifier(key: KeyCode) -> bool {
 
 #[allow(clippy::too_many_arguments)]
 fn button_sequence_matcher<E: GamepadEvent + Clone>(
-                          // A: Ord + Clone + Send + Sync + 'static>(
+    // A: Ord + Clone + Send + Sync + 'static>(
     mut writer: EventWriter<E>,
     secrets: Query<&ButtonSequence<E>>,
     time: Res<Time>,
@@ -213,8 +254,8 @@ fn key_sequence_matcher<E: Event + Clone>(
 }
 
 fn detect_additions<E: Event + Clone, A: Clone + Send + Sync + 'static>(
-    secrets: Query<&InputSequence<E,A>, Added<InputSequence<E, A>>>,
-    mut cache: ResMut<InputSequenceCache<E,A>>,
+    secrets: Query<&InputSequence<E, A>, Added<InputSequence<E, A>>>,
+    mut cache: ResMut<InputSequenceCache<E, A>>,
 ) {
     if secrets.iter().next().is_some() {
         cache.trie = None;
@@ -222,39 +263,18 @@ fn detect_additions<E: Event + Clone, A: Clone + Send + Sync + 'static>(
 }
 
 fn detect_removals<E: Event, A: Clone + Send + Sync + 'static>(
-    mut cache: ResMut<InputSequenceCache<E,A>>,
-    mut removals: RemovedComponents<InputSequence<E,A>>,
+    mut cache: ResMut<InputSequenceCache<E, A>>,
+    mut removals: RemovedComponents<InputSequence<E, A>>,
 ) {
     if removals.read().next().is_some() {
         cache.trie = None;
     }
 }
 
-// fn consume_input<E: Event + Clone, A>(
-// fn consume_input<E: Event + Clone, A>(
-//     trie: &Trie<A, InputSequence<E, A>>,
-//     input: &mut Vec<A>,
-// ) -> impl Iterator<Item = InputSequence<E, A>>
-//     where A: Clone + Eq + Ord,
-// {
-//     let mut result = vec![];
-//     for i in 0..input.len() {
-//         if let Some(seq) = trie.exact_match(&input[i..]) {
-//             result.push(seq.clone());
-//         } else if trie.is_prefix(&input[i..]) {
-//             let _ = input.drain(0..i);
-//             return result.into_iter();
-//         }
-//     }
-//     input.clear();
-//     result.into_iter()
-// }
-fn consume_input<K, V>(
-    trie: &Trie<K, V>,
-    input: &mut Vec<K>,
-) -> impl Iterator<Item = V>
-    where K: Clone + Eq + Ord,
-V: Clone
+fn consume_input<K, V>(trie: &Trie<K, V>, input: &mut Vec<K>) -> impl Iterator<Item = V>
+where
+    K: Clone + Eq + Ord,
+    V: Clone,
 {
     let mut result = vec![];
     for i in 0..input.len() {
@@ -292,8 +312,7 @@ mod tests {
             None
         }
 
-        fn set_gamepad(&mut self, gamepad: Gamepad) {
-        }
+        fn set_gamepad(&mut self, gamepad: Gamepad) {}
     }
 
     #[derive(Component)]
@@ -303,7 +322,7 @@ mod tests {
     fn one_key() {
         let mut app = new_app();
 
-        app.world.spawn(InputSequence::<MyEvent, KeyChord>::new(
+        app.world.spawn(KeySequence::new(
             MyEvent,
             [(Modifiers::empty(), KeyCode::KeyA)],
         ));
@@ -321,47 +340,23 @@ mod tests {
     fn two_components_one_event() {
         let mut app = new_app();
 
-        app.world.spawn(KeySequence::new(
-            MyEvent,
-            [KeyCode::KeyA],
-        ));
-        app.world.spawn(KeySequence::new(
-            MyEvent,
-            [KeyCode::KeyA],
-        ));
+        app.world.spawn(KeySequence::new(MyEvent, [KeyCode::KeyA]));
+        app.world.spawn(KeySequence::new(MyEvent, [KeyCode::KeyA]));
         press_key(&mut app, KeyCode::KeyA);
         app.update();
-        assert_eq!(app
-                   .world
-                   .query::<&EventSent>()
-                   .iter(&app.world)
-                   .count(),
-                   1);
-
+        assert_eq!(app.world.query::<&EventSent>().iter(&app.world).count(), 1);
     }
 
     #[test]
     fn two_presses_two_events() {
         let mut app = new_app();
 
-        app.world.spawn(KeySequence::new(
-            MyEvent,
-            [KeyCode::KeyA],
-        ));
-        app.world.spawn(KeySequence::new(
-            MyEvent,
-            [KeyCode::KeyB],
-        ));
+        app.world.spawn(KeySequence::new(MyEvent, [KeyCode::KeyA]));
+        app.world.spawn(KeySequence::new(MyEvent, [KeyCode::KeyB]));
         press_key(&mut app, KeyCode::KeyA);
         press_key(&mut app, KeyCode::KeyB);
         app.update();
-        assert_eq!(app
-                   .world
-                   .query::<&EventSent>()
-                   .iter(&app.world)
-                   .count(),
-                   2);
-
+        assert_eq!(app.world.query::<&EventSent>().iter(&app.world).count(), 2);
     }
 
     // #[test]
@@ -655,7 +650,8 @@ mod tests {
         let mut app = new_app();
 
         app.world.spawn(
-            KeySequence::new(MyEvent, [KeyCode::KeyA, KeyCode::KeyB]).time_limit(TimeLimit::Frames(1)),
+            KeySequence::new(MyEvent, [KeyCode::KeyA, KeyCode::KeyB])
+                .time_limit(TimeLimit::Frames(1)),
         );
 
         press_key(&mut app, KeyCode::KeyA);
@@ -725,7 +721,8 @@ mod tests {
         let mut app = new_app();
 
         app.world.spawn(
-            KeySequence::new(MyEvent, [KeyCode::KeyA, KeyCode::KeyB]).time_limit(TimeLimit::Frames(2)),
+            KeySequence::new(MyEvent, [KeyCode::KeyA, KeyCode::KeyB])
+                .time_limit(TimeLimit::Frames(2)),
         );
 
         press_key(&mut app, KeyCode::KeyA);
