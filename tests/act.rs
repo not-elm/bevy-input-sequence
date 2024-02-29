@@ -1,7 +1,5 @@
 use bevy::prelude::*;
-use bevy::utils::HashSet;
 use bevy_input_sequence::*;
-use std::cmp::Ordering;
 
 #[allow(unused_must_use)]
 #[test]

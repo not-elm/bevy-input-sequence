@@ -301,7 +301,6 @@ mod tests {
     use bevy::MinimalPlugins;
 
     use super::*;
-    use crate::input_sequence::InputSequence;
     use crate::TimeLimit;
 
     #[derive(Event, Clone)]
@@ -312,7 +311,7 @@ mod tests {
             None
         }
 
-        fn set_gamepad(&mut self, gamepad: Gamepad) {}
+        fn set_gamepad(&mut self, _gamepad: Gamepad) {}
     }
 
     #[derive(Component)]
@@ -359,115 +358,124 @@ mod tests {
         assert_eq!(app.world.query::<&EventSent>().iter(&app.world).count(), 2);
     }
 
-    // #[test]
-    // fn two_keycodes_match_first() {
-    //     let mut app = new_app();
+    #[test]
+    fn two_keycodes_match_first() {
+        let mut app = new_app();
 
-    //     app.world
-    //         .spawn(KeySequence::new(MyEvent, [ActPattern::from(KeyCode::KeyA), Act::from(KeyCode::KeyB) | Act::from(KeyCode::KeyC)]));
+        app.world
+            .spawn(KeySequence::new(MyEvent, [KeyCode::KeyA, KeyCode::KeyB]));
+        app.world
+            .spawn(KeySequence::new(MyEvent, [KeyCode::KeyA, KeyCode::KeyC]));
 
-    //     press_key(&mut app, KeyCode::KeyA);
-    //     app.update();
-    //     assert!(app
-    //         .world
-    //         .query::<&EventSent>()
-    //         .iter(&app.world)
-    //         .next()
-    //         .is_none());
+        press_key(&mut app, KeyCode::KeyA);
+        app.update();
+        assert!(app
+            .world
+            .query::<&EventSent>()
+            .iter(&app.world)
+            .next()
+            .is_none());
 
-    //     clear_just_pressed(&mut app, KeyCode::KeyA);
-    //     press_key(&mut app, KeyCode::KeyB);
-    //     app.update();
-    //     assert!(app
-    //         .world
-    //         .query::<&EventSent>()
-    //         .iter(&app.world)
-    //         .next()
-    //         .is_some());
-    // }
+        clear_just_pressed(&mut app, KeyCode::KeyA);
+        press_key(&mut app, KeyCode::KeyB);
+        app.update();
+        assert!(app
+            .world
+            .query::<&EventSent>()
+            .iter(&app.world)
+            .next()
+            .is_some());
+    }
 
-    // #[test]
-    // fn two_any_patterns() {
-    //     let mut app = new_app();
+    #[test]
+    fn two_keycodes_match_second() {
+        let mut app = new_app();
 
-    //     app.world
-    //         .spawn(KeySequence::new(MyEvent, [ActPattern::from(KeyCode::KeyA), Act::from(KeyCode::KeyB) | Act::from(KeyCode::KeyC)]));
-    //     app.world
-    //         .spawn(KeySequence::new(MyEvent, [ActPattern::from(KeyCode::KeyA), Act::from(KeyCode::KeyC) | Act::from(KeyCode::KeyD)]));
-    //     press_key(&mut app, KeyCode::KeyA);
-    //     app.update();
-    //     assert!(app
-    //         .world
-    //         .query::<&EventSent>()
-    //         .iter(&app.world)
-    //         .next()
-    //         .is_none());
+        app.world
+            .spawn(KeySequence::new(MyEvent, [KeyCode::KeyA, KeyCode::KeyB]));
+        app.world
+            .spawn(KeySequence::new(MyEvent, [KeyCode::KeyA, KeyCode::KeyC]));
 
-    //     clear_just_pressed(&mut app, KeyCode::KeyA);
-    //     press_key(&mut app, KeyCode::KeyB);
-    //     app.update();
-    //     assert!(app
-    //         .world
-    //         .query::<&EventSent>()
-    //         .iter(&app.world)
-    //         .next()
-    //         .is_some());
-    // }
+        press_key(&mut app, KeyCode::KeyA);
+        app.update();
+        assert!(app
+            .world
+            .query::<&EventSent>()
+            .iter(&app.world)
+            .next()
+            .is_none());
 
-    // #[test]
-    // fn two_any_patterns_match_2nd() {
-    //     let mut app = new_app();
+        clear_just_pressed(&mut app, KeyCode::KeyA);
+        press_key(&mut app, KeyCode::KeyC);
+        app.update();
+        assert!(app
+            .world
+            .query::<&EventSent>()
+            .iter(&app.world)
+            .next()
+            .is_some());
+    }
 
-    //     app.world
-    //         .spawn(KeySequence::new(MyEvent, [ActPattern::from(KeyCode::KeyA), Act::from(KeyCode::KeyB) | Act::from(KeyCode::KeyC)]));
-    //     app.world
-    //         .spawn(KeySequence::new(MyEvent, [ActPattern::from(KeyCode::KeyA), Act::from(KeyCode::KeyC) | Act::from(KeyCode::KeyD)]));
-    //     press_key(&mut app, KeyCode::KeyA);
-    //     app.update();
-    //     assert!(app
-    //         .world
-    //         .query::<&EventSent>()
-    //         .iter(&app.world)
-    //         .next()
-    //         .is_none());
+    #[test]
+    fn two_any_patterns() {
+        let mut app = new_app();
 
-    //     clear_just_pressed(&mut app, KeyCode::KeyA);
-    //     press_key(&mut app, KeyCode::KeyD);
-    //     app.update();
-    //     assert!(app
-    //         .world
-    //         .query::<&EventSent>()
-    //         .iter(&app.world)
-    //         .next()
-    //         .is_some());
-    // }
+        app.world
+            .spawn(KeySequence::new(MyEvent, [KeyCode::KeyA, KeyCode::KeyB]));
+        app.world
+            .spawn(KeySequence::new(MyEvent, [KeyCode::KeyA, KeyCode::KeyC]));
+        app.world
+            .spawn(KeySequence::new(MyEvent, [KeyCode::KeyA, KeyCode::KeyD]));
+        press_key(&mut app, KeyCode::KeyA);
+        app.update();
+        assert!(app
+            .world
+            .query::<&EventSent>()
+            .iter(&app.world)
+            .next()
+            .is_none());
 
-    // #[test]
-    // fn two_keycodes_match_second() {
-    //     let mut app = new_app();
+        clear_just_pressed(&mut app, KeyCode::KeyA);
+        press_key(&mut app, KeyCode::KeyB);
+        app.update();
+        assert!(app
+            .world
+            .query::<&EventSent>()
+            .iter(&app.world)
+            .next()
+            .is_some());
+    }
 
-    //     app.world
-    //         .spawn(KeySequence::new(MyEvent, [ActPattern::from(KeyCode::KeyA), Act::from(KeyCode::KeyB) | Act::from(KeyCode::KeyC)]));
+    #[test]
+    fn two_any_patterns_match_2nd() {
+        let mut app = new_app();
 
-    //     press_key(&mut app, KeyCode::KeyA);
-    //     app.update();
-    //     assert!(app
-    //         .world
-    //         .query::<&EventSent>()
-    //         .iter(&app.world)
-    //         .next()
-    //         .is_none());
+        app.world
+            .spawn(KeySequence::new(MyEvent, [KeyCode::KeyA, KeyCode::KeyB]));
+        app.world
+            .spawn(KeySequence::new(MyEvent, [KeyCode::KeyA, KeyCode::KeyC]));
+        app.world
+            .spawn(KeySequence::new(MyEvent, [KeyCode::KeyA, KeyCode::KeyD]));
+        press_key(&mut app, KeyCode::KeyA);
+        app.update();
+        assert!(app
+            .world
+            .query::<&EventSent>()
+            .iter(&app.world)
+            .next()
+            .is_none());
 
-    //     clear_just_pressed(&mut app, KeyCode::KeyA);
-    //     press_key(&mut app, KeyCode::KeyC);
-    //     app.update();
-    //     assert!(app
-    //         .world
-    //         .query::<&EventSent>()
-    //         .iter(&app.world)
-    //         .next()
-    //         .is_some());
-    // }
+        clear_just_pressed(&mut app, KeyCode::KeyA);
+        press_key(&mut app, KeyCode::KeyD);
+        app.update();
+        assert!(app
+            .world
+            .query::<&EventSent>()
+            .iter(&app.world)
+            .next()
+            .is_some());
+    }
+
     #[test]
     fn two_keycodes() {
         let mut app = new_app();
@@ -584,66 +592,84 @@ mod tests {
             .is_some());
     }
 
-    //
-    // #[test]
-    // fn multiple_inputs() {
-    //     let mut app = new_app();
-    //     app.world.send_event(GamepadConnectionEvent::new(
-    //         Gamepad::new(1),
-    //         GamepadConnection::Connected(GamepadInfo {
-    //             name: "".to_string(),
-    //         }),
-    //     ));
-    //     app.world.spawn(InputSequence::new(
-    //         MyEvent,
-    //         [
-    //             Act::key(KeyCode::KeyA),
-    //             Act::key(KeyCode::KeyB),
-    //             Act::key(KeyCode::KeyC) | Act::PadButton(GamepadButtonType::North.into()),
-    //             Act::PadButton(GamepadButtonType::C.into()),
-    //         ],
-    //     ));
-    //     app.update();
 
-    //     press_key(&mut app, KeyCode::KeyA);
-    //     app.update();
-    //     assert!(app
-    //         .world
-    //         .query::<&EventSent>()
-    //         .iter(&app.world)
-    //         .next()
-    //         .is_none());
+    #[test]
+    fn multiple_inputs() {
+        let mut app = new_app();
+        app.world.send_event(GamepadConnectionEvent::new(
+            Gamepad::new(1),
+            GamepadConnection::Connected(GamepadInfo {
+                name: "".to_string(),
+            }),
+        ));
+        // This is no longer possible right now. We could introduce a
+        // KeyButtonSequence mixture struct would allow it.
+        // app.world.spawn(KeySequence::new(
+        //     MyEvent,
+        //     [
+        //         (KeyCode::KeyA),
+        //         (KeyCode::KeyB),
+        //         (KeyCode::KeyC) | Act::PadButton(GamepadButtonType::North.into()),
+        //         (GamepadButtonType::C.into()),
+        //     ],
+        // ));
+        app.world.spawn(KeySequence::new(
+            MyEvent,
+            [
+                KeyCode::KeyA,
+                KeyCode::KeyB,
+                KeyCode::KeyX,
+            ],
+        ));
 
-    //     clear_just_pressed(&mut app, KeyCode::KeyA);
-    //     press_key(&mut app, KeyCode::KeyB);
-    //     app.update();
-    //     assert!(app
-    //         .world
-    //         .query::<&EventSent>()
-    //         .iter(&app.world)
-    //         .next()
-    //         .is_none());
+        app.world.spawn(ButtonSequence::new(
+            MyEvent,
+            [
+                GamepadButtonType::North,
+                GamepadButtonType::C,
+            ],
+        ));
+        app.update();
 
-    //     clear_just_pressed(&mut app, KeyCode::KeyB);
-    //     press_pad_button(&mut app, GamepadButtonType::North);
-    //     app.update();
-    //     assert!(app
-    //         .world
-    //         .query::<&EventSent>()
-    //         .iter(&app.world)
-    //         .next()
-    //         .is_none());
+        press_key(&mut app, KeyCode::KeyA);
+        app.update();
+        assert!(app
+            .world
+            .query::<&EventSent>()
+            .iter(&app.world)
+            .next()
+            .is_none());
 
-    //     clear_just_pressed_pad_button(&mut app, GamepadButtonType::North);
-    //     press_pad_button(&mut app, GamepadButtonType::C);
-    //     app.update();
-    //     assert!(app
-    //         .world
-    //         .query::<&EventSent>()
-    //         .iter(&app.world)
-    //         .next()
-    //         .is_some());
-    // }
+        clear_just_pressed(&mut app, KeyCode::KeyA);
+        press_key(&mut app, KeyCode::KeyB);
+        app.update();
+        assert!(app
+            .world
+            .query::<&EventSent>()
+            .iter(&app.world)
+            .next()
+            .is_none());
+
+        clear_just_pressed(&mut app, KeyCode::KeyB);
+        press_pad_button(&mut app, GamepadButtonType::North);
+        app.update();
+        assert!(app
+            .world
+            .query::<&EventSent>()
+            .iter(&app.world)
+            .next()
+            .is_none());
+
+        clear_just_pressed_pad_button(&mut app, GamepadButtonType::North);
+        press_pad_button(&mut app, GamepadButtonType::C);
+        app.update();
+        assert!(app
+            .world
+            .query::<&EventSent>()
+            .iter(&app.world)
+            .next()
+            .is_some());
+    }
 
     #[test]
     fn timeout_1frame() {
