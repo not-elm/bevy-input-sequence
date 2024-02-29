@@ -1,11 +1,11 @@
 use std::time::Duration;
 
 use bevy::app::{App, Startup, Update};
-use bevy::prelude::{Commands, Event, EventReader, Gamepad, GamepadButtonType, KeyCode};
+use bevy::prelude::{Commands, Event, EventReader, Gamepad, GamepadButtonType};
 use bevy::DefaultPlugins;
 
 use bevy_input_sequence::AddInputSequenceEvent;
-use bevy_input_sequence::{keyseq, Act, ButtonSequence, GamepadEvent, KeySequence};
+use bevy_input_sequence::{keyseq, ButtonSequence, GamepadEvent, KeySequence};
 
 #[derive(Event, Clone, Debug)]
 struct MyEvent(u8, Option<Gamepad>);
@@ -71,6 +71,7 @@ fn setup(mut commands: Commands) {
 
 fn input_sequence_event_system(mut er: EventReader<MyEvent>) {
     for e in er.read() {
-        println!("{e:?} emitted ");
+        println!("{e:?} emitted {}", e.gamepad()
+                 .map(|x| format!("from gamepad id {}", x.id)).unwrap_or("not from gamepad".into()));
     }
 }

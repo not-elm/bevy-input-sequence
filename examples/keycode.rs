@@ -14,7 +14,7 @@ struct MyEvent(Direction);
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        .add_input_sequence_event::<MyEvent>()
+        .add_key_sequence_event::<MyEvent>()
         .add_systems(Startup, setup)
         .add_systems(Update, event_listener)
         .run();
@@ -42,6 +42,7 @@ fn setup(mut commands: Commands) {
         )
         .time_limit(Duration::from_secs(1)),
     );
+
     println!("Press W D S A to emit clockwise event.");
     println!("Press W A S D to emit counter clockwise event.");
 }
