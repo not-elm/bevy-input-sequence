@@ -24,7 +24,7 @@ fn main() {
 fn setup(mut commands: Commands) {
     // Specify key codes directly.
     commands.spawn(
-        InputSequence::new(
+        KeySequence::new(
             MyEvent(Direction::Clockwise),
             [KeyCode::KeyW,
              KeyCode::KeyD,
@@ -36,7 +36,7 @@ fn setup(mut commands: Commands) {
 
     // Use keyseq! macro.
     commands.spawn(
-        InputSequence::new(
+        KeySequence::new(
             MyEvent(Direction::CounterClockwise),
             keyseq!(W A S D),
         )

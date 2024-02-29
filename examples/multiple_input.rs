@@ -1,19 +1,30 @@
 use std::time::Duration;
 
 use bevy::app::{App, Startup, Update};
-use bevy::prelude::{Commands, Event, EventReader, GamepadButtonType, KeyCode};
+use bevy::prelude::{Commands, Event, EventReader, GamepadButtonType, KeyCode, Gamepad};
 use bevy::DefaultPlugins;
 
 use bevy_input_sequence::AddInputSequenceEvent;
-use bevy_input_sequence::{Act, InputSequence};
+use bevy_input_sequence::{Act, KeySequence, ButtonSequence, GamepadEvent, keyseq};
 
 #[derive(Event, Clone, Debug)]
-struct MyEvent(u8);
+struct MyEvent(u8, Option<Gamepad>);
+
+impl GamepadEvent for MyEvent {
+    fn gamepad(&self) -> Option<Gamepad> {
+        self.1
+    }
+
+    fn set_gamepad(&mut self, gamepad: Gamepad) {
+        self.1 = Some(gamepad);
+    }
+}
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        .add_input_sequence_event::<MyEvent>()
+        .add_key_sequence_event::<MyEvent>()
+        .add_button_sequence_event::<MyEvent>()
         .add_systems(Startup, setup)
         .add_systems(Update, input_sequence_event_system)
         .run();
@@ -21,33 +32,49 @@ fn main() {
 
 fn setup(mut commands: Commands) {
     commands.spawn(
-        InputSequence::new(
-            MyEvent(1),
+        KeySequence::new(
+            MyEvent(1, None),
+            keyseq!(W D S A)
+        )
+        .time_limit(Duration::from_secs(5)),
+    );
+
+    commands.spawn(
+        ButtonSequence::new(
+            MyEvent(2, None),
             [
-                Act::from(KeyCode::KeyW) | Act::from(GamepadButtonType::North),
-                Act::from(KeyCode::KeyD) | Act::from(GamepadButtonType::East),
-                Act::from(KeyCode::KeyS) | Act::from(GamepadButtonType::South),
-                Act::from(KeyCode::KeyA) | Act::from(GamepadButtonType::West),
+                GamepadButtonType::North,
+                GamepadButtonType::East,
+                GamepadButtonType::South,
+                GamepadButtonType::West,
             ],
         )
         .time_limit(Duration::from_secs(5)),
     );
 
-    // BUG: W A S D does not work!
     commands.spawn(
-        InputSequence::new(
-            MyEvent(2),
+        KeySequence::new(
+            MyEvent(3, None),
+            keyseq!(W A S D)
+        )
+        .time_limit(Duration::from_secs(5)),
+    );
+
+    commands.spawn(
+        ButtonSequence::new(
+            MyEvent(4, None),
             [
-                Act::from(KeyCode::KeyW) | Act::from(KeyCode::KeyI),
-                Act::from(KeyCode::KeyA) | Act::from(KeyCode::KeyJ),
-                Act::from(KeyCode::KeyS) | Act::from(KeyCode::KeyK),
-                Act::from(KeyCode::KeyD) | Act::from(KeyCode::KeyL),
+                GamepadButtonType::North,
+                GamepadButtonType::West,
+                GamepadButtonType::South,
+                GamepadButtonType::East,
             ],
         )
         .time_limit(Duration::from_secs(5)),
     );
-    println!("Press W D S A or north east south west to emit event 1.");
-    println!("Press W A S D or I J K L to emit event 2.");
+
+    println!("Press W D S A or north east south west to emit event 1 and 2.");
+    println!("Press W A S D or north west south east to emit event 3 and 4.");
 }
 
 fn input_sequence_event_system(mut er: EventReader<MyEvent>) {

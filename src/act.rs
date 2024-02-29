@@ -10,7 +10,19 @@ pub enum Act {
     /// A simple key press like `A` or key chord, e.g., `ctrl-B`, `ctrl-alt-C`
     KeyChord(Modifiers, KeyCode),
     /// A controller input
-    PadButton(GamepadButton),
+    PadButton(GamepadButtonType),
+}
+
+/// Represents a key chord, a set of modifiers and a key code.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct KeyChord(pub Modifiers, pub KeyCode);
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum Acts {
+    /// A simple key press like `A` or key chord, e.g., `ctrl-B`, `ctrl-alt-C`
+    KeyChords(Vec<KeyChord>),
+    /// A controller input
+    PadButtons(Vec<GamepadButtonType>),
 }
 
 /// An act pattern can match any one act or some set of acts.
@@ -97,27 +109,17 @@ impl Ord for ActPattern {
     }
 }
 
-#[derive(PartialEq, Eq, Clone, Debug, Hash)]
-pub struct GamepadButton(GamepadButtonType);
-
-impl From<GamepadButtonType> for GamepadButton {
-    fn from(a: GamepadButtonType) -> Self {
-        Self(a)
+impl From<(Modifiers, KeyCode)> for KeyChord {
+    #[inline(always)]
+    fn from((mods, key): (Modifiers, KeyCode)) -> Self {
+        KeyChord(mods, key)
     }
 }
 
-#[allow(clippy::non_canonical_partial_ord_impl)]
-impl PartialOrd for GamepadButton {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        use bevy::reflect::Enum;
-        Some(self.0.variant_index().cmp(&other.0.variant_index()))
-    }
-}
-
-impl Ord for GamepadButton {
-    fn cmp(&self, other: &Self) -> Ordering {
-        use bevy::reflect::Enum;
-        self.0.variant_index().cmp(&other.0.variant_index())
+impl From<KeyCode> for KeyChord {
+    #[inline(always)]
+    fn from(key: KeyCode) -> Self {
+        KeyChord(Modifiers::empty(), key)
     }
 }
 
