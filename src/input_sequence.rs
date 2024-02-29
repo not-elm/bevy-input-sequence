@@ -3,8 +3,8 @@ use bevy::prelude::{Component, Event, GamepadButtonType};
 use crate::time_limit::TimeLimit;
 use crate::{GamepadEvent, KeyChord};
 
-/// An input sequence is a series of [ActPattern]s that fires an event when
-/// matched with inputs within the given time limit.
+/// An input sequence is a series of acts [A] that fires an event when matched
+/// with inputs within the given time limit.
 #[derive(Component, Debug, Clone)]
 pub struct InputSequence<E, A> {
     /// Event emitted
@@ -22,7 +22,8 @@ where
 {
     /// Create new input sequence. Not operant until added to an entity.
     #[inline(always)]
-    pub fn new<T>(event: E, acts: impl IntoIterator<Item = T>) -> InputSequence<E, A>
+    pub fn new<T>(event: E, acts: impl IntoIterator<Item = T>)
+                  -> InputSequence<E, A>
     where
         A: From<T>,
     {
@@ -42,8 +43,9 @@ where
 
 /// Represents a key sequence.
 pub type KeySequence<E> = InputSequence<E, KeyChord>;
+
 // pub type ButtonSequence<E> = InputSequence<E, GamepadButtonType>;
-/// Represents a game pad button sequence.
+/// Represents a gamepad button sequence.
 #[derive(Component, Debug, Clone)]
 pub struct ButtonSequence<E>(pub(crate) InputSequence<E, GamepadButtonType>);
 
@@ -51,7 +53,7 @@ impl<E> ButtonSequence<E>
 where
     E: GamepadEvent + Clone,
 {
-    /// Create new input sequence. Not operant until added to an entity.
+    /// Create new button sequence. Not operant until added to an entity.
     #[inline(always)]
     pub fn new(event: E, acts: impl IntoIterator<Item = GamepadButtonType>) -> ButtonSequence<E> {
         ButtonSequence(InputSequence {

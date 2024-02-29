@@ -28,7 +28,7 @@ mod time_limit;
 use covec::Covec;
 use frame_time::FrameTime;
 
-/// Represents a key chord, a set of modifiers and a key code.
+/// Represents a key chord, i.e., a set of modifiers and a key code.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct KeyChord(pub Modifiers, pub KeyCode);
 
@@ -49,7 +49,7 @@ impl From<KeyCode> for KeyChord {
 pub trait GamepadEvent: Event {
     /// Return gamepad if available.
     fn gamepad(&self) -> Option<Gamepad>;
-    /// Return mutable gamepad if available.
+    /// Set gamepad.
     fn set_gamepad(&mut self, gamepad: Gamepad);
 }
 
@@ -207,9 +207,18 @@ fn button_sequence_matcher<E: GamepadEvent + Clone>(
         };
 
         pad_buttons.push(button.button_type, now.clone());
+        let start = pad_buttons.1[0].clone();
         for mut seq in consume_input(trie, &mut pad_buttons.0) {
-            seq.event.set_gamepad(button.gamepad);
-            writer.send(seq.event);
+            if seq
+                .time_limit
+                .map(|limit| (&now - &start).has_timedout(&limit))
+                .unwrap_or(false)
+            {
+                // Sequence timed out.
+            } else {
+                seq.event.set_gamepad(button.gamepad);
+                writer.send(seq.event);
+            }
         }
         pad_buttons.drain1_sync();
     }
@@ -277,15 +286,21 @@ where
     V: Clone,
 {
     let mut result = vec![];
+    let mut min_prefix = None;
     for i in 0..input.len() {
         if let Some(seq) = trie.exact_match(&input[i..]) {
             result.push(seq.clone());
-        } else if trie.is_prefix(&input[i..]) {
-            let _ = input.drain(0..i);
-            return result.into_iter();
+        }
+        if min_prefix.is_none() && trie.is_prefix(&input[i..]) {
+            min_prefix = Some(i);
+            // let _ = input.drain(0..i);
+            // return result.into_iter();
         }
     }
-    input.clear();
+    match min_prefix {
+        Some(i) => {let _ = input.drain(0..i);}
+        None => { input.clear(); }
+    }
     result.into_iter()
 }
 
@@ -315,7 +330,7 @@ mod tests {
     }
 
     #[derive(Component)]
-    struct EventSent;
+    struct EventSent(u8);
 
     #[test]
     fn one_key() {
@@ -385,6 +400,66 @@ mod tests {
             .iter(&app.world)
             .next()
             .is_some());
+    }
+
+    #[test]
+    fn match_short_seq() {
+        let mut app = new_app();
+
+        app.world
+            .spawn(KeySequence::new(MyEvent, [KeyCode::KeyA, KeyCode::KeyB]));
+        app.world
+            .spawn(KeySequence::new(MyEvent, [KeyCode::KeyA, KeyCode::KeyB,
+                                              KeyCode::KeyC]));
+
+        press_key(&mut app, KeyCode::KeyA);
+        app.update();
+        assert!(app
+            .world
+            .query::<&EventSent>()
+            .iter(&app.world)
+            .next()
+            .is_none());
+
+        clear_just_pressed(&mut app, KeyCode::KeyA);
+        press_key(&mut app, KeyCode::KeyB);
+        app.update();
+        assert_eq!(app
+            .world
+            .query::<&EventSent>()
+            .iter(&app.world)
+            .next()
+            .map(|x| x.0)
+            .unwrap(),
+                1
+            // .is_some()
+        );
+
+        clear_just_pressed(&mut app, KeyCode::KeyB);
+        press_key(&mut app, KeyCode::KeyC);
+        app.update();
+        assert_eq!(app
+            .world
+            .query::<&EventSent>()
+            .iter(&app.world)
+            .next()
+            .map(|x| x.0)
+            .unwrap(),
+                    2
+            // .is_some()
+            );
+
+        clear_just_pressed(&mut app, KeyCode::KeyC);
+        press_key(&mut app, KeyCode::KeyD);
+        app.update();
+        assert_eq!(app
+            .world
+            .query::<&EventSent>()
+            .iter(&app.world)
+            .next()
+            .map(|x| x.0)
+            .unwrap(),
+                    2);
     }
 
     #[test]
@@ -847,9 +922,14 @@ mod tests {
             .clear_just_pressed(GamepadButton::new(Gamepad::new(1), game_button));
     }
 
-    fn read(mut commands: Commands, mut er: EventReader<MyEvent>) {
+    fn read(mut commands: Commands,
+            mut er: EventReader<MyEvent>,
+            mut query: Query<&mut EventSent>) {
         for _ in er.read() {
-            commands.spawn(EventSent);
+            match query.get_single_mut() {
+                Ok(ref mut event_sent) => { event_sent.0 += 1; },
+                _ => { commands.spawn(EventSent(1)); }
+            }
         }
     }
 
