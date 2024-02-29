@@ -195,9 +195,9 @@ fn setup(mut commands: Commands) {
 
 | bevy-input-sequence | bevy |
 | ------------------- | ---- |
-| 0.1.0               | 0.11 |
-| 0.2.0               | 0.12 |
-| N/A                 | 0.13 |
+| 0.1                 | 0.11 |
+| 0.2                 | 0.12 |
+| 0.3                 | 0.13 |
 
 # License
 

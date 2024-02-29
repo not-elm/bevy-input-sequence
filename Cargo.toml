@@ -1,7 +1,7 @@
 [package]
 name = "bevy-input-sequence"
 description = "Recognizes input sequences and send events"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
 authors = ["elm", "Shane Celis <shane.celis@gmail.com>"]
 keywords = [
@@ -36,7 +36,7 @@ path = "examples/multiple_input.rs"
 
 [dependencies]
 bevy = { version = "0.13", default-features = false, features = [] }
-trie-rs = "0.2"
+trie-rs = { version = "0.2" }
 keyseq = { version = "0.2", features = [ "bevy" ], path = "../keyseq" }
 
 [dev-dependencies]
