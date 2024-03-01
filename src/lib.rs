@@ -6,7 +6,8 @@ use bevy::core::FrameCount;
 use bevy::ecs::schedule::Condition;
 use bevy::prelude::{
     Added, ButtonInput as Input, Event, EventWriter, Gamepad, GamepadButton, GamepadButtonType,
-    IntoSystemConfigs, KeyCode, Local, Query, RemovedComponents, Res, ResMut, Resource};
+    IntoSystemConfigs, KeyCode, Local, Query, RemovedComponents, Res, ResMut, Resource,
+};
 use bevy::time::Time;
 use std::collections::HashMap;
 use trie_rs::map::{Trie, TrieBuilder};
@@ -87,15 +88,17 @@ where
     E: Event + Clone,
     A: Ord + Clone + Send + Sync + 'static,
 {
-    pub(crate) fn build_trie<'a>(
+    pub(crate) fn trie<'a>(
         &mut self,
         sequences: impl Iterator<Item = &'a InputSequence<E, A>>,
-    ) {
-        let mut builder = TrieBuilder::new();
-        for sequence in sequences {
-            builder.push(sequence.acts.clone(), sequence.clone());
-        }
-        self.trie = Some(builder.build())
+    ) -> &Trie<A, InputSequence<E, A>> {
+        self.trie.get_or_insert_with(|| {
+            let mut builder = TrieBuilder::new();
+            for sequence in sequences {
+                builder.push(sequence.acts.clone(), sequence.clone());
+            }
+            builder.build()
+        })
     }
 }
 
@@ -179,6 +182,7 @@ fn is_modifier(key: KeyCode) -> bool {
 
 #[allow(clippy::too_many_arguments)]
 fn button_sequence_matcher<E: GamepadEvent + Clone>(
+    // A: Ord + Clone + Send + Sync + 'static>(
     mut writer: EventWriter<E>,
     secrets: Query<&ButtonSequence<E>>,
     time: Res<Time>,
@@ -187,10 +191,7 @@ fn button_sequence_matcher<E: GamepadEvent + Clone>(
     mut cache: ResMut<InputSequenceCache<E, GamepadButtonType>>,
     frame_count: Res<FrameCount>,
 ) {
-    if cache.trie.is_none() {
-        cache.build_trie(secrets.iter().map(|c| &c.0));
-    }
-    let trie = &cache.trie.as_ref().unwrap();
+    let trie = cache.trie(secrets.iter().map(|x| &x.0));
     let now = FrameTime {
         frame: frame_count.0,
         time: time.elapsed_seconds(),
@@ -233,10 +234,7 @@ fn key_sequence_matcher<E: Event + Clone>(
     frame_count: Res<FrameCount>,
 ) {
     let mods = Modifiers::from_input(&keys);
-    if cache.trie.is_none() {
-        cache.build_trie(secrets.iter());
-    }
-    let trie = &cache.trie.as_ref().unwrap();
+    let trie = cache.trie(secrets.iter());
     let now = FrameTime {
         frame: frame_count.0,
         time: time.elapsed_seconds(),
