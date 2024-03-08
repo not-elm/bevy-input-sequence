@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [released]
 
+## [0.3.0] - 2024-03-08
+
+### Features
+
+- Removed `Act::Any`, so We can no longer define an act composed of multiple buttons(or keycodes).
+- The keyboard and gamepad now use different sequences.
+
+
 ## [0.2.0] - 2024-02-24
 
 ### Features
