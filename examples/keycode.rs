@@ -14,7 +14,7 @@ struct MyEvent(Direction);
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        .add_input_sequence_event::<MyEvent>()
+        .add_key_sequence_event::<MyEvent>()
         .add_systems(Startup, setup)
         .add_systems(Update, event_listener)
         .run();
@@ -24,24 +24,25 @@ fn main() {
 fn setup(mut commands: Commands) {
     // Specify key codes directly.
     commands.spawn(
-        InputSequence::new(
+        KeySequence::new(
             MyEvent(Direction::Clockwise),
-            [KeyCode::W,
-             KeyCode::D,
-             KeyCode::S,
-             KeyCode::A],
+            [KeyCode::KeyW,
+             KeyCode::KeyD,
+             KeyCode::KeyS,
+             KeyCode::KeyA],
         )
         .time_limit(Duration::from_secs(1)),
     );
 
     // Use keyseq! macro.
     commands.spawn(
-        InputSequence::new(
+        KeySequence::new(
             MyEvent(Direction::CounterClockwise),
             keyseq!(W A S D),
         )
         .time_limit(Duration::from_secs(1)),
     );
+
     println!("Press W D S A to emit clockwise event.");
     println!("Press W A S D to emit counter clockwise event.");
 }

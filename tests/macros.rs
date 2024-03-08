@@ -6,21 +6,21 @@ fn test_keyseq_doc() {
     assert_eq!(
         keyseq! { A B },
         [
-            (Modifiers::empty(), KeyCode::A),
-            (Modifiers::empty(), KeyCode::B)
+            (Modifiers::empty(), KeyCode::KeyA),
+            (Modifiers::empty(), KeyCode::KeyB)
         ]
     );
     assert_eq!(
         keyseq! { ctrl-A B },
         [
-            (Modifiers::CONTROL, KeyCode::A),
-            (Modifiers::empty(), KeyCode::B)
+            (Modifiers::CONTROL, KeyCode::KeyA),
+            (Modifiers::empty(), KeyCode::KeyB)
         ]
     );
     assert_eq!(
         keyseq! { ctrl-alt-A Escape },
         [
-            (Modifiers::ALT | Modifiers::CONTROL, KeyCode::A),
+            (Modifiers::ALT | Modifiers::CONTROL, KeyCode::KeyA),
             (Modifiers::empty(), KeyCode::Escape)
         ]
     );

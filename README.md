@@ -30,12 +30,12 @@ use bevy_input_sequence::*;
 struct MyEvent;
 ```
 
-## Add event as an input_sequence
+## Add event as an key sequence
 
 ```rust ignore
 fn main() {
     App::new()
-        .add_input_sequence_event::<MyEvent>()
+        .add_key_sequence_event::<MyEvent>()
         .run()
 }
 ```
@@ -48,7 +48,7 @@ sequence is entered. This crate re-exports the `keyseq!` macro for bevy from the
 ```rust ignore
 fn setup(mut commands: Commands) {
     commands.spawn(
-        InputSequence::new(MyEvent, keyseq! { alt-X M })
+        KeySequence::new(MyEvent, keyseq! { alt-X M })
     );
 }
 ```
@@ -107,6 +107,53 @@ cargo run --example run_if
 
 # Advanced Usage
 
+## Fire event on gamepad button sequence
+
+Define an event
+
+```rust ignore
+#[derive(Event, Clone, Debug)]
+struct MyEvent(Gamepad);
+
+impl GamepadEvent for MyEvent {
+    fn gamepad(&self) -> Option<Gamepad> {
+        Some(self.0)
+    }
+
+    fn set_gamepad(&mut self, gamepad: Gamepad) {
+        self.0 = gamepad;
+    }
+}
+
+```
+
+Add event as a button sequence.
+
+```rust ignore
+fn main() {
+    App::new()
+        .add_button_sequence_event::<MyEvent>()
+        .run()
+}
+```
+
+Add a button sequence component.
+
+```rust ignore
+fn setup(mut commands: Commands) {
+    commands.spawn(ButtonSequence::new(
+        MyEvent(Gamepad { id: 999 }),
+        [
+            GamepadButtonType::North,
+            GamepadButtonType::East,
+            GamepadButtonType::South,
+            GamepadButtonType::West,
+        ],
+    ));
+    println!("Press north, east, south, west to emit MyEvent.");
+}
+```
+
 ## Add an event with a condition
 
 Some key sequences you may only what to fire in particular modes. You can supply
@@ -123,7 +170,7 @@ enum AppState {
 
 fn main() {
     App::new()
-        .add_input_sequence_event_run_if::<MyEvent, _>(in_state(AppState::Menu))
+        .add_key_sequence_event_run_if::<MyEvent, _>(in_state(AppState::Menu))
         .run()
 }
 ```
@@ -138,7 +185,7 @@ time limit in order to fire the event.
 ```rust ignore
 fn setup(mut commands: Commands) {
     commands.spawn(
-        InputSequence::new(MyEvent, keyseq! { alt-X M })
+        KeySequence::new(MyEvent, keyseq! { alt-X M })
             .time_limit(Duration::from_secs(1)),
     );
 }
@@ -148,9 +195,9 @@ fn setup(mut commands: Commands) {
 
 | bevy-input-sequence | bevy |
 | ------------------- | ---- |
-| 0.1.0               | 0.11 |
-| 0.2.0               | 0.12 |
-| N/A                 | 0.13 |
+| 0.1                 | 0.11 |
+| 0.2                 | 0.12 |
+| 0.3                 | 0.13 |
 
 # License
 
