@@ -59,7 +59,7 @@ where
         ButtonSequence(InputSequence {
             event,
             time_limit: None,
-            acts: Vec::from_iter(acts.into_iter()),
+            acts: Vec::from_iter(acts),
         })
     }
     /// Specify a time limit from the start of the first matching input.
