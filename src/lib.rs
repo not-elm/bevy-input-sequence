@@ -10,7 +10,9 @@ use bevy::prelude::{
 };
 use bevy::time::Time;
 use std::collections::HashMap;
+use std::fmt;
 use trie_rs::map::{Trie, TrieBuilder};
+use bevy::reflect::Enum;
 
 pub use crate::input_sequence::{ButtonSequence, InputSequence, KeySequence};
 pub use crate::time_limit::TimeLimit;
@@ -31,6 +33,34 @@ use frame_time::FrameTime;
 /// Represents a key chord, i.e., a set of modifiers and a key code.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct KeyChord(pub Modifiers, pub KeyCode);
+
+impl fmt::Display for KeyChord {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        use KeyCode::*;
+        self.0.fmt(f)?;
+        if !self.0.is_empty() {
+            f.write_str("-")?;
+        }
+        let key_repr = match self.1 {
+            Semicolon => ";",
+            Period => ".",
+            Equal => "=",
+            Slash => "/",
+            Minus => "-",
+            BracketLeft => "[",
+            BracketRight => "]",
+            Quote => "'",
+            Backquote => "`",
+            key_code => {
+                let mut key = key_code.variant_name();
+                key = key.strip_prefix("Key").unwrap_or(key);
+                key = key.strip_prefix("Digit").unwrap_or(key);
+                return f.write_str(key);
+            }
+        };
+        f.write_str(key_repr)
+    }
+}
 
 impl From<(Modifiers, KeyCode)> for KeyChord {
     #[inline(always)]
@@ -305,6 +335,20 @@ where
 
 #[cfg(test)]
 mod tests {
+    use crate::key;
+    use crate::KeyChord;
+
+    #[test]
+    fn keychord_display() {
+        let keychord = KeyChord::from(key!(ctrl-A));
+        assert_eq!(format!("{}", keychord), "ctrl-A");
+        let keychord = KeyChord::from(key!(ctrl-1));
+        assert_eq!(format!("{}", keychord), "ctrl-1");
+        let keychord = KeyChord::from(key!(1));
+        assert_eq!(format!("{}", keychord), "1");
+    }
+
+    mod simulate_app {
     use bevy::app::{App, PostUpdate};
     use bevy::input::gamepad::{GamepadConnection, GamepadConnectionEvent, GamepadInfo};
     use bevy::input::{Axis, ButtonInput as Input};
@@ -314,7 +358,7 @@ mod tests {
     };
     use bevy::MinimalPlugins;
 
-    use super::*;
+    use super::super::*;
     use crate::TimeLimit;
 
     #[derive(Event, Clone)]
@@ -945,5 +989,6 @@ mod tests {
         app.init_resource::<Axis<GamepadAxis>>();
         app.init_resource::<Input<KeyCode>>();
         app
+    }
     }
 }
