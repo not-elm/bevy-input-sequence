@@ -4,6 +4,7 @@
 use bevy::app::{App, Update};
 use bevy::core::FrameCount;
 use bevy::ecs::schedule::Condition;
+use bevy::reflect::{Reflect, Enum};
 use bevy::prelude::{
     Added, ButtonInput as Input, Event, EventWriter, Gamepad, GamepadButton, GamepadButtonType,
     IntoSystemConfigs, KeyCode, Local, Query, RemovedComponents, Res, ResMut, Resource,
@@ -12,7 +13,6 @@ use bevy::time::Time;
 use std::collections::HashMap;
 use std::fmt;
 use trie_rs::map::{Trie, TrieBuilder};
-use bevy::reflect::Enum;
 
 pub use crate::input_sequence::{ButtonSequence, InputSequence, KeySequence};
 pub use crate::time_limit::TimeLimit;
@@ -31,7 +31,7 @@ use covec::Covec;
 use frame_time::FrameTime;
 
 /// Represents a key chord, i.e., a set of modifiers and a key code.
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Reflect)]
 pub struct KeyChord(pub Modifiers, pub KeyCode);
 
 impl fmt::Display for KeyChord {

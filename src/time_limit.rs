@@ -1,8 +1,8 @@
 use bevy::prelude::Resource;
 use std::time::Duration;
-
+use bevy::reflect::Reflect;
 /// A time limit specified as frame counts or duration.
-#[derive(Clone, Resource, Debug)]
+#[derive(Clone, Resource, Debug, Reflect)]
 pub enum TimeLimit {
     /// Time limit for frame count
     Frames(u32),

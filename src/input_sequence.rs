@@ -1,11 +1,11 @@
 use bevy::prelude::{Component, Event, GamepadButtonType};
-
+use bevy::reflect::Reflect;
 use crate::time_limit::TimeLimit;
 use crate::{GamepadEvent, KeyChord};
 
 /// An input sequence is a series of acts [A] that fires an event when matched
 /// with inputs within the given time limit.
-#[derive(Component, Debug, Clone)]
+#[derive(Component, Debug, Clone, Reflect)]
 pub struct InputSequence<E, A> {
     /// Event emitted
     pub event: E,
@@ -46,7 +46,7 @@ pub type KeySequence<E> = InputSequence<E, KeyChord>;
 
 // pub type ButtonSequence<E> = InputSequence<E, GamepadButtonType>;
 /// Represents a gamepad button sequence.
-#[derive(Component, Debug, Clone)]
+#[derive(Component, Debug, Clone, Reflect)]
 pub struct ButtonSequence<E>(pub(crate) InputSequence<E, GamepadButtonType>);
 
 impl<E> ButtonSequence<E>
