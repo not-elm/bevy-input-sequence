@@ -108,8 +108,9 @@ pub trait AddInputSequenceEvent {
     ) -> &mut App;
 }
 
+/// Contains the trie for the input sequences.
 #[derive(Resource)]
-struct InputSequenceCache<E, A> {
+pub struct InputSequenceCache<E, A> {
     trie: Option<Trie<A, InputSequence<E, A>>>,
 }
 
@@ -118,7 +119,10 @@ where
     E: Event + Clone,
     A: Ord + Clone + Send + Sync + 'static,
 {
-    pub(crate) fn trie<'a>(
+    /// Retrieve the cached trie without iterating through `sequences`. Or if
+    /// the cache has been invalidated, build and cache a new trie using the
+    /// `sequences` iterator.
+    pub fn trie<'a>(
         &mut self,
         sequences: impl Iterator<Item = &'a InputSequence<E, A>>,
     ) -> &Trie<A, InputSequence<E, A>> {
