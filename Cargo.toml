@@ -36,8 +36,7 @@ path = "examples/multiple_input.rs"
 
 [dependencies]
 bevy = { version = "0.13", default-features = false, features = [] }
-# trie-rs = { version = "0.2" }
-trie-rs = { git = "https://github.com/shanecelis/trie-rs.git", branch = "dev" }
+trie-rs = { version = "0.3" }
 keyseq = { version = "0.2.3", features = [ "bevy" ] }
 
 [dev-dependencies]
