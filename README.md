@@ -16,27 +16,57 @@ cargo install bevy-input-sequence
 
 # Usage
 
-## Import symbols
+# Minimal
 
-```rust ignore
+```rust
 use bevy::prelude::*;
 use bevy_input_sequence::*;
-```
 
-## Define an event
-
-```rust ignore
-#[derive(Event, Clone, Debug)]
-struct MyEvent;
-```
-
-## Add event as an key sequence
-
-```rust ignore
 fn main() {
     App::new()
-        .add_key_sequence_event::<MyEvent>()
-        .run()
+        .add_plugins(DefaultPlugins)
+        .add_plugins(InputSequencePlugin::default())
+        .add_systems(Startup, setup)
+        .update(); // Normally you'd run it here.
+}
+
+fn setup(mut commands: Commands) {
+    commands.add(KeySequence::new(say_hi, keyseq! { alt-H I }));
+}
+
+fn say_hi() {
+    info!("hi");
+}
+```
+
+# Send an Event
+
+```rust
+use bevy::prelude::*;
+use bevy_input_sequence::*;
+
+// Define an event
+#[derive(Event, Clone, Debug)]
+struct MyEvent;
+
+// Add event as an key sequence
+fn main() {
+    App::new()
+        .add_plugins(DefaultPlugins)
+        .add_plugins(InputSequencePlugin::default())
+        .add_event::<MyEvent>()
+        .add_systems(Startup, setup)
+        .update(); // Normally you'd run it here.
+}
+
+fn setup(mut commands: Commands) {
+    commands.add(KeySequence::new(action::send_event(MyEvent), keyseq! { ctrl-E L M }));
+}
+
+fn check_events(events: EventReader<MyEvent>) {
+    for event in events {
+        info!("got event {event:?}");
+    }
 }
 ```
 
@@ -46,11 +76,6 @@ So long as one component is present, it will fire one event when the input
 sequence is entered. This crate re-exports the `keyseq!` macro for bevy from the [keyseq](https://crates.io/crates/keyseq) crate.
 
 ```rust ignore
-fn setup(mut commands: Commands) {
-    commands.spawn(
-        KeySequence::new(MyEvent, keyseq! { alt-X M })
-    );
-}
 ```
 
 # Examples
@@ -185,7 +210,7 @@ time limit in order to fire the event.
 ```rust ignore
 fn setup(mut commands: Commands) {
     commands.spawn(
-        KeySequence::new(MyEvent, keyseq! { alt-X M })
+        KeySequence::new(action::send_event(MyEvent), keyseq! { alt-X M })
             .time_limit(Duration::from_secs(1)),
     );
 }

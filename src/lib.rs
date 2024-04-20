@@ -2,6 +2,7 @@
 #![doc = include_str!("../README.md")]
 #![forbid(missing_docs)]
 use bevy::{
+    log::warn,
     app::{App, Plugin, Update},
     core::FrameCount,
     ecs::{
@@ -99,61 +100,70 @@ impl Default for InputSequencePlugin {
 
 impl Plugin for InputSequencePlugin {
     fn build(&self, app: &mut App) {
-        // Add key sequence.
-        app.init_resource::<InputSequenceCache<KeyChord, ()>>();
+        if true || app.world.get_resource::<Input<KeyCode>>().is_some() {
+            // Add key sequence.
+            app.init_resource::<InputSequenceCache<KeyChord, ()>>();
 
-        for (schedule, set) in &self.schedules {
-            if let Some(set) = set {
-                app.add_systems(
-                    *schedule,
-                    (
-                        detect_removals::<KeyChord, ()>,
-                        detect_additions::<KeyChord, ()>,
-                        key_sequence_matcher,
-                    )
-                        .chain()
-                        .in_set(*set),
-                );
-            } else {
-                app.add_systems(
-                    *schedule,
-                    (
-                        detect_removals::<KeyChord, ()>,
-                        detect_additions::<KeyChord, ()>,
-                        key_sequence_matcher,
-                    )
-                        .chain(),
-                );
+            for (schedule, set) in &self.schedules {
+                if let Some(set) = set {
+                    app.add_systems(
+                        *schedule,
+                        (
+                            detect_removals::<KeyChord, ()>,
+                            detect_additions::<KeyChord, ()>,
+                            key_sequence_matcher,
+                        )
+                            .chain()
+                            .in_set(*set),
+                    );
+                } else {
+                    app.add_systems(
+                        *schedule,
+                        (
+                            detect_removals::<KeyChord, ()>,
+                            detect_additions::<KeyChord, ()>,
+                            key_sequence_matcher,
+                        )
+                            .chain(),
+                    );
+                }
             }
+        } else {
+            warn!("No key sequence matcher added; consider adding DefaultPlugins.");
         }
 
-        // Add button sequences.
-        app.init_resource::<InputSequenceCache<GamepadButtonType, Gamepad>>();
+        if true || app.world.get_resource::<Input<GamepadButton>>().is_some() {
+            // Add button sequences.
+            app.init_resource::<InputSequenceCache<GamepadButtonType, Gamepad>>();
 
-        for (schedule, set) in &self.schedules {
-            if let Some(set) = set {
-                app.add_systems(
-                    *schedule,
-                    (
-                        detect_removals::<GamepadButtonType, Gamepad>,
-                        detect_additions::<GamepadButtonType, Gamepad>,
-                        button_sequence_matcher,
-                    )
-                        .chain()
-                        .in_set(*set),
-                );
-            } else {
-                app.add_systems(
-                    *schedule,
-                    (
-                        detect_removals::<GamepadButtonType, Gamepad>,
-                        detect_additions::<GamepadButtonType, Gamepad>,
-                        button_sequence_matcher,
-                    )
-                        .chain(),
-                );
+            for (schedule, set) in &self.schedules {
+                if let Some(set) = set {
+                    app.add_systems(
+                        *schedule,
+                        (
+                            detect_removals::<GamepadButtonType, Gamepad>,
+                            detect_additions::<GamepadButtonType, Gamepad>,
+                            button_sequence_matcher,
+                        )
+                            .chain()
+                            .in_set(*set),
+                    );
+                } else {
+                    app.add_systems(
+                        *schedule,
+                        (
+                            detect_removals::<GamepadButtonType, Gamepad>,
+                            detect_additions::<GamepadButtonType, Gamepad>,
+                            button_sequence_matcher,
+                        )
+                            .chain(),
+                    );
+                }
             }
+        } else {
+            warn!("No button sequence matcher added; consider adding DefaultPlugins.");
         }
+
     }
 }
 
@@ -370,7 +380,13 @@ mod tests {
     }
 
     mod simulate_app {
-        use bevy::app::{App, PostUpdate};
+        use bevy:: {
+            app::{App, PostUpdate},
+            ecs::{
+                world::World,
+                system::Command
+            }
+        };
         use bevy::input::gamepad::{GamepadConnection, GamepadConnectionEvent, GamepadInfo};
         use bevy::input::{Axis, ButtonInput as Input};
         use bevy::prelude::{
@@ -380,7 +396,7 @@ mod tests {
         use bevy::MinimalPlugins;
 
         use super::super::*;
-        use crate::TimeLimit;
+        use crate::{TimeLimit, action};
 
         #[derive(Event, Clone)]
         struct MyEvent;
@@ -388,12 +404,22 @@ mod tests {
         #[derive(Component)]
         struct EventSent(u8);
 
+        trait AddCommand {
+            fn add(&mut self, command: impl Command);
+        }
+
+        impl AddCommand for World {
+            fn add(&mut self, command: impl Command) {
+                command.apply(self);
+            }
+        }
+
         #[test]
         fn one_key() {
             let mut app = new_app();
 
-            app.world.spawn(KeySequence::new(
-                MyEvent,
+            app.world.add(KeySequence::new(
+                action::send_event(MyEvent),
                 [(Modifiers::empty(), KeyCode::KeyA)],
             ));
             press_key(&mut app, KeyCode::KeyA);
@@ -410,8 +436,8 @@ mod tests {
         fn two_components_one_event() {
             let mut app = new_app();
 
-            app.world.spawn(KeySequence::new(MyEvent, [KeyCode::KeyA]));
-            app.world.spawn(KeySequence::new(MyEvent, [KeyCode::KeyA]));
+            app.world.add(KeySequence::new(action::send_event(MyEvent), [KeyCode::KeyA]));
+            app.world.add(KeySequence::new(action::send_event(MyEvent), [KeyCode::KeyA]));
             press_key(&mut app, KeyCode::KeyA);
             app.update();
             assert_eq!(app.world.query::<&EventSent>().iter(&app.world).count(), 1);
@@ -421,8 +447,8 @@ mod tests {
         fn two_presses_two_events() {
             let mut app = new_app();
 
-            app.world.spawn(KeySequence::new(MyEvent, [KeyCode::KeyA]));
-            app.world.spawn(KeySequence::new(MyEvent, [KeyCode::KeyB]));
+            app.world.add(KeySequence::new(action::send_event(MyEvent), [KeyCode::KeyA]));
+            app.world.add(KeySequence::new(action::send_event(MyEvent), [KeyCode::KeyB]));
             press_key(&mut app, KeyCode::KeyA);
             press_key(&mut app, KeyCode::KeyB);
             app.update();
@@ -434,9 +460,9 @@ mod tests {
             let mut app = new_app();
 
             app.world
-                .spawn(KeySequence::new(MyEvent, [KeyCode::KeyA, KeyCode::KeyB]));
+                .add(KeySequence::new(action::send_event(MyEvent), [KeyCode::KeyA, KeyCode::KeyB]));
             app.world
-                .spawn(KeySequence::new(MyEvent, [KeyCode::KeyA, KeyCode::KeyC]));
+                .add(KeySequence::new(action::send_event(MyEvent), [KeyCode::KeyA, KeyCode::KeyC]));
 
             press_key(&mut app, KeyCode::KeyA);
             app.update();
@@ -463,9 +489,9 @@ mod tests {
             let mut app = new_app();
 
             app.world
-                .spawn(KeySequence::new(MyEvent, [KeyCode::KeyA, KeyCode::KeyB]));
-            app.world.spawn(KeySequence::new(
-                MyEvent,
+                .add(KeySequence::new(action::send_event(MyEvent), [KeyCode::KeyA, KeyCode::KeyB]));
+            app.world.add(KeySequence::new(
+                action::send_event(MyEvent),
                 [KeyCode::KeyA, KeyCode::KeyB, KeyCode::KeyC],
             ));
 
@@ -523,9 +549,9 @@ mod tests {
             let mut app = new_app();
 
             app.world
-                .spawn(KeySequence::new(MyEvent, [KeyCode::KeyA, KeyCode::KeyB]));
+                .add(KeySequence::new(action::send_event(MyEvent), [KeyCode::KeyA, KeyCode::KeyB]));
             app.world
-                .spawn(KeySequence::new(MyEvent, [KeyCode::KeyA, KeyCode::KeyC]));
+                .add(KeySequence::new(action::send_event(MyEvent), [KeyCode::KeyA, KeyCode::KeyC]));
 
             press_key(&mut app, KeyCode::KeyA);
             app.update();
@@ -552,11 +578,11 @@ mod tests {
             let mut app = new_app();
 
             app.world
-                .spawn(KeySequence::new(MyEvent, [KeyCode::KeyA, KeyCode::KeyB]));
+                .add(KeySequence::new(action::send_event(MyEvent), [KeyCode::KeyA, KeyCode::KeyB]));
             app.world
-                .spawn(KeySequence::new(MyEvent, [KeyCode::KeyA, KeyCode::KeyC]));
+                .add(KeySequence::new(action::send_event(MyEvent), [KeyCode::KeyA, KeyCode::KeyC]));
             app.world
-                .spawn(KeySequence::new(MyEvent, [KeyCode::KeyA, KeyCode::KeyD]));
+                .add(KeySequence::new(action::send_event(MyEvent), [KeyCode::KeyA, KeyCode::KeyD]));
             press_key(&mut app, KeyCode::KeyA);
             app.update();
             assert!(app
@@ -582,11 +608,11 @@ mod tests {
             let mut app = new_app();
 
             app.world
-                .spawn(KeySequence::new(MyEvent, [KeyCode::KeyA, KeyCode::KeyB]));
+                .add(KeySequence::new(action::send_event(MyEvent), [KeyCode::KeyA, KeyCode::KeyB]));
             app.world
-                .spawn(KeySequence::new(MyEvent, [KeyCode::KeyA, KeyCode::KeyC]));
+                .add(KeySequence::new(action::send_event(MyEvent), [KeyCode::KeyA, KeyCode::KeyC]));
             app.world
-                .spawn(KeySequence::new(MyEvent, [KeyCode::KeyA, KeyCode::KeyD]));
+                .add(KeySequence::new(action::send_event(MyEvent), [KeyCode::KeyA, KeyCode::KeyD]));
             press_key(&mut app, KeyCode::KeyA);
             app.update();
             assert!(app
@@ -612,7 +638,7 @@ mod tests {
             let mut app = new_app();
 
             app.world
-                .spawn(KeySequence::new(MyEvent, [KeyCode::KeyA, KeyCode::KeyB]));
+                .add(KeySequence::new(action::send_event(MyEvent), [KeyCode::KeyA, KeyCode::KeyB]));
 
             press_key(&mut app, KeyCode::KeyA);
             app.update();
@@ -638,8 +664,8 @@ mod tests {
         fn delete_sequences_if_pressed_incorrect_key() {
             let mut app = new_app();
 
-            app.world.spawn(KeySequence::new(
-                MyEvent,
+            app.world.add(KeySequence::new(
+                action::send_event(MyEvent),
                 [KeyCode::KeyA, KeyCode::KeyB, KeyCode::KeyC],
             ));
 
@@ -683,8 +709,8 @@ mod tests {
                     name: "".to_string(),
                 }),
             ));
-            app.world.spawn(ButtonSequence::new(
-                MyEvent,
+            app.world.add(ButtonSequence::new(
+                action::send_event_with_input(|_| MyEvent),
                 [
                     GamepadButtonType::North,
                     GamepadButtonType::East,
@@ -734,8 +760,8 @@ mod tests {
             ));
             // This is no longer possible right now. We could introduce a
             // KeyButtonSequence mixture struct would allow it.
-            // app.world.spawn(KeySequence::new(
-            //     MyEvent,
+            // app.world.add(KeySequence::new(
+            //     action::send_event(MyEvent),
             //     [
             //         (KeyCode::KeyA),
             //         (KeyCode::KeyB),
@@ -743,13 +769,13 @@ mod tests {
             //         (GamepadButtonType::C.into()),
             //     ],
             // ));
-            app.world.spawn(KeySequence::new(
-                MyEvent,
+            app.world.add(KeySequence::new(
+                action::send_event(MyEvent),
                 [KeyCode::KeyA, KeyCode::KeyB, KeyCode::KeyX],
             ));
 
-            app.world.spawn(ButtonSequence::new(
-                MyEvent,
+            app.world.add(ButtonSequence::new(
+                action::send_event_with_input(|_| MyEvent),
                 [GamepadButtonType::North, GamepadButtonType::C],
             ));
             app.update();
@@ -798,8 +824,8 @@ mod tests {
         fn timeout_1frame() {
             let mut app = new_app();
 
-            app.world.spawn(
-                KeySequence::new(MyEvent, [KeyCode::KeyA, KeyCode::KeyB])
+            app.world.add(
+                KeySequence::new(action::send_event(MyEvent), [KeyCode::KeyA, KeyCode::KeyB])
                     .time_limit(TimeLimit::Frames(1)),
             );
 
@@ -830,7 +856,7 @@ mod tests {
             let mut app = new_app();
 
             app.world
-                .spawn(KeySequence::new(MyEvent, [KeyCode::KeyA, KeyCode::KeyB]));
+                .add(KeySequence::new(action::send_event(MyEvent), [KeyCode::KeyA, KeyCode::KeyB]));
 
             press_key(&mut app, KeyCode::KeyA);
             app.update();
@@ -869,8 +895,8 @@ mod tests {
         fn no_timeout_1frame() {
             let mut app = new_app();
 
-            app.world.spawn(
-                KeySequence::new(MyEvent, [KeyCode::KeyA, KeyCode::KeyB])
+            app.world.add(
+                KeySequence::new(action::send_event(MyEvent), [KeyCode::KeyA, KeyCode::KeyB])
                     .time_limit(TimeLimit::Frames(2)),
             );
 
@@ -900,8 +926,8 @@ mod tests {
         fn timeout_3frames() {
             let mut app = new_app();
 
-            app.world.spawn(
-                KeySequence::new(MyEvent, [KeyCode::KeyA, KeyCode::KeyB, KeyCode::KeyC])
+            app.world.add(
+                KeySequence::new(action::send_event(MyEvent), [KeyCode::KeyA, KeyCode::KeyB, KeyCode::KeyC])
                     .time_limit(TimeLimit::Frames(2)),
             );
 
@@ -990,9 +1016,10 @@ mod tests {
         fn new_app() -> App {
             let mut app = App::new();
             app.add_plugins(MinimalPlugins);
+            // app.add_plugins(DefaultPlugins);
+            app.add_plugins(InputSequencePlugin::default());
             app.add_systems(PostUpdate, read);
-            app.add_key_sequence_event::<MyEvent>();
-            app.add_button_sequence_event::<MyEvent>();
+            app.add_event::<MyEvent>();
             app.init_resource::<Gamepads>();
             app.init_resource::<Input<GamepadButton>>();
             app.init_resource::<Input<GamepadAxis>>();
