@@ -1,11 +1,15 @@
 use crate::{
     time_limit::TimeLimit,
     KeyChord,
+    cond_system::CondSystem,
 };
+
+use std::borrow::Cow;
 use bevy::{
+    log::warn,
     ecs::{
         entity::Entity,
-        system::{BoxedSystem, Commands, IntoSystem, SystemId, ReadOnlySystem, In, System},
+        system::{Commands, IntoSystem, SystemId, ReadOnlySystem, In, System},
         schedule::{Condition, BoxedCondition},
         world::World,
     },
@@ -29,22 +33,23 @@ pub struct InputSequence<Act, In> {
 }
 
 pub struct InputSequenceBuilder<Act, S> {
-    pub system: CondSystem<S>,
+    pub system: S,
     /// Sequence of acts that trigger input sequence
     pub acts: Vec<Act>,
     /// Optional time limit after first match
     pub time_limit: Option<TimeLimit>,
 }
 
-pub struct CondSystem<S> {
-    system: S,
-    condition: Option<BoxedCondition>,
-}
+// pub struct CondSystem<S> {
+//     system: S,
+//     condition: Option<BoxedCondition>,
+// }
 
 // struct CondMarker;
+//
 
-pub trait IntoCondSystem<S, M> { //: System<I, O, M1> {
-    fn into_cond_system(this: Self) -> CondSystem<S>;
+pub trait IntoCondSystem<I, O, M> : IntoSystem<I, O, M> {
+    // fn into_cond_system(this: Self) -> CondSystem<S>;
     // {
     //     CondSystem {
     //         system: IntoSystem::into_system(this),
@@ -52,56 +57,66 @@ pub trait IntoCondSystem<S, M> { //: System<I, O, M1> {
     //     }
     // }
 
-    fn only_if<P>(self, condition: impl Condition<P> + ReadOnlySystem)
-                 -> CondSystem<S> where Self: Sized {
-        let x = IntoCondSystem::into_cond_system(self);
-        if x.condition.is_none() {
-            panic!("Cannot chain run_if conditions.");
-        }
-        CondSystem {
-            system: x.system,//IntoSystem::into_system(self),
-            condition: Some(Box::new(IntoSystem::into_system(condition))),
-        }
+
+    fn only_if<B, MarkerB>(self, system: B) -> CondSystem<Self::System, B::System>
+    where
+        B: IntoSystem<(), bool, MarkerB>,
+    {
+        let system_a = IntoSystem::into_system(self);
+        let system_b = IntoSystem::into_system(system);
+        let name = format!("Cond({}, {})", system_a.name(), system_b.name());
+        CondSystem::new(system_a, system_b, Cow::Owned(name))
     }
+    // fn only_if<P>(self, condition: impl Condition<P>)
+    //              -> CondSystem<S> where Self: Sized {
+    //     let x = IntoCondSystem::into_cond_system(self);
+    //     if x.condition.is_some() {
+    //         panic!("Cannot chain run_if conditions.");
+    //     }
+    //     warn!("create cond system");
+    //     CondSystem {
+    //         system: x.system,
+    //         condition: Some(Box::new(IntoSystem::into_system(condition))),
+    //     }
+    // }
 }
 
 pub struct Blanket;
 
-impl<I, O, T, M> IntoCondSystem<T::System, (Blanket, I, O, M)> for T where T: IntoSystem<I, O, M> + ?Sized {
-    fn into_cond_system(this: Self) -> CondSystem<T::System> {
-        CondSystem {
-            system: IntoSystem::into_system(this),
-            condition: None,
-        }
-    }
+impl<I, O, M, T> IntoCondSystem<I, O, M> for T where T: IntoSystem<I, O, M> + ?Sized {
+    // fn into_cond_system(this: Self) -> CondSystem<T::System> {
+    //     CondSystem {
+    //         system: IntoSystem::into_system(this),
+    //         condition: None,
+    //     }
+    // }
 }
 
-pub struct CondSys;
-impl<S> IntoSystem<S::In, S::Out, CondSys> for CondSystem<S>
-where S: System{
-    type System = S;
-    fn into_system(this: Self) -> Self::System {
-        this.system
-    }
-}
+// pub struct CondSys;
+// impl<S> IntoSystem<S::In, S::Out, CondSys> for CondSystem<S>
+// where S: System{
+//     type System = S;
+//     fn into_system(this: Self) -> Self::System {
+//         this.system
+//     }
+// }
 
-impl<Act, S> InputSequenceBuilder<Act, S>
-where
-    S: System<Out = ()> + 'static,
-    S::In : Send + Sync + 'static,
+impl<Act> InputSequenceBuilder<Act, ()>
 {
     /// Create new input sequence. Not operant until added to an entity.
-    pub fn new<C, M>(system: C) -> Self
-    where
-    C: IntoCondSystem<S, M> + 'static,
-
+    pub fn new<C, I, M>(system: C) -> InputSequenceBuilder<Act, C::System>
+        where C: IntoCondSystem<I, (), M> + 'static,
+              I: Send + Sync + 'static,
     {
         InputSequenceBuilder {
             acts: Vec::new(),
-            system: IntoCondSystem::into_cond_system(system),
+            system: IntoSystem::into_system(system),
             time_limit: None,
         }
     }
+}
+
+impl <Act, S> InputSequenceBuilder<Act, S> where S: System<Out = ()>{
 
     /// Specify a time limit from the start of the first matching input.
     pub fn time_limit(mut self, time_limit: impl Into<TimeLimit>) -> Self {
@@ -110,9 +125,8 @@ where
     }
 
     pub fn build(self, world: &mut World) -> InputSequence<Act, S::In> {
-        let consequent = world.register_system(self.system.system);
         InputSequence {
-            system_id: world.register_system(run_if_impl(self.system.condition, consequent)),
+            system_id: world.register_system(self.system),
             acts: self.acts,
             time_limit: self.time_limit,
         }
@@ -120,19 +134,14 @@ where
 }
 
 fn run_if_impl<I>(
-    mut condition: Option<BoxedCondition>,
+    mut condition: BoxedCondition,
     consequent: SystemId<I>,
 ) -> impl FnMut(In<I>, Commands, &World) where I: Send + Sync + 'static {
     move |In(input): In<I>, mut commands: Commands, world: &World| {
-        match condition {
-            Some(ref mut condition) => {
-                if condition.run_readonly((), world) {
-                    commands.run_system_with_input(consequent, input);
-                }
-            }
-            None => {
-                commands.run_system_with_input(consequent, input);
-            }
+        eprintln!("checking condition");
+        if condition.run_readonly((), world) {
+        eprintln!("running after condition");
+            commands.run_system_with_input(consequent, input);
         }
     }
 }
@@ -168,11 +177,11 @@ where
 {
     /// Create new input sequence. Not operant until added to an entity.
     #[inline(always)]
-    pub fn new<T, S>(system: S, acts: impl IntoIterator<Item = T>) -> InputSequenceBuilder<Act, S>
+    pub fn new<T, C, I, M>(system: C, acts: impl IntoIterator<Item = T>) -> InputSequenceBuilder<Act, C::System>
     where
+        C: IntoCondSystem<I, (), M> + 'static,
         Act: From<T>,
-        S: System<Out = ()>,
-        S::In: Send + Sync + 'static,
+        I: Send + Sync + 'static,
     {
         let mut builder = InputSequenceBuilder::new(system);
         builder.acts = Vec::from_iter(acts.into_iter().map(Act::from));

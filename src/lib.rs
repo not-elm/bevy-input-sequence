@@ -30,12 +30,14 @@ pub use keyseq::{
     Modifiers,
 };
 
+pub mod cond_system;
 pub mod action;
 mod covec;
 mod frame_time;
 mod input_sequence;
 mod time_limit;
 
+use cond_system::*;
 use covec::Covec;
 use frame_time::FrameTime;
 
