@@ -5,11 +5,9 @@ use crate::{
 };
 
 use bevy::{
-    log::warn,
     ecs::{
         entity::Entity,
-        system::{Commands, IntoSystem, SystemId, ReadOnlySystem, In, System},
-        schedule::{Condition, BoxedCondition},
+        system::{IntoSystem, SystemId, System},
         world::World,
     },
     input::gamepad::Gamepad,
@@ -102,6 +100,7 @@ where
 {
     /// Create new input sequence. Not operant until added to an entity.
     #[inline(always)]
+    #[allow(clippy::new_ret_no_self)]
     pub fn new<T, C, I, M>(system: C, acts: impl IntoIterator<Item = T>) -> InputSequenceBuilder<Act, C::System>
     where
         C: IntoCondSystem<I, (), M> + 'static,

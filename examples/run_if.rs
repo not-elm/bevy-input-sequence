@@ -34,10 +34,6 @@ fn main() {
         .run();
 }
 
-fn cond(world: &World) -> bool {
-    true
-}
-
 fn setup(mut commands: Commands) {
     commands.add(KeySequence::new(
         action::send_event(GlobalEvent),

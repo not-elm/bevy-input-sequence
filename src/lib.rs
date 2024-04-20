@@ -37,7 +37,7 @@ mod frame_time;
 mod input_sequence;
 mod time_limit;
 
-use cond_system::*;
+
 use covec::Covec;
 use frame_time::FrameTime;
 
@@ -89,6 +89,7 @@ impl From<KeyCode> for KeyChord {
 
 /// Input sequence plugin.
 pub struct InputSequencePlugin {
+    #[allow(clippy::type_complexity)]
     schedules: Vec<(Interned<dyn ScheduleLabel>, Option<Interned<dyn SystemSet>>)>,
 }
 
