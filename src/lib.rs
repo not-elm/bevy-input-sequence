@@ -5,12 +5,12 @@ use bevy::{
     app::{App, Plugin, Update},
     core::FrameCount,
     ecs::{
-        schedule::{Condition, ScheduleLabel, SystemSet},
+        schedule::{ScheduleLabel, SystemSet},
         system::Commands,
     },
     prelude::{
-        Added, ButtonInput as Input, Event, EventWriter, Gamepad, GamepadButton, GamepadButtonType,
-        IntoSystemConfigs, IntoSystemSetConfigs, KeyCode, Local, Query, RemovedComponents, Res,
+        Added, ButtonInput as Input, Gamepad, GamepadButton, GamepadButtonType,
+        IntoSystemConfigs, KeyCode, Local, Query, RemovedComponents, Res,
         ResMut, Resource,
     },
     reflect::{Enum, Reflect},
@@ -251,11 +251,11 @@ fn button_sequence_matcher(
 
         pad_buttons.push(button.button_type, now.clone());
         let start = pad_buttons.1[0].clone();
-        for mut seq in consume_input(trie, &mut pad_buttons.0) {
+        for seq in consume_input(trie, &mut pad_buttons.0) {
             if seq
                 .time_limit
                 .as_ref()
-                .map(|limit| (&now - &start).has_timedout(&limit))
+                .map(|limit| (&now - &start).has_timedout(limit))
                 .unwrap_or(false)
             {
                 // Sequence timed out.
@@ -294,7 +294,7 @@ fn key_sequence_matcher(
             if seq
                 .time_limit
                 .as_ref()
-                .map(|limit| (&now - &start).has_timedout(&limit))
+                .map(|limit| (&now - &start).has_timedout(limit))
                 .unwrap_or(false)
             {
                 // Sequence timed out.
