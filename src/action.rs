@@ -1,11 +1,9 @@
 //! Common actions to do on key sequence matches
-use bevy::{
-    ecs::{
-        event::{Event, EventWriter},
-        schedule::Condition,
-        system::{In, IntoSystem, SystemId},
-        world::World,
-    },
+use bevy::ecs::{
+    event::{Event, EventWriter},
+    schedule::Condition,
+    system::{In, IntoSystem, SystemId},
+    world::World,
 };
 
 /// Send this event.

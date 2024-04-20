@@ -1,7 +1,7 @@
 use bevy::prelude::*;
+use bevy_input_sequence::cond_system::*;
 use bevy_input_sequence::*;
 use std::time::Duration;
-use bevy_input_sequence::cond_system::*;
 
 #[derive(Event, Clone, Debug)]
 struct MyEvent;
@@ -41,9 +41,8 @@ fn setup(mut commands: Commands) {
     ));
     commands.add(
         KeySequence::new(
-            action::send_event(MyEvent)
-                .only_if(in_state(AppState::Game)),
-                // .only_if(cond),
+            action::send_event(MyEvent).only_if(in_state(AppState::Game)),
+            // .only_if(cond),
             keyseq!(Space),
         )
         .time_limit(Duration::from_secs(1)),

@@ -1,13 +1,9 @@
-use crate::{
-    time_limit::TimeLimit,
-    KeyChord,
-    cond_system::IntoCondSystem,
-};
+use crate::{cond_system::IntoCondSystem, time_limit::TimeLimit, KeyChord};
 
 use bevy::{
     ecs::{
         entity::Entity,
-        system::{IntoSystem, SystemId, System},
+        system::{IntoSystem, System, SystemId},
         world::World,
     },
     input::gamepad::Gamepad,
@@ -37,12 +33,12 @@ pub struct InputSequenceBuilder<Act, S> {
     pub time_limit: Option<TimeLimit>,
 }
 
-impl<Act> InputSequenceBuilder<Act, ()>
-{
+impl<Act> InputSequenceBuilder<Act, ()> {
     /// Create new input sequence. Not operant until added to an entity.
     pub fn new<C, I, M>(system: C) -> InputSequenceBuilder<Act, C::System>
-        where C: IntoCondSystem<I, (), M> + 'static,
-              I: Send + Sync + 'static,
+    where
+        C: IntoCondSystem<I, (), M> + 'static,
+        I: Send + Sync + 'static,
     {
         InputSequenceBuilder {
             acts: Vec::new(),
@@ -52,8 +48,10 @@ impl<Act> InputSequenceBuilder<Act, ()>
     }
 }
 
-impl <Act, S> InputSequenceBuilder<Act, S> where S: System<Out = ()>{
-
+impl<Act, S> InputSequenceBuilder<Act, S>
+where
+    S: System<Out = ()>,
+{
     /// Specify a time limit from the start of the first matching input.
     pub fn time_limit(mut self, time_limit: impl Into<TimeLimit>) -> Self {
         self.time_limit = Some(time_limit.into());
@@ -101,7 +99,10 @@ where
     /// Create new input sequence. Not operant until added to an entity.
     #[inline(always)]
     #[allow(clippy::new_ret_no_self)]
-    pub fn new<T, C, I, M>(system: C, acts: impl IntoIterator<Item = T>) -> InputSequenceBuilder<Act, C::System>
+    pub fn new<T, C, I, M>(
+        system: C,
+        acts: impl IntoIterator<Item = T>,
+    ) -> InputSequenceBuilder<Act, C::System>
     where
         C: IntoCondSystem<I, (), M> + 'static,
         Act: From<T>,

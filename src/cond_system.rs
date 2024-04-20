@@ -1,7 +1,7 @@
-use bevy::ecs::system::{Combine, CombinatorSystem, System, IntoSystem};
+use bevy::ecs::system::{CombinatorSystem, Combine, IntoSystem, System};
 use std::borrow::Cow;
 
-pub trait IntoCondSystem<I, O, M> : IntoSystem<I, O, M> {
+pub trait IntoCondSystem<I, O, M>: IntoSystem<I, O, M> {
     fn only_if<B, MarkerB>(self, system: B) -> SilentCondSystem<Self::System, B::System>
     where
         B: IntoSystem<(), bool, MarkerB>,

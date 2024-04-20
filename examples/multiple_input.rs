@@ -66,7 +66,7 @@ fn input_sequence_event_system(mut er: EventReader<MyEvent>) {
         println!(
             "{e:?} emitted {}",
             e.1.map(|x| format!("from gamepad id {}", x.id))
-               .unwrap_or("not from gamepad".into())
+                .unwrap_or("not from gamepad".into())
         );
     }
 }
