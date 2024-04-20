@@ -43,8 +43,8 @@ pub struct CondSystem<S> {
 
 // struct CondMarker;
 
-pub trait IntoCondSystem<I, O, M1, M2> : IntoSystem<I, O, M1> {
-    fn into_cond_system(this: Self) -> CondSystem<Self::System>;
+pub trait IntoCondSystem<S, M> { //: System<I, O, M1> {
+    fn into_cond_system(this: Self) -> CondSystem<S>;
     // {
     //     CondSystem {
     //         system: IntoSystem::into_system(this),
@@ -53,7 +53,7 @@ pub trait IntoCondSystem<I, O, M1, M2> : IntoSystem<I, O, M1> {
     // }
 
     fn only_if<P>(self, condition: impl Condition<P> + ReadOnlySystem)
-                 -> CondSystem<Self::System> where Self: Sized {
+                 -> CondSystem<S> where Self: Sized {
         let x = IntoCondSystem::into_cond_system(self);
         if x.condition.is_none() {
             panic!("Cannot chain run_if conditions.");
@@ -67,7 +67,7 @@ pub trait IntoCondSystem<I, O, M1, M2> : IntoSystem<I, O, M1> {
 
 pub struct Blanket;
 
-impl<I, O, M, T> IntoCondSystem<I, O, M, Blanket> for T where T: IntoSystem<I, O, M> + ?Sized {
+impl<I, O, T, M> IntoCondSystem<T::System, (Blanket, I, O, M)> for T where T: IntoSystem<I, O, M> + ?Sized {
     fn into_cond_system(this: Self) -> CondSystem<T::System> {
         CondSystem {
             system: IntoSystem::into_system(this),
@@ -87,12 +87,13 @@ where S: System{
 
 impl<Act, S> InputSequenceBuilder<Act, S>
 where
-    S: System + 'static,
+    S: System<Out = ()> + 'static,
+    S::In : Send + Sync + 'static,
 {
     /// Create new input sequence. Not operant until added to an entity.
-    pub fn new<C, P, M>(system: C) -> Self
+    pub fn new<C, M>(system: C) -> Self
     where
-    C: IntoCondSystem<S::In, S::Out, P, M> + 'static,
+    C: IntoCondSystem<S, M> + 'static,
 
     {
         InputSequenceBuilder {
@@ -108,7 +109,7 @@ where
         self
     }
 
-    pub fn build(self, world: &mut World) -> InputSequence<Act, S> {
+    pub fn build(self, world: &mut World) -> InputSequence<Act, S::In> {
         let consequent = world.register_system(self.system.system);
         InputSequence {
             system_id: world.register_system(run_if_impl(self.system.condition, consequent)),
@@ -139,7 +140,8 @@ fn run_if_impl<I>(
 impl<Act, S> bevy::ecs::system::Command for InputSequenceBuilder<Act, S>
 where
     Act: Send + Sync + 'static,
-    S: Send + Sync + 'static,
+    S: System<Out = ()> + Send + Sync + 'static,
+    S::In: Send + Sync + 'static,
 {
     fn apply(self, world: &mut World) {
         let act = self.build(world);
@@ -150,7 +152,8 @@ where
 impl<Act, S> bevy::ecs::system::EntityCommand for InputSequenceBuilder<Act, S>
 where
     Act: Send + Sync + 'static,
-    S: Send + Sync + 'static,
+    S: System<Out = ()> + Send + Sync + 'static,
+    S::In: Send + Sync + 'static,
 {
     fn apply(self, id: Entity, world: &mut World) {
         let act = self.build(world);
@@ -165,12 +168,11 @@ where
 {
     /// Create new input sequence. Not operant until added to an entity.
     #[inline(always)]
-    pub fn new<T, S, P, M>(system: S, acts: impl IntoIterator<Item = T>) -> InputSequenceBuilder<Act, S::System>
+    pub fn new<T, S>(system: S, acts: impl IntoIterator<Item = T>) -> InputSequenceBuilder<Act, S>
     where
         Act: From<T>,
-
-        S: IntoCondSystem<In, (), P, M> + 'static,
-        // S: IntoSystem<In, (), P> + 'static,
+        S: System<Out = ()>,
+        S::In: Send + Sync + 'static,
     {
         let mut builder = InputSequenceBuilder::new(system);
         builder.acts = Vec::from_iter(acts.into_iter().map(Act::from));
