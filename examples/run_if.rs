@@ -22,8 +22,7 @@ fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .init_state::<AppState>()
-        .add_plugins(InputSequencePlugin::new()
-                     .run_in_set(Update, MySet))
+        .add_plugins(InputSequencePlugin::new().run_in_set(Update, MySet))
         .add_event::<GlobalEvent>()
         .add_event::<MyEvent>()
         // .configure_sets(Update,
@@ -35,9 +34,17 @@ fn main() {
 }
 
 fn setup(mut commands: Commands) {
-    commands.add(KeySequence::new(action::send_event(GlobalEvent), keyseq!(Escape)));
-    commands.add(KeySequence::new(action::send_event_if(MyEvent,
-                                                        in_state(AppState::Game)), keyseq!(Space)).time_limit(Duration::from_secs(1)));
+    commands.add(KeySequence::new(
+        action::send_event(GlobalEvent),
+        keyseq!(Escape),
+    ));
+    commands.add(
+        KeySequence::new(
+            action::send_event_if(MyEvent, in_state(AppState::Game)),
+            keyseq!(Space),
+        )
+        .time_limit(Duration::from_secs(1)),
+    );
     println!("Press Space to emit event in game mode.");
     println!("Press Escape to switch between Game and Menu mode; currently in Game mode.");
 }

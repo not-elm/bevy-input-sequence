@@ -5,7 +5,7 @@ use bevy::prelude::{Commands, Event, EventReader, Gamepad, GamepadButtonType};
 use bevy::DefaultPlugins;
 
 use bevy_input_sequence::InputSequencePlugin;
-use bevy_input_sequence::{keyseq, ButtonSequence, GamepadEvent, KeySequence, action};
+use bevy_input_sequence::{action, keyseq, ButtonSequence, GamepadEvent, KeySequence};
 
 #[derive(Event, Clone, Debug)]
 struct MyEvent(u8, Option<Gamepad>);
@@ -32,8 +32,8 @@ fn main() {
 
 fn setup(mut commands: Commands) {
     commands.add(
-        KeySequence::new(action::send_event(MyEvent(1, None)),
-                         keyseq!(W D S A)).time_limit(Duration::from_secs(5)),
+        KeySequence::new(action::send_event(MyEvent(1, None)), keyseq!(W D S A))
+            .time_limit(Duration::from_secs(5)),
     );
 
     commands.add(
@@ -50,7 +50,8 @@ fn setup(mut commands: Commands) {
     );
 
     commands.add(
-        KeySequence::new(action::send_event(MyEvent(3, None)), keyseq!(W A S D)).time_limit(Duration::from_secs(5)),
+        KeySequence::new(action::send_event(MyEvent(3, None)), keyseq!(W A S D))
+            .time_limit(Duration::from_secs(5)),
     );
 
     commands.add(
@@ -72,7 +73,11 @@ fn setup(mut commands: Commands) {
 
 fn input_sequence_event_system(mut er: EventReader<MyEvent>) {
     for e in er.read() {
-        println!("{e:?} emitted {}", e.gamepad()
-                 .map(|x| format!("from gamepad id {}", x.id)).unwrap_or("not from gamepad".into()));
+        println!(
+            "{e:?} emitted {}",
+            e.gamepad()
+                .map(|x| format!("from gamepad id {}", x.id))
+                .unwrap_or("not from gamepad".into())
+        );
     }
 }

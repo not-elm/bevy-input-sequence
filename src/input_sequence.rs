@@ -1,15 +1,15 @@
-use bevy::{
-    prelude::{Component, Event, GamepadButtonType},
-    ecs::{
-        entity::Entity,
-        world::World,
-        system::{SystemId, BoxedSystem, IntoSystem}
-    },
-    reflect::Reflect,
-    input::gamepad::Gamepad,
-};
 use crate::time_limit::TimeLimit;
 use crate::{GamepadEvent, KeyChord};
+use bevy::{
+    ecs::{
+        entity::Entity,
+        system::{BoxedSystem, IntoSystem, SystemId},
+        world::World,
+    },
+    input::gamepad::Gamepad,
+    prelude::{Component, Event, GamepadButtonType},
+    reflect::Reflect,
+};
 
 /// An input sequence is a series of acts [A] that fires an event when matched
 /// with inputs within the given time limit.
@@ -34,12 +34,14 @@ pub struct InputSequenceBuilder<A, In> {
 }
 
 impl<A, In> InputSequenceBuilder<A, In>
-    where In: 'static
+where
+    In: 'static,
 {
     /// Create new input sequence. Not operant until added to an entity.
     pub fn new<S, P>(system: S) -> Self
     where
-        S: IntoSystem<In, (), P> + 'static {
+        S: IntoSystem<In, (), P> + 'static,
+    {
         InputSequenceBuilder {
             acts: Vec::new(),
             system: Box::new(IntoSystem::into_system(system)),
@@ -57,14 +59,14 @@ impl<A, In> InputSequenceBuilder<A, In>
         InputSequence {
             system_id: world.register_boxed_system::<In, ()>(self.system),
             acts: self.acts,
-            time_limit: self.time_limit
+            time_limit: self.time_limit,
         }
     }
 }
 
-
 impl<A, In> bevy::ecs::system::Command for InputSequenceBuilder<A, In>
-    where A: Send + Sync + 'static,
+where
+    A: Send + Sync + 'static,
     In: Send + Sync + 'static,
 {
     fn apply(self, world: &mut World) {
@@ -74,7 +76,8 @@ impl<A, In> bevy::ecs::system::Command for InputSequenceBuilder<A, In>
 }
 
 impl<A, In> bevy::ecs::system::EntityCommand for InputSequenceBuilder<A, In>
-    where A: Send + Sync + 'static,
+where
+    A: Send + Sync + 'static,
     In: Send + Sync + 'static,
 {
     fn apply(self, id: Entity, world: &mut World) {
@@ -85,21 +88,20 @@ impl<A, In> bevy::ecs::system::EntityCommand for InputSequenceBuilder<A, In>
 }
 
 impl<A, In> InputSequence<A, In>
-    where In: 'static
+where
+    In: 'static,
 {
     /// Create new input sequence. Not operant until added to an entity.
     #[inline(always)]
-    pub fn new<T, S, P>(system: S, acts: impl IntoIterator<Item = T>)
-                  -> InputSequenceBuilder<A, In>
+    pub fn new<T, S, P>(system: S, acts: impl IntoIterator<Item = T>) -> InputSequenceBuilder<A, In>
     where
         A: From<T>,
-        S: IntoSystem<In, (), P> + 'static
+        S: IntoSystem<In, (), P> + 'static,
     {
         let mut builder = InputSequenceBuilder::new(system);
         builder.acts = Vec::from_iter(acts.into_iter().map(A::from));
         builder
     }
-
 }
 
 /// Represents a key sequence.
