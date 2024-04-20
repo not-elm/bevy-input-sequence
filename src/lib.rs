@@ -83,13 +83,6 @@ impl From<KeyCode> for KeyChord {
         KeyChord(Modifiers::empty(), key)
     }
 }
-/// A gamepad event includes what gamepad the event came from.
-pub trait GamepadEvent: Event {
-    /// Return gamepad if available.
-    fn gamepad(&self) -> Option<Gamepad>;
-    /// Set gamepad.
-    fn set_gamepad(&mut self, gamepad: Gamepad);
-}
 
 pub struct InputSequencePlugin {
     schedules: Vec<(Interned<dyn ScheduleLabel>, Option<Interned<dyn SystemSet>>)>,

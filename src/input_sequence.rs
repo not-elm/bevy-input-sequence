@@ -1,5 +1,7 @@
-use crate::time_limit::TimeLimit;
-use crate::{GamepadEvent, KeyChord};
+use crate::{
+    time_limit::TimeLimit,
+    KeyChord,
+};
 use bevy::{
     ecs::{
         entity::Entity,

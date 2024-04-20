@@ -5,20 +5,10 @@ use bevy::prelude::{Commands, Event, EventReader, Gamepad, GamepadButtonType};
 use bevy::DefaultPlugins;
 
 use bevy_input_sequence::InputSequencePlugin;
-use bevy_input_sequence::{action, keyseq, ButtonSequence, GamepadEvent, KeySequence};
+use bevy_input_sequence::{action, keyseq, ButtonSequence, KeySequence};
 
 #[derive(Event, Clone, Debug)]
 struct MyEvent(u8, Option<Gamepad>);
-
-impl GamepadEvent for MyEvent {
-    fn gamepad(&self) -> Option<Gamepad> {
-        self.1
-    }
-
-    fn set_gamepad(&mut self, gamepad: Gamepad) {
-        self.1 = Some(gamepad);
-    }
-}
 
 fn main() {
     App::new()
@@ -75,9 +65,8 @@ fn input_sequence_event_system(mut er: EventReader<MyEvent>) {
     for e in er.read() {
         println!(
             "{e:?} emitted {}",
-            e.gamepad()
-                .map(|x| format!("from gamepad id {}", x.id))
-                .unwrap_or("not from gamepad".into())
+            e.1.map(|x| format!("from gamepad id {}", x.id))
+               .unwrap_or("not from gamepad".into())
         );
     }
 }
