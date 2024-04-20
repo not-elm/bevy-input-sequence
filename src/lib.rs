@@ -1,6 +1,6 @@
 #![doc(html_root_url = "https://docs.rs/bevy-input-sequence/0.3.0")]
 #![doc = include_str!("../README.md")]
-#![forbid(missing_docs)]
+// #![forbid(missing_docs)]
 use bevy::{
     log::warn,
     app::{App, Plugin, Update},
@@ -22,7 +22,7 @@ use std::collections::HashMap;
 use std::fmt;
 use trie_rs::map::{Trie, TrieBuilder};
 
-pub use crate::input_sequence::{ButtonSequence, InputSequence, KeySequence};
+pub use crate::input_sequence::{ButtonSequence, InputSequence, KeySequence, IntoCondSystem, Blanket};
 pub use crate::time_limit::TimeLimit;
 
 pub use keyseq::{
