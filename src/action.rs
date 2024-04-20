@@ -1,3 +1,4 @@
+//! Common actions to do on key sequence matches
 use bevy::{
     ecs::{
         event::{Event, EventWriter},
@@ -5,9 +6,9 @@ use bevy::{
         system::{In, IntoSystem, SystemId},
         world::World,
     },
-    input::gamepad::Gamepad,
 };
 
+/// Send this event.
 pub fn send_event<E: Event + Clone>(event: E) -> impl FnMut(EventWriter<E>) {
     move |mut writer: EventWriter<E>| {
         writer.send(event.clone());
@@ -49,10 +50,11 @@ pub fn send_event_if<E: Event + Clone, M>(
     }
 }
 
-pub fn send_gamepad_event<E: Event, F: FnMut(Gamepad) -> E>(
+/// Sends an event with input, .e.g, [ButtonSequence] provides a [Gamepad] identifier.
+pub fn send_event_with_input<E: Event, Input: 'static, F: FnMut(Input) -> E>(
     mut f: F,
-) -> impl FnMut(In<Gamepad>, EventWriter<E>) {
-    move |In(gamepad), mut writer: EventWriter<E>| {
-        writer.send(f(gamepad));
+) -> impl FnMut(In<Input>, EventWriter<E>) {
+    move |In(x), mut writer: EventWriter<E>| {
+        writer.send(f(x));
     }
 }

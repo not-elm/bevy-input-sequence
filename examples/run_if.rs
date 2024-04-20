@@ -22,7 +22,7 @@ fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .init_state::<AppState>()
-        .add_plugins(InputSequencePlugin::new().run_in_set(Update, MySet))
+        .add_plugins(InputSequencePlugin::empty().run_in_set(Update, MySet))
         .add_event::<GlobalEvent>()
         .add_event::<MyEvent>()
         // .configure_sets(Update,

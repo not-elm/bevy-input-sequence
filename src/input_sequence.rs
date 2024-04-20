@@ -13,8 +13,8 @@ use bevy::{
     reflect::Reflect,
 };
 
-/// An input sequence is a series of acts [A] that fires an event when matched
-/// with inputs within the given time limit.
+/// An input sequence is a series of acts that fires an event when matched with
+/// inputs within the given time limit.
 #[derive(Component, Reflect, Clone)]
 #[reflect(from_reflect = false)]
 pub struct InputSequence<Act, In> {

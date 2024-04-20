@@ -1,6 +1,6 @@
 #![doc(html_root_url = "https://docs.rs/bevy-input-sequence/0.3.0")]
 #![doc = include_str!("../README.md")]
-// #![forbid(missing_docs)]
+#![forbid(missing_docs)]
 use bevy::{
     app::{App, Plugin, Update},
     core::FrameCount,
@@ -84,6 +84,7 @@ impl From<KeyCode> for KeyChord {
     }
 }
 
+/// Input sequence plugin.
 pub struct InputSequencePlugin {
     schedules: Vec<(Interned<dyn ScheduleLabel>, Option<Interned<dyn SystemSet>>)>,
 }
@@ -157,7 +158,8 @@ impl Plugin for InputSequencePlugin {
 }
 
 impl InputSequencePlugin {
-    pub fn new() -> Self {
+    /// Constructs an empty input sequence plugin with no default schedules.
+    pub fn empty() -> Self {
         Self { schedules: vec![] }
     }
     /// Run the executor in a specific `Schedule`.
@@ -382,14 +384,6 @@ mod tests {
 
         #[derive(Event, Clone)]
         struct MyEvent;
-
-        impl GamepadEvent for MyEvent {
-            fn gamepad(&self) -> Option<Gamepad> {
-                None
-            }
-
-            fn set_gamepad(&mut self, _gamepad: Gamepad) {}
-        }
 
         #[derive(Component)]
         struct EventSent(u8);

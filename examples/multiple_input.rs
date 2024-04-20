@@ -28,7 +28,7 @@ fn setup(mut commands: Commands) {
 
     commands.add(
         ButtonSequence::new(
-            action::send_gamepad_event(|gamepad| MyEvent(2, Some(gamepad))),
+            action::send_event_with_input(|gamepad| MyEvent(2, Some(gamepad))),
             [
                 GamepadButtonType::North,
                 GamepadButtonType::East,
@@ -46,7 +46,7 @@ fn setup(mut commands: Commands) {
 
     commands.add(
         ButtonSequence::new(
-            action::send_gamepad_event(|gamepad| MyEvent(4, Some(gamepad))),
+            action::send_event_with_input(|gamepad| MyEvent(4, Some(gamepad))),
             [
                 GamepadButtonType::North,
                 GamepadButtonType::West,
