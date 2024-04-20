@@ -10,17 +10,16 @@ struct MyEvent;
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        .add_key_sequence_event::<MyEvent>()
+        .add_event::<MyEvent>()
+        .add_plugins(InputSequencePlugin::default())
         .add_systems(Startup, setup)
         .add_systems(Update, input_sequence_event_system)
         .run();
 }
 
 fn setup(mut commands: Commands) {
-    commands.spawn(
-        KeySequence::new(MyEvent, keyseq!(ctrl-W ctrl-D ctrl-S ctrl-A))
-            .time_limit(Duration::from_secs(1)),
-    );
+    commands.add(KeySequence::new(action::send_event(MyEvent), keyseq!(ctrl-W ctrl-D ctrl-S ctrl-A))
+                 .time_limit(Duration::from_secs(1)));
     println!("Press ctrl-W ctrl-D ctrl-S ctrl-A to emit event.");
 }
 

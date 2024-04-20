@@ -14,7 +14,8 @@ struct MyEvent(Direction);
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        .add_key_sequence_event::<MyEvent>()
+        .add_plugins(InputSequencePlugin::default())
+        .add_event::<MyEvent>()
         .add_systems(Startup, setup)
         .add_systems(Update, event_listener)
         .run();
@@ -23,9 +24,9 @@ fn main() {
 #[rustfmt::skip]
 fn setup(mut commands: Commands) {
     // Specify key codes directly.
-    commands.spawn(
+    commands.add(
         KeySequence::new(
-            MyEvent(Direction::Clockwise),
+            action::send_event(MyEvent(Direction::Clockwise)),
             [KeyCode::KeyW,
              KeyCode::KeyD,
              KeyCode::KeyS,
@@ -35,9 +36,9 @@ fn setup(mut commands: Commands) {
     );
 
     // Use keyseq! macro.
-    commands.spawn(
+    commands.add(
         KeySequence::new(
-            MyEvent(Direction::CounterClockwise),
+            action::send_event(MyEvent(Direction::CounterClockwise)),
             keyseq!(W A S D),
         )
         .time_limit(Duration::from_secs(1)),

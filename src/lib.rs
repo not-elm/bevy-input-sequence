@@ -1,17 +1,22 @@
 #![doc(html_root_url = "https://docs.rs/bevy-input-sequence/0.3.0")]
 #![doc = include_str!("../README.md")]
 // #![forbid(missing_docs)]
-use bevy::utils::intern::Interned;
-use bevy::app::{App, Update, Plugin};
-use bevy::core::FrameCount;
-use bevy::ecs::schedule::{Condition, SystemSet, ScheduleLabel};
-use bevy::reflect::{Reflect, Enum};
-use bevy::prelude::{
-    Added, ButtonInput as Input, Event, EventWriter, Gamepad, GamepadButton, GamepadButtonType,
-    IntoSystemConfigs, KeyCode, Local, Query, RemovedComponents, Res, ResMut, Resource,
-    IntoSystemSetConfigs,
+use bevy::{
+    utils::intern::Interned,
+    app::{App, Update, Plugin},
+    core::FrameCount,
+    ecs::{
+        system::Commands,
+        schedule::{Condition, SystemSet, ScheduleLabel},
+    },
+        reflect::{Reflect, Enum},
+        prelude::{
+            Added, ButtonInput as Input, Event, EventWriter, Gamepad, GamepadButton, GamepadButtonType,
+            IntoSystemConfigs, KeyCode, Local, Query, RemovedComponents, Res, ResMut, Resource,
+            IntoSystemSetConfigs,
+        },
+        time::Time,
 };
-use bevy::time::Time;
 use std::collections::HashMap;
 use std::fmt;
 use trie_rs::map::{Trie, TrieBuilder};
@@ -28,6 +33,7 @@ mod covec;
 mod frame_time;
 mod input_sequence;
 mod time_limit;
+pub mod action;
 
 use covec::Covec;
 use frame_time::FrameTime;
@@ -87,7 +93,6 @@ pub trait GamepadEvent: Event {
 
 pub struct InputSequencePlugin {
     schedules: Vec<(Interned<dyn ScheduleLabel>, Option<Interned<dyn SystemSet>>)>,
-    thunks: Vec<Box<dyn Fn(&Self, &mut App) + 'static + Sync + Send>>,
 }
 
 
@@ -95,15 +100,52 @@ impl Default for InputSequencePlugin {
     fn default() -> Self {
         InputSequencePlugin { schedules: vec![
             (Interned(Box::leak(Box::new(Update))), None)],
-                              thunks: vec![],
         }
     }
 }
 
 impl Plugin for InputSequencePlugin {
     fn build(&self, app: &mut App) {
-        for thunk in &self.thunks {
-            thunk(&self, app);
+        // Add key sequence.
+        app.init_resource::<InputSequenceCache<KeyChord, ()>>();
+
+        for (schedule, set) in &self.schedules {
+            if let Some(set) = set {
+                app.add_systems(*schedule,
+                                (
+                                    detect_removals::<KeyChord, ()>,
+                                    detect_additions::<KeyChord, ()>,
+                                    key_sequence_matcher,
+                                ).chain().in_set(*set));
+            } else {
+                app.add_systems(*schedule,
+                                (
+                                    detect_removals::<KeyChord, ()>,
+                                    detect_additions::<KeyChord, ()>,
+                                    key_sequence_matcher,
+                                ).chain());
+            }
+        }
+
+        // Add button sequences.
+        app.init_resource::<InputSequenceCache<GamepadButtonType, Gamepad>>();
+
+        for (schedule, set) in &self.schedules {
+            if let Some(set) = set {
+                app.add_systems(*schedule,
+                                (
+                                    detect_removals::<GamepadButtonType, Gamepad>,
+                                    detect_additions::<GamepadButtonType, Gamepad>,
+                                    button_sequence_matcher,
+                                ).chain().in_set(*set));
+            } else {
+                app.add_systems(*schedule,
+                                (
+                                    detect_removals::<GamepadButtonType, Gamepad>,
+                                    detect_additions::<GamepadButtonType, Gamepad>,
+                                    button_sequence_matcher,
+                                ).chain());
+            }
         }
     }
 }
@@ -112,7 +154,6 @@ impl InputSequencePlugin {
     pub fn new() -> Self {
         Self {
             schedules: vec![],
-            thunks: vec![],
         }
     }
     /// Run the executor in a specific `Schedule`.
@@ -131,119 +172,39 @@ impl InputSequencePlugin {
         );
         self
     }
-
-    pub fn add_key_sequence_event<E: Event + Clone>(mut self) -> Self {
-        self.thunks.push(Box::new(
-            |this, app|
-            {
-                app.add_event::<E>()
-                    .init_resource::<InputSequenceCache<E, KeyChord>>();
-
-                for (schedule, set) in &this.schedules {
-                    if let Some(set) = set {
-                        app.add_systems(*schedule,
-                                        (
-                                            detect_removals::<E, KeyChord>,
-                                            detect_additions::<E, KeyChord>,
-                                            key_sequence_matcher::<E>,
-                                        ).chain().in_set(*set));
-                    } else {
-                        app.add_systems(*schedule,
-                                        (
-                                            detect_removals::<E, KeyChord>,
-                                            detect_additions::<E, KeyChord>,
-                                            key_sequence_matcher::<E>,
-                                        ).chain());
-                    }
-                }
-        }));
-        self
-    }
-
-    pub fn add_button_sequence_event<E: GamepadEvent + Clone>(mut self) -> Self {
-        self.thunks.push(Box::new(
-            |this, app|
-            {
-                app.add_event::<E>()
-                    .init_resource::<InputSequenceCache<E, GamepadButtonType>>();
-
-                for (schedule, set) in &this.schedules {
-                    if let Some(set) = set {
-                        app.add_systems(*schedule,
-                                        (
-                                            detect_removals::<E, GamepadButtonType>,
-                                            detect_additions::<E, GamepadButtonType>,
-                                            button_sequence_matcher::<E>,
-                                        ).chain().in_set(*set));
-                    } else {
-                        app.add_systems(*schedule,
-                                        (
-                                            detect_removals::<E, GamepadButtonType>,
-                                            detect_additions::<E, GamepadButtonType>,
-                                            button_sequence_matcher::<E>,
-                                        ).chain());
-                    }
-                }
-        }));
-        self
-    }
 }
 
 
-/// App extension trait
-pub trait AddInputSequenceEvent {
-    /// Setup event `E` so that it may fire when a component `KeySequence<E>` is
-    /// present in the app.
-    fn add_key_sequence_event<E: Event + Clone>(&mut self) -> &mut App;
-
-    /// Setup event `E` so that it may fire when a component `ButtonSequence<E>` is
-    /// present in the app.
-    fn add_button_sequence_event<E: GamepadEvent + Clone>(&mut self) -> &mut App;
-
-    /// Setup event `E` so that it may fire when a component `KeySequence<E>` is
-    /// present and the condition is met.
-    fn add_key_sequence_event_run_if<E: Event + Clone, M>(
-        &mut self,
-        condition: impl Condition<M>,
-    ) -> &mut App;
-
-    /// Setup event `E` so that it may fire when a component `ButtonSequence<E>` is
-    /// present in the app.
-    fn add_button_sequence_event_run_if<E: GamepadEvent + Clone, M>(
-        &mut self,
-        condition: impl Condition<M>,
-    ) -> &mut App;
-}
 
 /// Contains the trie for the input sequences.
 #[derive(Resource)]
-pub struct InputSequenceCache<E, A> {
-    trie: Option<Trie<A, InputSequence<E, A>>>,
+pub struct InputSequenceCache<A, In> {
+    trie: Option<Trie<A, InputSequence<A, In>>>,
 }
 
-impl<E, A> InputSequenceCache<E, A>
+impl<A, In> InputSequenceCache<A, In>
 where
-    E: Event + Clone,
     A: Ord + Clone + Send + Sync + 'static,
+    In: Send + Sync + Clone + 'static
 {
     /// Retrieve the cached trie without iterating through `sequences`. Or if
     /// the cache has been invalidated, build and cache a new trie using the
     /// `sequences` iterator.
     pub fn trie<'a>(
         &mut self,
-        sequences: impl Iterator<Item = &'a InputSequence<E, A>>,
-    ) -> &Trie<A, InputSequence<E, A>> {
+        sequences: impl Iterator<Item = &'a InputSequence<A, In>>,
+    ) -> &Trie<A, InputSequence<A, In>> {
         self.trie.get_or_insert_with(|| {
-            let mut builder = TrieBuilder::new();
+            let mut builder: TrieBuilder<A, InputSequence<A, In>> = TrieBuilder::new();
             for sequence in sequences {
-                builder.push(sequence.acts.clone(), sequence.clone());
+                builder.insert(sequence.acts.clone(), sequence.clone());
             }
             builder.build()
         })
     }
 }
 
-impl<E, A> Default for InputSequenceCache<E, A> {
+impl<A, In> Default for InputSequenceCache<A, In> {
     fn default() -> Self {
         Self { trie: None }
     }
@@ -259,87 +220,23 @@ pub enum InputSet {
 }
 
 
-impl AddInputSequenceEvent for App {
-    /// Add a [KeySequence] event.
-    ///
-    /// You can also control when it runs by configuring [InputSet::Key].
-    ///
-    /// ```ignore
-    /// fn main() {
-    ///     App::new()
-    ///         .add_key_sequence_event::<A>()
-    ///         .configure_sets(Update, (InputSet::Key).run_if(in_state(State::Listen)))
-    ///         .run();
-    /// }
-    ///
-    /// ```
-    #[inline(always)]
-    fn add_key_sequence_event<E: Event + Clone>(&mut self) -> &mut App {
-        self.add_event::<E>()
-            .init_resource::<InputSequenceCache<E, KeyChord>>()
-            .add_systems(
-                Update,
-                (
-                    detect_removals::<E, KeyChord>,
-                    detect_additions::<E, KeyChord>,
-                    key_sequence_matcher::<E>,
-                )
-                    .chain()
-                    .in_set(InputSet::Key),
-            )
-    }
-
-    // TODO: Remove this function.
-    fn add_key_sequence_event_run_if<E: Event + Clone, M>(
-        &mut self,
-        condition: impl Condition<M>,
-    ) -> &mut App {
-        self.add_key_sequence_event::<E>();
-        self.configure_sets(Update, (InputSet::Key).run_if(condition))
-    }
-
-    fn add_button_sequence_event<E: GamepadEvent + Clone>(&mut self) -> &mut App {
-        self.add_event::<E>()
-            .init_resource::<InputSequenceCache<E, GamepadButtonType>>()
-            .add_systems(
-                Update,
-                (
-                    detect_removals::<E, GamepadButtonType>,
-                    detect_additions::<E, GamepadButtonType>,
-                    button_sequence_matcher::<E>,
-                )
-                    .chain()
-                    .in_set(InputSet::Button),
-            )
-    }
-
-    // TODO: Remove this function.
-    fn add_button_sequence_event_run_if<E: GamepadEvent + Clone, M>(
-        &mut self,
-        condition: impl Condition<M>,
-    ) -> &mut App {
-        self.add_key_sequence_event::<E>();
-        self.configure_sets(Update, (InputSet::Button).run_if(condition))
-    }
-}
-
 fn is_modifier(key: KeyCode) -> bool {
     let mods = Modifiers::from(key);
     !mods.is_empty()
 }
 
 #[allow(clippy::too_many_arguments)]
-fn button_sequence_matcher<E: GamepadEvent + Clone>(
+fn button_sequence_matcher(
     // A: Ord + Clone + Send + Sync + 'static>(
-    mut writer: EventWriter<E>,
-    secrets: Query<&ButtonSequence<E>>,
+    // mut writer: EventWriter<E>,
+    secrets: Query<&ButtonSequence>,
     time: Res<Time>,
     buttons: Res<Input<GamepadButton>>,
     mut last_buttons: Local<HashMap<usize, Covec<GamepadButtonType, FrameTime>>>,
-    mut cache: ResMut<InputSequenceCache<E, GamepadButtonType>>,
+    mut cache: ResMut<InputSequenceCache<GamepadButtonType, Gamepad>>,
     frame_count: Res<FrameCount>,
 ) {
-    let trie = cache.trie(secrets.iter().map(|x| &x.0));
+    let trie = cache.trie(secrets.iter());
     let now = FrameTime {
         frame: frame_count.0,
         time: time.elapsed_seconds(),
@@ -358,13 +255,15 @@ fn button_sequence_matcher<E: GamepadEvent + Clone>(
         for mut seq in consume_input(trie, &mut pad_buttons.0) {
             if seq
                 .time_limit
+                .as_ref()
                 .map(|limit| (&now - &start).has_timedout(&limit))
                 .unwrap_or(false)
             {
                 // Sequence timed out.
             } else {
-                seq.event.set_gamepad(button.gamepad);
-                writer.send(seq.event);
+                // seq.event.set_gamepad(button.gamepad);
+                todo!("run system");
+                // writer.send(seq.event);
             }
         }
         pad_buttons.drain1_sync();
@@ -372,14 +271,14 @@ fn button_sequence_matcher<E: GamepadEvent + Clone>(
 }
 
 #[allow(clippy::too_many_arguments)]
-fn key_sequence_matcher<E: Event + Clone>(
-    mut writer: EventWriter<E>,
-    secrets: Query<&KeySequence<E>>,
+fn key_sequence_matcher(
+    secrets: Query<&KeySequence>,
     time: Res<Time>,
     keys: Res<Input<KeyCode>>,
     mut last_keys: Local<Covec<KeyChord, FrameTime>>,
-    mut cache: ResMut<InputSequenceCache<E, KeyChord>>,
+    mut cache: ResMut<InputSequenceCache<KeyChord, ()>>,
     frame_count: Res<FrameCount>,
+    mut commands: Commands,
 ) {
     let mods = Modifiers::from_input(&keys);
     let trie = cache.trie(secrets.iter());
@@ -397,46 +296,47 @@ fn key_sequence_matcher<E: Event + Clone>(
         for seq in consume_input(trie, &mut last_keys.0) {
             if seq
                 .time_limit
+                .as_ref()
                 .map(|limit| (&now - &start).has_timedout(&limit))
                 .unwrap_or(false)
             {
                 // Sequence timed out.
             } else {
-                writer.send(seq.event);
+                commands.run_system(seq.system_id);
             }
         }
         last_keys.drain1_sync();
     }
 }
 
-fn detect_additions<E: Event + Clone, A: Clone + Send + Sync + 'static>(
-    secrets: Query<&InputSequence<E, A>, Added<InputSequence<E, A>>>,
-    mut cache: ResMut<InputSequenceCache<E, A>>,
+fn detect_additions<A: Clone + Send + Sync + 'static, In: 'static>(
+    secrets: Query<&InputSequence<A, In>, Added<InputSequence<A, In>>>,
+    mut cache: ResMut<InputSequenceCache<A, In>>,
 ) {
     if secrets.iter().next().is_some() {
         cache.trie = None;
     }
 }
 
-fn detect_removals<E: Event, A: Clone + Send + Sync + 'static>(
-    mut cache: ResMut<InputSequenceCache<E, A>>,
-    mut removals: RemovedComponents<InputSequence<E, A>>,
+fn detect_removals<A: Clone + Send + Sync + 'static, In: 'static>(
+    mut cache: ResMut<InputSequenceCache<A, In>>,
+    mut removals: RemovedComponents<InputSequence<A, In>>,
 ) {
     if removals.read().next().is_some() {
         cache.trie = None;
     }
 }
 
-fn consume_input<K, V>(trie: &Trie<K, V>, input: &mut Vec<K>) -> impl Iterator<Item = V>
+fn consume_input<'a, K, V>(trie: &'a Trie<K, V>, input: &mut Vec<K>) -> impl Iterator<Item = &'a V>
 where
     K: Clone + Eq + Ord,
-    V: Clone,
+    // V: Clone,
 {
     let mut result = vec![];
     let mut min_prefix = None;
     for i in 0..input.len() {
         if let Some(seq) = trie.exact_match(&input[i..]) {
-            result.push(seq.clone());
+            result.push(seq);
         }
         if min_prefix.is_none() && trie.is_prefix(&input[i..]) {
             min_prefix = Some(i);

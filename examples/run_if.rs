@@ -15,12 +15,19 @@ enum AppState {
     Game,
 }
 
+#[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
+pub struct MySet;
+
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .init_state::<AppState>()
-        .add_key_sequence_event::<GlobalEvent>()
-        .add_key_sequence_event_run_if::<MyEvent, _>(in_state(AppState::Game))
+        .add_plugins(InputSequencePlugin::new()
+                     .run_in_set(Update, MySet))
+        .add_event::<GlobalEvent>()
+        .add_event::<MyEvent>()
+        // .configure_sets(Update,
+        //                 MySet.run_if(in_state(AppState::Game)))
         .add_systems(Startup, setup)
         .add_systems(Update, listen_for_myevent)
         .add_systems(Update, listen_for_global_event)
@@ -28,8 +35,9 @@ fn main() {
 }
 
 fn setup(mut commands: Commands) {
-    commands.spawn(KeySequence::new(GlobalEvent, keyseq!(Escape)));
-    commands.spawn(KeySequence::new(MyEvent, keyseq!(Space)).time_limit(Duration::from_secs(1)));
+    commands.add(KeySequence::new(action::send_event(GlobalEvent), keyseq!(Escape)));
+    commands.add(KeySequence::new(action::send_event_if(MyEvent,
+                                                        in_state(AppState::Game)), keyseq!(Space)).time_limit(Duration::from_secs(1)));
     println!("Press Space to emit event in game mode.");
     println!("Press Escape to switch between Game and Menu mode; currently in Game mode.");
 }

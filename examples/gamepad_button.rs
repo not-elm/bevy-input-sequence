@@ -2,8 +2,8 @@ use bevy::app::{App, Startup, Update};
 use bevy::prelude::{Commands, Event, EventReader, Gamepad, GamepadButtonType};
 use bevy::{DefaultPlugins, utils::Duration};
 
-use bevy_input_sequence::AddInputSequenceEvent;
-use bevy_input_sequence::{ButtonSequence, GamepadEvent};
+use bevy_input_sequence::InputSequencePlugin;
+use bevy_input_sequence::{ButtonSequence, GamepadEvent, action};
 
 #[derive(Event, Clone, Debug)]
 struct MyEvent(usize, Gamepad);
@@ -21,15 +21,16 @@ impl GamepadEvent for MyEvent {
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        .add_button_sequence_event::<MyEvent>()
+        .add_plugins(InputSequencePlugin::default())
+        .add_event::<MyEvent>()
         .add_systems(Startup, setup)
         .add_systems(Update, input_sequence_event_system)
         .run();
 }
 
 fn setup(mut commands: Commands) {
-    commands.spawn(ButtonSequence::new(
-        MyEvent(0, Gamepad { id: 999 }),
+    commands.add(ButtonSequence::new(
+        action::send_gamepad_event(|gamepad| MyEvent(0, gamepad)),
         [
             GamepadButtonType::North,
             GamepadButtonType::East,
@@ -38,8 +39,8 @@ fn setup(mut commands: Commands) {
         ],
     ).time_limit(Duration::from_secs(1)));
 
-    commands.spawn(ButtonSequence::new(
-        MyEvent(1, Gamepad { id: 999 }),
+    commands.add(ButtonSequence::new(
+        action::send_gamepad_event(|gamepad| MyEvent(1, gamepad)),
         [
             GamepadButtonType::North,
             GamepadButtonType::West,

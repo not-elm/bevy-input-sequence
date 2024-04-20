@@ -4,8 +4,8 @@ use bevy::app::{App, Startup, Update};
 use bevy::prelude::{Commands, Event, EventReader, Gamepad, GamepadButtonType};
 use bevy::DefaultPlugins;
 
-use bevy_input_sequence::AddInputSequenceEvent;
-use bevy_input_sequence::{keyseq, ButtonSequence, GamepadEvent, KeySequence};
+use bevy_input_sequence::InputSequencePlugin;
+use bevy_input_sequence::{keyseq, ButtonSequence, GamepadEvent, KeySequence, action};
 
 #[derive(Event, Clone, Debug)]
 struct MyEvent(u8, Option<Gamepad>);
@@ -23,21 +23,22 @@ impl GamepadEvent for MyEvent {
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        .add_key_sequence_event::<MyEvent>()
-        .add_button_sequence_event::<MyEvent>()
+        .add_plugins(InputSequencePlugin::default())
+        .add_event::<MyEvent>()
         .add_systems(Startup, setup)
         .add_systems(Update, input_sequence_event_system)
         .run();
 }
 
 fn setup(mut commands: Commands) {
-    commands.spawn(
-        KeySequence::new(MyEvent(1, None), keyseq!(W D S A)).time_limit(Duration::from_secs(5)),
+    commands.add(
+        KeySequence::new(action::send_event(MyEvent(1, None)),
+                         keyseq!(W D S A)).time_limit(Duration::from_secs(5)),
     );
 
-    commands.spawn(
+    commands.add(
         ButtonSequence::new(
-            MyEvent(2, None),
+            action::send_gamepad_event(|gamepad| MyEvent(2, Some(gamepad))),
             [
                 GamepadButtonType::North,
                 GamepadButtonType::East,
@@ -48,13 +49,13 @@ fn setup(mut commands: Commands) {
         .time_limit(Duration::from_secs(5)),
     );
 
-    commands.spawn(
-        KeySequence::new(MyEvent(3, None), keyseq!(W A S D)).time_limit(Duration::from_secs(5)),
+    commands.add(
+        KeySequence::new(action::send_event(MyEvent(3, None)), keyseq!(W A S D)).time_limit(Duration::from_secs(5)),
     );
 
-    commands.spawn(
+    commands.add(
         ButtonSequence::new(
-            MyEvent(4, None),
+            action::send_gamepad_event(|gamepad| MyEvent(4, Some(gamepad))),
             [
                 GamepadButtonType::North,
                 GamepadButtonType::West,
