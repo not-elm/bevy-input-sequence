@@ -1,10 +1,9 @@
 use crate::{
     time_limit::TimeLimit,
     KeyChord,
-    cond_system::SilentCondSystem,
+    cond_system::IntoCondSystem,
 };
 
-use std::borrow::Cow;
 use bevy::{
     log::warn,
     ecs::{
@@ -40,67 +39,6 @@ pub struct InputSequenceBuilder<Act, S> {
     pub time_limit: Option<TimeLimit>,
 }
 
-// pub struct CondSystem<S> {
-//     system: S,
-//     condition: Option<BoxedCondition>,
-// }
-
-// struct CondMarker;
-//
-
-pub trait IntoCondSystem<I, O, M> : IntoSystem<I, O, M> {
-    // fn into_cond_system(this: Self) -> CondSystem<S>;
-    // {
-    //     CondSystem {
-    //         system: IntoSystem::into_system(this),
-    //         condition: None,
-    //     }
-    // }
-
-
-    fn only_if<B, MarkerB>(self, system: B) -> SilentCondSystem<Self::System, B::System>
-    where
-        B: IntoSystem<(), bool, MarkerB>,
-    {
-        let system_a = IntoSystem::into_system(self);
-        let system_b = IntoSystem::into_system(system);
-        let name = format!("Cond({}, {})", system_a.name(), system_b.name());
-        SilentCondSystem::new(system_a, system_b, Cow::Owned(name))
-    }
-    // fn only_if<P>(self, condition: impl Condition<P>)
-    //              -> CondSystem<S> where Self: Sized {
-    //     let x = IntoCondSystem::into_cond_system(self);
-    //     if x.condition.is_some() {
-    //         panic!("Cannot chain run_if conditions.");
-    //     }
-    //     warn!("create cond system");
-    //     CondSystem {
-    //         system: x.system,
-    //         condition: Some(Box::new(IntoSystem::into_system(condition))),
-    //     }
-    // }
-}
-
-pub struct Blanket;
-
-impl<I, O, M, T> IntoCondSystem<I, O, M> for T where T: IntoSystem<I, O, M> + ?Sized {
-    // fn into_cond_system(this: Self) -> CondSystem<T::System> {
-    //     CondSystem {
-    //         system: IntoSystem::into_system(this),
-    //         condition: None,
-    //     }
-    // }
-}
-
-// pub struct CondSys;
-// impl<S> IntoSystem<S::In, S::Out, CondSys> for CondSystem<S>
-// where S: System{
-//     type System = S;
-//     fn into_system(this: Self) -> Self::System {
-//         this.system
-//     }
-// }
-
 impl<Act> InputSequenceBuilder<Act, ()>
 {
     /// Create new input sequence. Not operant until added to an entity.
@@ -129,19 +67,6 @@ impl <Act, S> InputSequenceBuilder<Act, S> where S: System<Out = ()>{
             system_id: world.register_system(self.system),
             acts: self.acts,
             time_limit: self.time_limit,
-        }
-    }
-}
-
-fn run_if_impl<I>(
-    mut condition: BoxedCondition,
-    consequent: SystemId<I>,
-) -> impl FnMut(In<I>, Commands, &World) where I: Send + Sync + 'static {
-    move |In(input): In<I>, mut commands: Commands, world: &World| {
-        eprintln!("checking condition");
-        if condition.run_readonly((), world) {
-        eprintln!("running after condition");
-            commands.run_system_with_input(consequent, input);
         }
     }
 }

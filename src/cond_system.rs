@@ -1,4 +1,19 @@
-use bevy::ecs::system::{Combine, CombinatorSystem, System};
+use bevy::ecs::system::{Combine, CombinatorSystem, System, IntoSystem};
+use std::borrow::Cow;
+
+pub trait IntoCondSystem<I, O, M> : IntoSystem<I, O, M> {
+    fn only_if<B, MarkerB>(self, system: B) -> SilentCondSystem<Self::System, B::System>
+    where
+        B: IntoSystem<(), bool, MarkerB>,
+    {
+        let system_a = IntoSystem::into_system(self);
+        let system_b = IntoSystem::into_system(system);
+        let name = format!("Cond({}, {})", system_a.name(), system_b.name());
+        SilentCondSystem::new(system_a, system_b, Cow::Owned(name))
+    }
+}
+
+impl<I, O, M, T> IntoCondSystem<I, O, M> for T where T: IntoSystem<I, O, M> + ?Sized {}
 
 pub type CondSystem<SystemA, SystemB> = CombinatorSystem<Cond, SystemA, SystemB>;
 

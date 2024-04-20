@@ -22,7 +22,7 @@ use std::collections::HashMap;
 use std::fmt;
 use trie_rs::map::{Trie, TrieBuilder};
 
-pub use crate::input_sequence::{ButtonSequence, InputSequence, KeySequence, IntoCondSystem, Blanket};
+pub use crate::input_sequence::{ButtonSequence, InputSequence, KeySequence};
 pub use crate::time_limit::TimeLimit;
 
 pub use keyseq::{
@@ -102,7 +102,7 @@ impl Default for InputSequencePlugin {
 
 impl Plugin for InputSequencePlugin {
     fn build(&self, app: &mut App) {
-        if true || app.world.get_resource::<Input<KeyCode>>().is_some() {
+        if app.world.get_resource::<Input<KeyCode>>().is_some() {
             // Add key sequence.
             app.init_resource::<InputSequenceCache<KeyChord, ()>>();
 
@@ -134,7 +134,7 @@ impl Plugin for InputSequencePlugin {
             warn!("No key sequence matcher added; consider adding DefaultPlugins.");
         }
 
-        if true || app.world.get_resource::<Input<GamepadButton>>().is_some() {
+        if app.world.get_resource::<Input<GamepadButton>>().is_some() {
             // Add button sequences.
             app.init_resource::<InputSequenceCache<GamepadButtonType, Gamepad>>();
 
@@ -712,7 +712,7 @@ mod tests {
                 }),
             ));
             app.world.add(ButtonSequence::new(
-                action::send_event_with_input(|_| MyEvent),
+                action::send_event_with_input(|_: Gamepad| MyEvent),
                 [
                     GamepadButtonType::North,
                     GamepadButtonType::East,
@@ -777,7 +777,7 @@ mod tests {
             ));
 
             app.world.add(ButtonSequence::new(
-                action::send_event_with_input(|_| MyEvent),
+                action::send_event_with_input(|_: Gamepad| MyEvent),
                 [GamepadButtonType::North, GamepadButtonType::C],
             ));
             app.update();
