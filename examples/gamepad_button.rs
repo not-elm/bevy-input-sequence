@@ -51,6 +51,6 @@ fn setup(mut commands: Commands) {
 
 fn input_sequence_event_system(mut er: EventReader<MyEvent>) {
     for e in er.read() {
-        println!("{e:?} emitted from gamepad {:?}", e.1);
+        println!("{:?} emitted from gamepad {:?}", e.0, e.1);
     }
 }

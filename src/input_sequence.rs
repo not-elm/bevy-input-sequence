@@ -109,9 +109,5 @@ where
 /// Represents a key sequence.
 pub type KeySequence = InputSequence<KeyChord, ()>;
 
-// pub type ButtonSequence<E> = InputSequence<E, GamepadButtonType>;
 /// Represents a gamepad button sequence.
-// #[derive(Component, Reflect, Clone)]
-// #[reflect(from_reflect = false)]
 pub type ButtonSequence = InputSequence<GamepadButtonType, Gamepad>;
-

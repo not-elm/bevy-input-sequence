@@ -227,14 +227,13 @@ fn is_modifier(key: KeyCode) -> bool {
 
 #[allow(clippy::too_many_arguments)]
 fn button_sequence_matcher(
-    // A: Ord + Clone + Send + Sync + 'static>(
-    // mut writer: EventWriter<E>,
     secrets: Query<&ButtonSequence>,
     time: Res<Time>,
     buttons: Res<Input<GamepadButton>>,
     mut last_buttons: Local<HashMap<usize, Covec<GamepadButtonType, FrameTime>>>,
     mut cache: ResMut<InputSequenceCache<GamepadButtonType, Gamepad>>,
     frame_count: Res<FrameCount>,
+    mut commands: Commands,
 ) {
     let trie = cache.trie(secrets.iter());
     let now = FrameTime {
@@ -261,9 +260,7 @@ fn button_sequence_matcher(
             {
                 // Sequence timed out.
             } else {
-                // seq.event.set_gamepad(button.gamepad);
-                todo!("run system");
-                // writer.send(seq.event);
+                commands.run_system_with_input(seq.system_id, button.gamepad);
             }
         }
         pad_buttons.drain1_sync();
