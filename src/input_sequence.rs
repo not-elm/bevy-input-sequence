@@ -1,7 +1,7 @@
 use crate::{
     time_limit::TimeLimit,
     KeyChord,
-    cond_system::CondSystem,
+    cond_system::SilentCondSystem,
 };
 
 use std::borrow::Cow;
@@ -58,14 +58,14 @@ pub trait IntoCondSystem<I, O, M> : IntoSystem<I, O, M> {
     // }
 
 
-    fn only_if<B, MarkerB>(self, system: B) -> CondSystem<Self::System, B::System>
+    fn only_if<B, MarkerB>(self, system: B) -> SilentCondSystem<Self::System, B::System>
     where
         B: IntoSystem<(), bool, MarkerB>,
     {
         let system_a = IntoSystem::into_system(self);
         let system_b = IntoSystem::into_system(system);
         let name = format!("Cond({}, {})", system_a.name(), system_b.name());
-        CondSystem::new(system_a, system_b, Cow::Owned(name))
+        SilentCondSystem::new(system_a, system_b, Cow::Owned(name))
     }
     // fn only_if<P>(self, condition: impl Condition<P>)
     //              -> CondSystem<S> where Self: Sized {
