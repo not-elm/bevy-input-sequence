@@ -1,8 +1,8 @@
 # bevy-input-sequence
 
-This crate recognizes input sequences and sends events.
+This crate recognizes input sequences.
 
-# Use cases
+# Use Cases
 
 * Hotkeys
 * Cheat codes
@@ -14,36 +14,45 @@ This crate recognizes input sequences and sends events.
 cargo install bevy-input-sequence
 ```
 
-# Usage
+# Code Examples
 
-# Minimal
+Here are some code snippets. These also run as doctests so they are not quite
+runnable examples, but those are described in the next section.
+
+## Run a System
+
+Runs a system whenever the user presses the key sequence "hi" within a time limit.
 
 ```rust
 use bevy::prelude::*;
-use bevy_input_sequence::*;
+use bevy_input_sequence::prelude::*;
 
 fn main() {
     App::new()
-        .add_plugins(DefaultPlugins)
+        .add_plugins(MinimalPlugins)
         .add_plugins(InputSequencePlugin::default())
         .add_systems(Startup, setup)
         .update(); // Normally you'd run it here.
 }
 
 fn setup(mut commands: Commands) {
-    commands.add(KeySequence::new(say_hi, keyseq! { alt-H I }));
+    commands.add(
+        KeySequence::new(say_hi, 
+                         keyseq! { H I })
+        .time_limit(Duration::from_secs(2))
+    );
 }
 
 fn say_hi() {
-    info!("hi");
+    info!("hello");
 }
 ```
 
-# Send an Event
+## Send an Event on Key Sequence
 
 ```rust
 use bevy::prelude::*;
-use bevy_input_sequence::*;
+use bevy_input_sequence::prelude::*;
 
 // Define an event
 #[derive(Event, Clone, Debug)]
@@ -52,7 +61,7 @@ struct MyEvent;
 // Add event as an key sequence
 fn main() {
     App::new()
-        .add_plugins(DefaultPlugins)
+        .add_plugins(MinimalPlugins)
         .add_plugins(InputSequencePlugin::default())
         .add_event::<MyEvent>()
         .add_systems(Startup, setup)
@@ -60,25 +69,57 @@ fn main() {
 }
 
 fn setup(mut commands: Commands) {
-    commands.add(KeySequence::new(action::send_event(MyEvent), keyseq! { ctrl-E L M }));
+    commands.add(
+        KeySequence::new(action::send_event(MyEvent), 
+                         keyseq! { ctrl-E L M })
+    );
 }
 
-fn check_events(events: EventReader<MyEvent>) {
-    for event in events {
+fn check_events(mut events: EventReader<MyEvent>) {
+    for event in events.read() {
         info!("got event {event:?}");
     }
 }
 ```
 
-## Add a key sequence component
+## Send an Event on Gamepad Button Sequence
 
-So long as one component is present, it will fire one event when the input
-sequence is entered. This crate re-exports the `keyseq!` macro for bevy from the [keyseq](https://crates.io/crates/keyseq) crate.
+```rust
+use bevy::prelude::*;
+use bevy_input_sequence::prelude::*;
 
-```rust ignore
+// Define an event
+#[derive(Event, Clone, Debug)]
+struct MyEvent(Gamepad);
+
+// Add event as an key sequence
+fn main() {
+    App::new()
+        .add_plugins(MinimalPlugins)
+        .add_plugins(InputSequencePlugin::default())
+        .add_event::<MyEvent>()
+        .add_systems(Startup, setup)
+        .update(); // Normally you'd run it here.
+}
+
+fn setup(mut commands: Commands) {
+    commands.add(
+        ButtonSequence::new(action::send_event_with_input(|gamepad| MyEvent(gamepad)), 
+            [GamepadButtonType::North,
+             GamepadButtonType::East,
+             GamepadButtonType::South,
+             GamepadButtonType::West])
+    );
+}
+
+fn check_events(mut events: EventReader<MyEvent>) {
+    for event in events.read() {
+        info!("got event {event:?}");
+    }
+}
 ```
 
-# Examples
+# Runnable Examples
 
 ## keycode
 
@@ -121,99 +162,25 @@ be recognized from the controller. But a mixed sequence like `W D A X` will not
 currently be recognized. If this should be done and how exactly one should do it
 are under consideration. Please open an issue or PR if you have thoughts on this.
 
+## only_if
+
+The `only_if` example recognizes `Space` and fires an event if it's in game
+mode. The `Escape` key toggles the app between menu and game mode. It does this
+by only sending the `Space` event if it's in game mode.
+
+``` sh
+cargo run --example only_if
+```
+
 ## run_if
 
-The `run_if` example recognizes `Space` and fires an event if it's in game mode.
-The `Escape` key toggles the app betwee n menu and game mode.
+The `run_if` has the same behavior as `only_if` but achieves it differently. It
+places the `InputSequencePlugin` systems in a system set that is configured to
+only run in game mode. Because of this the `Escape` key which toggles between
+game and menu mode cannot be a `KeySequence`.
 
 ``` sh
 cargo run --example run_if
-```
-
-# Advanced Usage
-
-## Fire event on gamepad button sequence
-
-Define an event
-
-```rust ignore
-#[derive(Event, Clone, Debug)]
-struct MyEvent(Gamepad);
-
-impl GamepadEvent for MyEvent {
-    fn gamepad(&self) -> Option<Gamepad> {
-        Some(self.0)
-    }
-
-    fn set_gamepad(&mut self, gamepad: Gamepad) {
-        self.0 = gamepad;
-    }
-}
-
-```
-
-Add event as a button sequence.
-
-```rust ignore
-fn main() {
-    App::new()
-        .add_button_sequence_event::<MyEvent>()
-        .run()
-}
-```
-
-Add a button sequence component.
-
-```rust ignore
-fn setup(mut commands: Commands) {
-    commands.spawn(ButtonSequence::new(
-        MyEvent(Gamepad { id: 999 }),
-        [
-            GamepadButtonType::North,
-            GamepadButtonType::East,
-            GamepadButtonType::South,
-            GamepadButtonType::West,
-        ],
-    ));
-    println!("Press north, east, south, west to emit MyEvent.");
-}
-```
-
-## Add an event with a condition
-
-Some key sequences you may only what to fire in particular modes. You can supply
-a condition that will only run if it's met. This works nicely with bevy `States`
-for example.
-
-```rust ignore
-#[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States)]
-enum AppState {
-    #[default]
-    Menu,
-    Game,
-}
-
-fn main() {
-    App::new()
-        .add_key_sequence_event_run_if::<MyEvent, _>(in_state(AppState::Menu))
-        .run()
-}
-```
-
-See the "run_if" example for more details.
-
-## Add a input sequence component with a time limit
-
-Input sequences can have time limits. Sequences must be completed within the
-time limit in order to fire the event.
-
-```rust ignore
-fn setup(mut commands: Commands) {
-    commands.spawn(
-        KeySequence::new(action::send_event(MyEvent), keyseq! { alt-X M })
-            .time_limit(Duration::from_secs(1)),
-    );
-}
 ```
 
 # Compatibility

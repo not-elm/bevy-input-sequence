@@ -2,15 +2,15 @@
 #![doc = include_str!("../README.md")]
 #![forbid(missing_docs)]
 
+pub mod action;
 mod cache;
-mod plugin;
+mod chord;
+pub mod cond_system;
 mod covec;
 mod frame_time;
 pub mod input_sequence;
+mod plugin;
 mod time_limit;
-mod chord;
-pub mod action;
-pub mod cond_system;
 
 pub use keyseq::{
     bevy::{pkey as key, pkeyseq as keyseq},
@@ -19,18 +19,14 @@ pub use keyseq::{
 
 /// Convenient splat import
 pub mod prelude {
-    pub use super::{keyseq,
-                    Modifiers,
-                    TimeLimit,
-                    InputSequencePlugin,
-                    action};
+    pub use super::{action, keyseq, InputSequencePlugin, Modifiers, TimeLimit};
     pub use crate::input_sequence::{ButtonSequence, InputSequence, KeySequence};
 
-    pub use std::time::Duration;
     pub use super::cond_system::IntoCondSystem;
+    pub use std::time::Duration;
 }
 
 pub use time_limit::TimeLimit;
 
-pub use plugin::InputSequencePlugin;
 pub use chord::KeyChord;
+pub use plugin::InputSequencePlugin;

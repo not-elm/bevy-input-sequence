@@ -1,9 +1,4 @@
-use std::time::Duration;
-use bevy::{
-    app::{App, Startup, Update},
-    prelude::{Commands, Event, EventReader, Gamepad, GamepadButtonType},
-    DefaultPlugins,
-};
+use bevy::prelude::*;
 use bevy_input_sequence::prelude::*;
 
 #[derive(Event, Clone, Debug)]

@@ -1,5 +1,7 @@
-use bevy::prelude::Resource;
-use bevy::reflect::Reflect;
+use bevy::{
+    ecs::system::Resource,
+    reflect::Reflect
+};
 use std::time::Duration;
 /// A time limit specified as frame counts or duration.
 #[derive(Clone, Resource, Debug, Reflect)]

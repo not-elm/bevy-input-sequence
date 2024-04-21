@@ -1,364 +1,364 @@
-
-use bevy_input_sequence::{KeyChord, key};
+use bevy_input_sequence::{key, KeyChord};
 
 #[test]
 fn keychord_display() {
-let keychord = KeyChord::from(key!(ctrl - A));
-assert_eq!(format!("{}", keychord), "ctrl-A");
-let keychord = KeyChord::from(key!(ctrl - 1));
-assert_eq!(format!("{}", keychord), "ctrl-1");
-let keychord = KeyChord::from(key!(1));
-assert_eq!(format!("{}", keychord), "1");
+    let keychord = KeyChord::from(key!(ctrl - A));
+    assert_eq!(format!("{}", keychord), "ctrl-A");
+    let keychord = KeyChord::from(key!(ctrl - 1));
+    assert_eq!(format!("{}", keychord), "ctrl-1");
+    let keychord = KeyChord::from(key!(1));
+    assert_eq!(format!("{}", keychord), "1");
 }
 
 mod simulate_app {
-use bevy_input_sequence::prelude::*;
-use bevy::{
-    MinimalPlugins,
-    input::{
-        gamepad::{GamepadConnection, GamepadConnectionEvent, GamepadInfo, Gamepad, GamepadAxis, GamepadButton, GamepadButtonType, Gamepads},
-        keyboard::KeyCode,
-        Axis,
-        ButtonInput as Input},
-    app::{App, PostUpdate},
-    ecs::{system::{Query,
-                   Command, Commands},
-          component::Component,
-          event::{Event, EventReader},
+    use bevy::{
+        app::{App, PostUpdate},
+        ecs::{
+            component::Component,
+            event::{Event, EventReader},
+            system::{Command, Commands, Query},
+            world::World,
+        },
+        input::{
+            gamepad::{
+                Gamepad, GamepadAxis, GamepadButton, GamepadButtonType, GamepadConnection,
+                GamepadConnectionEvent, GamepadInfo, Gamepads,
+            },
+            keyboard::KeyCode,
+            Axis, ButtonInput as Input,
+        },
+        MinimalPlugins,
+    };
+    use bevy_input_sequence::prelude::*;
 
-          world::World
-    },
-};
+    #[derive(Event, Clone)]
+    struct MyEvent;
 
+    #[derive(Component)]
+    struct EventSent(u8);
 
-#[derive(Event, Clone)]
-struct MyEvent;
-
-#[derive(Component)]
-struct EventSent(u8);
-
-trait AddCommand {
-    fn add(&mut self, command: impl Command);
-}
-
-impl AddCommand for World {
-    fn add(&mut self, command: impl Command) {
-        command.apply(self);
+    trait AddCommand {
+        fn add(&mut self, command: impl Command);
     }
-}
 
-#[test]
-fn one_key() {
-    let mut app = new_app();
+    impl AddCommand for World {
+        fn add(&mut self, command: impl Command) {
+            command.apply(self);
+        }
+    }
 
-    app.world.add(KeySequence::new(
-        action::send_event(MyEvent),
-        [(Modifiers::empty(), KeyCode::KeyA)],
-    ));
-    press_key(&mut app, KeyCode::KeyA);
-    app.update();
-    assert!(app
-        .world
-        .query::<&EventSent>()
-        .iter(&app.world)
-        .next()
-        .is_some());
-}
+    #[test]
+    fn one_key() {
+        let mut app = new_app();
 
-#[test]
-fn two_components_one_event() {
-    let mut app = new_app();
-
-    app.world.add(KeySequence::new(
-        action::send_event(MyEvent),
-        [KeyCode::KeyA],
-    ));
-    app.world.add(KeySequence::new(
-        action::send_event(MyEvent),
-        [KeyCode::KeyA],
-    ));
-    press_key(&mut app, KeyCode::KeyA);
-    app.update();
-    assert_eq!(app.world.query::<&EventSent>().iter(&app.world).count(), 1);
-}
-
-#[test]
-fn two_presses_two_events() {
-    let mut app = new_app();
-
-    app.world.add(KeySequence::new(
-        action::send_event(MyEvent),
-        [KeyCode::KeyA],
-    ));
-    app.world.add(KeySequence::new(
-        action::send_event(MyEvent),
-        [KeyCode::KeyB],
-    ));
-    press_key(&mut app, KeyCode::KeyA);
-    press_key(&mut app, KeyCode::KeyB);
-    app.update();
-    assert_eq!(app.world.query::<&EventSent>().iter(&app.world).count(), 2);
-}
-
-#[test]
-fn two_keycodes_match_first() {
-    let mut app = new_app();
-
-    app.world.add(KeySequence::new(
-        action::send_event(MyEvent),
-        [KeyCode::KeyA, KeyCode::KeyB],
-    ));
-    app.world.add(KeySequence::new(
-        action::send_event(MyEvent),
-        [KeyCode::KeyA, KeyCode::KeyC],
-    ));
-
-    press_key(&mut app, KeyCode::KeyA);
-    app.update();
-    assert!(app
-        .world
-        .query::<&EventSent>()
-        .iter(&app.world)
-        .next()
-        .is_none());
-
-    clear_just_pressed(&mut app, KeyCode::KeyA);
-    press_key(&mut app, KeyCode::KeyB);
-    app.update();
-    assert!(app
-        .world
-        .query::<&EventSent>()
-        .iter(&app.world)
-        .next()
-        .is_some());
-}
-
-#[test]
-fn match_short_seq() {
-    let mut app = new_app();
-
-    app.world.add(KeySequence::new(
-        action::send_event(MyEvent),
-        [KeyCode::KeyA, KeyCode::KeyB],
-    ));
-    app.world.add(KeySequence::new(
-        action::send_event(MyEvent),
-        [KeyCode::KeyA, KeyCode::KeyB, KeyCode::KeyC],
-    ));
-
-    press_key(&mut app, KeyCode::KeyA);
-    app.update();
-    assert!(app
-        .world
-        .query::<&EventSent>()
-        .iter(&app.world)
-        .next()
-        .is_none());
-
-    clear_just_pressed(&mut app, KeyCode::KeyA);
-    press_key(&mut app, KeyCode::KeyB);
-    app.update();
-    assert_eq!(
-        app.world
+        app.world.add(KeySequence::new(
+            action::send_event(MyEvent),
+            [(Modifiers::empty(), KeyCode::KeyA)],
+        ));
+        press_key(&mut app, KeyCode::KeyA);
+        app.update();
+        assert!(app
+            .world
             .query::<&EventSent>()
             .iter(&app.world)
             .next()
-            .map(|x| x.0)
-            .unwrap(),
-        1 // .is_some()
-    );
+            .is_some());
+    }
 
-    clear_just_pressed(&mut app, KeyCode::KeyB);
-    press_key(&mut app, KeyCode::KeyC);
-    app.update();
-    assert_eq!(
-        app.world
+    #[test]
+    fn two_components_one_event() {
+        let mut app = new_app();
+
+        app.world.add(KeySequence::new(
+            action::send_event(MyEvent),
+            [KeyCode::KeyA],
+        ));
+        app.world.add(KeySequence::new(
+            action::send_event(MyEvent),
+            [KeyCode::KeyA],
+        ));
+        press_key(&mut app, KeyCode::KeyA);
+        app.update();
+        assert_eq!(app.world.query::<&EventSent>().iter(&app.world).count(), 1);
+    }
+
+    #[test]
+    fn two_presses_two_events() {
+        let mut app = new_app();
+
+        app.world.add(KeySequence::new(
+            action::send_event(MyEvent),
+            [KeyCode::KeyA],
+        ));
+        app.world.add(KeySequence::new(
+            action::send_event(MyEvent),
+            [KeyCode::KeyB],
+        ));
+        press_key(&mut app, KeyCode::KeyA);
+        press_key(&mut app, KeyCode::KeyB);
+        app.update();
+        assert_eq!(app.world.query::<&EventSent>().iter(&app.world).count(), 2);
+    }
+
+    #[test]
+    fn two_keycodes_match_first() {
+        let mut app = new_app();
+
+        app.world.add(KeySequence::new(
+            action::send_event(MyEvent),
+            [KeyCode::KeyA, KeyCode::KeyB],
+        ));
+        app.world.add(KeySequence::new(
+            action::send_event(MyEvent),
+            [KeyCode::KeyA, KeyCode::KeyC],
+        ));
+
+        press_key(&mut app, KeyCode::KeyA);
+        app.update();
+        assert!(app
+            .world
             .query::<&EventSent>()
             .iter(&app.world)
             .next()
-            .map(|x| x.0)
-            .unwrap(),
-        2 // .is_some()
-    );
+            .is_none());
 
-    clear_just_pressed(&mut app, KeyCode::KeyC);
-    press_key(&mut app, KeyCode::KeyD);
-    app.update();
-    assert_eq!(
-        app.world
+        clear_just_pressed(&mut app, KeyCode::KeyA);
+        press_key(&mut app, KeyCode::KeyB);
+        app.update();
+        assert!(app
+            .world
             .query::<&EventSent>()
             .iter(&app.world)
             .next()
-            .map(|x| x.0)
-            .unwrap(),
-        2
-    );
-}
+            .is_some());
+    }
 
-#[test]
-fn two_keycodes_match_second() {
-    let mut app = new_app();
+    #[test]
+    fn match_short_seq() {
+        let mut app = new_app();
 
-    app.world.add(KeySequence::new(
-        action::send_event(MyEvent),
-        [KeyCode::KeyA, KeyCode::KeyB],
-    ));
-    app.world.add(KeySequence::new(
-        action::send_event(MyEvent),
-        [KeyCode::KeyA, KeyCode::KeyC],
-    ));
+        app.world.add(KeySequence::new(
+            action::send_event(MyEvent),
+            [KeyCode::KeyA, KeyCode::KeyB],
+        ));
+        app.world.add(KeySequence::new(
+            action::send_event(MyEvent),
+            [KeyCode::KeyA, KeyCode::KeyB, KeyCode::KeyC],
+        ));
 
-    press_key(&mut app, KeyCode::KeyA);
-    app.update();
-    assert!(app
-        .world
-        .query::<&EventSent>()
-        .iter(&app.world)
-        .next()
-        .is_none());
+        press_key(&mut app, KeyCode::KeyA);
+        app.update();
+        assert!(app
+            .world
+            .query::<&EventSent>()
+            .iter(&app.world)
+            .next()
+            .is_none());
 
-    clear_just_pressed(&mut app, KeyCode::KeyA);
-    press_key(&mut app, KeyCode::KeyC);
-    app.update();
-    assert!(app
-        .world
-        .query::<&EventSent>()
-        .iter(&app.world)
-        .next()
-        .is_some());
-}
+        clear_just_pressed(&mut app, KeyCode::KeyA);
+        press_key(&mut app, KeyCode::KeyB);
+        app.update();
+        assert_eq!(
+            app.world
+                .query::<&EventSent>()
+                .iter(&app.world)
+                .next()
+                .map(|x| x.0)
+                .unwrap(),
+            1 // .is_some()
+        );
 
-#[test]
-fn two_any_patterns() {
-    let mut app = new_app();
+        clear_just_pressed(&mut app, KeyCode::KeyB);
+        press_key(&mut app, KeyCode::KeyC);
+        app.update();
+        assert_eq!(
+            app.world
+                .query::<&EventSent>()
+                .iter(&app.world)
+                .next()
+                .map(|x| x.0)
+                .unwrap(),
+            2 // .is_some()
+        );
 
-    app.world.add(KeySequence::new(
-        action::send_event(MyEvent),
-        [KeyCode::KeyA, KeyCode::KeyB],
-    ));
-    app.world.add(KeySequence::new(
-        action::send_event(MyEvent),
-        [KeyCode::KeyA, KeyCode::KeyC],
-    ));
-    app.world.add(KeySequence::new(
-        action::send_event(MyEvent),
-        [KeyCode::KeyA, KeyCode::KeyD],
-    ));
-    press_key(&mut app, KeyCode::KeyA);
-    app.update();
-    assert!(app
-        .world
-        .query::<&EventSent>()
-        .iter(&app.world)
-        .next()
-        .is_none());
+        clear_just_pressed(&mut app, KeyCode::KeyC);
+        press_key(&mut app, KeyCode::KeyD);
+        app.update();
+        assert_eq!(
+            app.world
+                .query::<&EventSent>()
+                .iter(&app.world)
+                .next()
+                .map(|x| x.0)
+                .unwrap(),
+            2
+        );
+    }
 
-    clear_just_pressed(&mut app, KeyCode::KeyA);
-    press_key(&mut app, KeyCode::KeyB);
-    app.update();
-    assert!(app
-        .world
-        .query::<&EventSent>()
-        .iter(&app.world)
-        .next()
-        .is_some());
-}
+    #[test]
+    fn two_keycodes_match_second() {
+        let mut app = new_app();
 
-#[test]
-fn two_any_patterns_match_2nd() {
-    let mut app = new_app();
+        app.world.add(KeySequence::new(
+            action::send_event(MyEvent),
+            [KeyCode::KeyA, KeyCode::KeyB],
+        ));
+        app.world.add(KeySequence::new(
+            action::send_event(MyEvent),
+            [KeyCode::KeyA, KeyCode::KeyC],
+        ));
 
-    app.world.add(KeySequence::new(
-        action::send_event(MyEvent),
-        [KeyCode::KeyA, KeyCode::KeyB],
-    ));
-    app.world.add(KeySequence::new(
-        action::send_event(MyEvent),
-        [KeyCode::KeyA, KeyCode::KeyC],
-    ));
-    app.world.add(KeySequence::new(
-        action::send_event(MyEvent),
-        [KeyCode::KeyA, KeyCode::KeyD],
-    ));
-    press_key(&mut app, KeyCode::KeyA);
-    app.update();
-    assert!(app
-        .world
-        .query::<&EventSent>()
-        .iter(&app.world)
-        .next()
-        .is_none());
+        press_key(&mut app, KeyCode::KeyA);
+        app.update();
+        assert!(app
+            .world
+            .query::<&EventSent>()
+            .iter(&app.world)
+            .next()
+            .is_none());
 
-    clear_just_pressed(&mut app, KeyCode::KeyA);
-    press_key(&mut app, KeyCode::KeyD);
-    app.update();
-    assert!(app
-        .world
-        .query::<&EventSent>()
-        .iter(&app.world)
-        .next()
-        .is_some());
-}
+        clear_just_pressed(&mut app, KeyCode::KeyA);
+        press_key(&mut app, KeyCode::KeyC);
+        app.update();
+        assert!(app
+            .world
+            .query::<&EventSent>()
+            .iter(&app.world)
+            .next()
+            .is_some());
+    }
 
-#[test]
-fn two_keycodes() {
-    let mut app = new_app();
+    #[test]
+    fn two_any_patterns() {
+        let mut app = new_app();
 
-    app.world.add(KeySequence::new(
-        action::send_event(MyEvent),
-        [KeyCode::KeyA, KeyCode::KeyB],
-    ));
+        app.world.add(KeySequence::new(
+            action::send_event(MyEvent),
+            [KeyCode::KeyA, KeyCode::KeyB],
+        ));
+        app.world.add(KeySequence::new(
+            action::send_event(MyEvent),
+            [KeyCode::KeyA, KeyCode::KeyC],
+        ));
+        app.world.add(KeySequence::new(
+            action::send_event(MyEvent),
+            [KeyCode::KeyA, KeyCode::KeyD],
+        ));
+        press_key(&mut app, KeyCode::KeyA);
+        app.update();
+        assert!(app
+            .world
+            .query::<&EventSent>()
+            .iter(&app.world)
+            .next()
+            .is_none());
 
-    press_key(&mut app, KeyCode::KeyA);
-    app.update();
-    assert!(app
-        .world
-        .query::<&EventSent>()
-        .iter(&app.world)
-        .next()
-        .is_none());
+        clear_just_pressed(&mut app, KeyCode::KeyA);
+        press_key(&mut app, KeyCode::KeyB);
+        app.update();
+        assert!(app
+            .world
+            .query::<&EventSent>()
+            .iter(&app.world)
+            .next()
+            .is_some());
+    }
 
-    clear_just_pressed(&mut app, KeyCode::KeyA);
-    press_key(&mut app, KeyCode::KeyB);
-    app.update();
-    assert!(app
-        .world
-        .query::<&EventSent>()
-        .iter(&app.world)
-        .next()
-        .is_some());
-}
+    #[test]
+    fn two_any_patterns_match_2nd() {
+        let mut app = new_app();
 
-#[test]
-fn delete_sequences_if_pressed_incorrect_key() {
-    let mut app = new_app();
+        app.world.add(KeySequence::new(
+            action::send_event(MyEvent),
+            [KeyCode::KeyA, KeyCode::KeyB],
+        ));
+        app.world.add(KeySequence::new(
+            action::send_event(MyEvent),
+            [KeyCode::KeyA, KeyCode::KeyC],
+        ));
+        app.world.add(KeySequence::new(
+            action::send_event(MyEvent),
+            [KeyCode::KeyA, KeyCode::KeyD],
+        ));
+        press_key(&mut app, KeyCode::KeyA);
+        app.update();
+        assert!(app
+            .world
+            .query::<&EventSent>()
+            .iter(&app.world)
+            .next()
+            .is_none());
 
-    app.world.add(KeySequence::new(
-        action::send_event(MyEvent),
-        [KeyCode::KeyA, KeyCode::KeyB, KeyCode::KeyC],
-    ));
+        clear_just_pressed(&mut app, KeyCode::KeyA);
+        press_key(&mut app, KeyCode::KeyD);
+        app.update();
+        assert!(app
+            .world
+            .query::<&EventSent>()
+            .iter(&app.world)
+            .next()
+            .is_some());
+    }
 
-    press_key(&mut app, KeyCode::KeyA);
-    app.update();
-    assert!(app
-        .world
-        .query::<&EventSent>()
-        .iter(&app.world)
-        .next()
-        .is_none());
+    #[test]
+    fn two_keycodes() {
+        let mut app = new_app();
 
-    clear_just_pressed(&mut app, KeyCode::KeyA);
-    press_key(&mut app, KeyCode::KeyB);
-    app.update();
-    assert!(app
-        .world
-        .query::<&EventSent>()
-        .iter(&app.world)
-        .next()
-        .is_none());
+        app.world.add(KeySequence::new(
+            action::send_event(MyEvent),
+            [KeyCode::KeyA, KeyCode::KeyB],
+        ));
 
-    clear_just_pressed(&mut app, KeyCode::KeyB);
-            press_key(&mut app, KeyCode::KeyD);
+        press_key(&mut app, KeyCode::KeyA);
+        app.update();
+        assert!(app
+            .world
+            .query::<&EventSent>()
+            .iter(&app.world)
+            .next()
+            .is_none());
+
+        clear_just_pressed(&mut app, KeyCode::KeyA);
+        press_key(&mut app, KeyCode::KeyB);
+        app.update();
+        assert!(app
+            .world
+            .query::<&EventSent>()
+            .iter(&app.world)
+            .next()
+            .is_some());
+    }
+
+    #[test]
+    fn delete_sequences_if_pressed_incorrect_key() {
+        let mut app = new_app();
+
+        app.world.add(KeySequence::new(
+            action::send_event(MyEvent),
+            [KeyCode::KeyA, KeyCode::KeyB, KeyCode::KeyC],
+        ));
+
+        press_key(&mut app, KeyCode::KeyA);
+        app.update();
+        assert!(app
+            .world
+            .query::<&EventSent>()
+            .iter(&app.world)
+            .next()
+            .is_none());
+
+        clear_just_pressed(&mut app, KeyCode::KeyA);
+        press_key(&mut app, KeyCode::KeyB);
+        app.update();
+        assert!(app
+            .world
+            .query::<&EventSent>()
+            .iter(&app.world)
+            .next()
+            .is_none());
+
+        clear_just_pressed(&mut app, KeyCode::KeyB);
+        press_key(&mut app, KeyCode::KeyD);
         app.update();
         assert!(app
             .world
@@ -691,9 +691,11 @@ fn delete_sequences_if_pressed_incorrect_key() {
         let mut app = App::new();
         app.add_plugins(MinimalPlugins);
         // app.add_plugins(DefaultPlugins);
-        app.add_plugins(InputSequencePlugin::default()
-                        .match_key(true)
-                        .match_button(true));
+        app.add_plugins(
+            InputSequencePlugin::default()
+                .match_key(true)
+                .match_button(true),
+        );
         app.add_systems(PostUpdate, read);
         app.add_event::<MyEvent>();
         app.init_resource::<Gamepads>();

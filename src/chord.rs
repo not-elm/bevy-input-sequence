@@ -1,7 +1,5 @@
 use bevy::{
-    prelude::{
-        KeyCode,
-    },
+    input::keyboard::KeyCode,
     reflect::{Enum, Reflect},
 };
 

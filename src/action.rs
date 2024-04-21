@@ -1,14 +1,14 @@
 //! Common actions to do on key sequence matches
 use bevy::ecs::{
     event::{Event, EventWriter},
-    system::{In},
+    system::In,
 };
 
 /// Send this event.
 ///
 /// ```
 /// use bevy::prelude::*;
-/// use bevy_input_sequence::*;
+/// use bevy_input_sequence::prelude::*;
 ///
 /// #[derive(Debug, Clone, Eq, PartialEq, Hash, States)]
 /// enum AppState { Menu, Game }

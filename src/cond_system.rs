@@ -1,13 +1,16 @@
-//! Extend [IntoSystem] for conditional execution
+//! Extend
+//! [IntoSystem](https://docs.rs/bevy/latest/bevy/ecs/system/trait.IntoSystem.html)
+//! for conditional execution
 use bevy::ecs::system::{CombinatorSystem, Combine, IntoSystem, System};
 use std::borrow::Cow;
 
-/// Extend [IntoSystem] to allow for some conditional execution. Probably only
-/// appropriate for one-shot systems. Prefer
-/// [bevy::prelude::IntoSystemConfigs::run_if] when directly adding to the
-/// scheduler.
+/// Extend
+/// [IntoSystem](https://docs.rs/bevy/latest/bevy/ecs/system/trait.IntoSystem.html)
+/// to allow for some conditional execution. Probably only appropriate for
+/// one-shot systems. Prefer
+/// [`run_if`](https://docs.rs/bevy/latest/bevy/ecs/schedule/trait.IntoSystemConfigs.html#method.run_if)
+/// when directly adding to the scheduler.
 pub trait IntoCondSystem<I, O, M>: IntoSystem<I, O, M> {
-
     /// Only run self's system if the given `system` parameter returns true. No
     /// output is provided. (This is convenient for running systems with
     /// [bevy::prelude::Commands::run_system]).

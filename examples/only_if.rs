@@ -4,6 +4,9 @@ use bevy_input_sequence::prelude::*;
 #[derive(Event, Clone, Debug)]
 struct MyEvent;
 
+#[derive(Event, Clone, Debug)]
+struct GlobalEvent;
+
 #[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States)]
 enum AppState {
     Menu,
@@ -11,24 +14,24 @@ enum AppState {
     Game,
 }
 
-#[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
-pub struct MySet;
-
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .init_state::<AppState>()
-        .add_plugins(InputSequencePlugin::empty().run_in_set(Update, MySet))
+        .add_plugins(InputSequencePlugin::default())
+        .add_event::<GlobalEvent>()
         .add_event::<MyEvent>()
-        .configure_sets(Update,
-                        MySet.run_if(in_state(AppState::Game)))
         .add_systems(Startup, setup)
         .add_systems(Update, listen_for_myevent)
-        .add_systems(Update, listen_for_escape_key)
+        .add_systems(Update, listen_for_global_event)
         .run();
 }
 
 fn setup(mut commands: Commands) {
+    commands.add(KeySequence::new(
+        action::send_event(GlobalEvent),
+        keyseq!(Escape),
+    ));
     commands.add(
         KeySequence::new(
             action::send_event(MyEvent).only_if(in_state(AppState::Game)),
@@ -40,13 +43,12 @@ fn setup(mut commands: Commands) {
     println!("Press Escape to switch between Game and Menu mode; currently in Game mode.");
 }
 
-fn listen_for_escape_key(
-    keys: Res<ButtonInput<KeyCode>>,
+fn listen_for_global_event(
+    mut er: EventReader<GlobalEvent>,
     state: Res<State<AppState>>,
     mut next_state: ResMut<NextState<AppState>>,
 ) {
-
-    if keys.just_pressed(KeyCode::Escape) {
+    for _ in er.read() {
         let new_state = match state.get() {
             AppState::Menu => AppState::Game,
             AppState::Game => AppState::Menu,

@@ -2,27 +2,31 @@ use bevy::{
     app::{App, Plugin, Update},
     core::FrameCount,
     ecs::{
-        schedule::{ScheduleLabel, SystemSet, IntoSystemConfigs},
-        system::{Query, Commands, Res, ResMut, Local},
         query::Added,
         removal_detection::RemovedComponents,
+        schedule::{IntoSystemConfigs, ScheduleLabel, SystemSet},
+        system::{Commands, Local, Query, Res, ResMut},
     },
-    input::{ButtonInput, keyboard::KeyCode, gamepad::{GamepadButtonType, GamepadButton, Gamepad}},
+    input::{
+        gamepad::{Gamepad, GamepadButton, GamepadButtonType},
+        keyboard::KeyCode,
+        ButtonInput,
+    },
     log::warn,
     time::Time,
     utils::intern::Interned,
 };
 use std::collections::HashMap;
 
-use trie_rs::map::{Trie};
 use crate::{
-    chord::is_modifier,
-    input_sequence::{InputSequence, ButtonSequence, KeySequence},
     cache::InputSequenceCache,
-    KeyChord, Modifiers,
+    chord::is_modifier,
     covec::Covec,
     frame_time::FrameTime,
+    input_sequence::{ButtonSequence, InputSequence, KeySequence},
+    KeyChord, Modifiers,
 };
+use trie_rs::map::Trie;
 
 /// ButtonInput sequence plugin.
 pub struct InputSequencePlugin {
@@ -44,7 +48,10 @@ impl Default for InputSequencePlugin {
 
 impl Plugin for InputSequencePlugin {
     fn build(&self, app: &mut App) {
-        if self.match_key.unwrap_or(app.world.get_resource::<ButtonInput<KeyCode>>().is_some()) {
+        if self
+            .match_key
+            .unwrap_or(app.world.get_resource::<ButtonInput<KeyCode>>().is_some())
+        {
             // Add key sequence.
             app.init_resource::<InputSequenceCache<KeyChord, ()>>();
 
@@ -76,7 +83,11 @@ impl Plugin for InputSequencePlugin {
             warn!("No key sequence matcher added; consider adding DefaultPlugins.");
         }
 
-        if self.match_button.unwrap_or(app.world.get_resource::<ButtonInput<GamepadButton>>().is_some()) {
+        if self.match_button.unwrap_or(
+            app.world
+                .get_resource::<ButtonInput<GamepadButton>>()
+                .is_some(),
+        ) {
             // Add button sequences.
             app.init_resource::<InputSequenceCache<GamepadButtonType, Gamepad>>();
 

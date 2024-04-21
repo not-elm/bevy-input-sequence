@@ -3,8 +3,8 @@ use crate::{cond_system::IntoCondSystem, time_limit::TimeLimit, KeyChord};
 
 use bevy::{
     ecs::{
-        entity::Entity,
         component::Component,
+        entity::Entity,
         system::{IntoSystem, System, SystemId},
         world::World,
     },

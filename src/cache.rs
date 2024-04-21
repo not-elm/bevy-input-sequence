@@ -1,6 +1,6 @@
+use crate::input_sequence::InputSequence;
 use bevy::ecs::system::Resource;
 use trie_rs::map::{Trie, TrieBuilder};
-use crate::input_sequence::InputSequence;
 
 /// Contains the trie for the input sequences.
 #[derive(Resource)]
