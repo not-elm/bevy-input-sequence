@@ -1,9 +1,7 @@
 //! Common actions to do on key sequence matches
-use bevy::{
-    ecs::{
-        event::{Event, EventWriter},
-        system::In,
-    },
+use bevy::ecs::{
+    event::{Event, EventWriter},
+    system::In,
 };
 
 /// Send this event.

@@ -20,8 +20,7 @@ fn main() {
         .init_state::<AppState>()
         .add_plugins(InputSequencePlugin::empty().run_in_set(Update, MySet))
         .add_event::<MyEvent>()
-        .configure_sets(Update,
-                        MySet.run_if(in_state(AppState::Game)))
+        .configure_sets(Update, MySet.run_if(in_state(AppState::Game)))
         .add_systems(Startup, setup)
         .add_systems(Update, listen_for_myevent)
         .add_systems(Update, listen_for_escape_key)
@@ -45,7 +44,6 @@ fn listen_for_escape_key(
     state: Res<State<AppState>>,
     mut next_state: ResMut<NextState<AppState>>,
 ) {
-
     if keys.just_pressed(KeyCode::Escape) {
         let new_state = match state.get() {
             AppState::Menu => AppState::Game,
