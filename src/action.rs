@@ -1,12 +1,14 @@
 //! Common actions to do on key sequence matches
-use bevy::ecs::{
-    event::{Event, EventWriter},
-    system::In,
+use bevy::{
+    ecs::{
+        event::{Event, EventWriter},
+        system::In,
+    },
 };
 
 /// Send this event.
 ///
-/// ```
+/// ```rust
 /// use bevy::prelude::*;
 /// use bevy_input_sequence::prelude::*;
 ///
@@ -25,7 +27,7 @@ pub fn send_event<E: Event + Clone>(event: E) -> impl FnMut(EventWriter<E>) {
     }
 }
 
-/// Sends an event with input, .e.g, [ButtonSequence] provides a [Gamepad] identifier.
+/// Sends an event with input, .e.g, [ButtonSequence](crate::input_sequence::ButtonSequence) provides a [Gamepad](bevy::input::gamepad::Gamepad) identifier.
 pub fn send_event_with_input<E: Event, Input: 'static, F: FnMut(Input) -> E>(
     mut f: F,
 ) -> impl FnMut(In<Input>, EventWriter<E>) {

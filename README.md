@@ -1,6 +1,6 @@
 # bevy-input-sequence
 
-This crate recognizes input sequences.
+This crate recognizes input sequences from keyboard and gamepad.
 
 # Use Cases
 
@@ -16,12 +16,18 @@ cargo install bevy-input-sequence
 
 # Code Examples
 
-Here are some code snippets. These also run as doctests so they are not quite
-runnable examples, but those are described in the next section.
+Here are some code snippets. These also run as doctests so they do a few things
+differently than a regular runnable example:
 
-## Run a System
+- Use `MinimalPlugins` instead of `DefaultPlugins`,
+- and call `app.update()` instead of `app.run()`.
 
-Runs a system whenever the user presses the key sequence "hi" within a time limit.
+The next section describes the runnable examples that come with the crate.
+
+## Run a System on a Key Sequence
+
+Runs a system whenever the user presses the key sequence `H I` or "hi" within a
+time limit.
 
 ```rust
 use bevy::prelude::*;
@@ -37,18 +43,21 @@ fn main() {
 
 fn setup(mut commands: Commands) {
     commands.add(
-        KeySequence::new(say_hi, 
+        KeySequence::new(say_hello, 
                          keyseq! { H I })
         .time_limit(Duration::from_secs(2))
     );
 }
 
-fn say_hi() {
+fn say_hello() {
     info!("hello");
 }
 ```
 
 ## Send an Event on Key Sequence
+
+Originally `bevy-input-sequence` always send an event. You can still do that
+with the `action::send_event()`.
 
 ```rust
 use bevy::prelude::*;
@@ -83,6 +92,10 @@ fn check_events(mut events: EventReader<MyEvent>) {
 ```
 
 ## Send an Event on Gamepad Button Sequence
+
+Gamepads have something that keyboards don't: identity problems. Which player
+hit the button sequence may be important to know. So the systems it accepts will
+take an input of `Gamepad`.
 
 ```rust
 use bevy::prelude::*;
@@ -187,9 +200,9 @@ cargo run --example run_if
 
 | bevy-input-sequence | bevy |
 | ------------------- | ---- |
-| 0.1                 | 0.11 |
-| 0.2                 | 0.12 |
 | 0.3                 | 0.13 |
+| 0.2                 | 0.12 |
+| 0.1                 | 0.11 |
 
 # License
 
