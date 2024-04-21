@@ -1,23 +1,6 @@
-use bevy::{
-    app::{App, Plugin, Update},
-    core::FrameCount,
-    ecs::{
-        schedule::{ScheduleLabel, SystemSet},
-        system::Commands,
-    },
-    log::warn,
-    prelude::{
-        Added, ButtonInput as Input, Gamepad, GamepadButton, GamepadButtonType, IntoSystemConfigs,
-        KeyCode, Local, Query, RemovedComponents, Res, ResMut, Resource,
-    },
-    reflect::{Enum, Reflect},
-    time::Time,
-    utils::intern::Interned,
-};
-use std::collections::HashMap;
-use std::fmt;
+use bevy::ecs::system::Resource;
 use trie_rs::map::{Trie, TrieBuilder};
-use super::InputSequence;
+use crate::input_sequence::InputSequence;
 
 /// Contains the trie for the input sequences.
 #[derive(Resource)]

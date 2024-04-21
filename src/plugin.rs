@@ -8,34 +8,44 @@ use bevy::{
     log::warn,
     prelude::{
         Added, ButtonInput as Input, Gamepad, GamepadButton, GamepadButtonType, IntoSystemConfigs,
-        KeyCode, Local, Query, RemovedComponents, Res, ResMut, Resource,
+        KeyCode, Local, Query, RemovedComponents, Res, ResMut,
     },
-    reflect::{Enum, Reflect},
     time::Time,
     utils::intern::Interned,
 };
 use std::collections::HashMap;
-use std::fmt;
-use trie_rs::map::{Trie, TrieBuilder};
-use super::chord::is_modifier;
-use super::{InputSequenceCache, KeyChord, InputSequence, ButtonSequence, KeySequence, Covec, FrameTime, Modifiers};
+
+use trie_rs::map::{Trie};
+use crate::{
+    chord::is_modifier,
+    input_sequence::{InputSequence, ButtonSequence, KeySequence},
+    cache::InputSequenceCache,
+    KeyChord, Modifiers,
+    covec::Covec,
+    frame_time::FrameTime,
+};
+
 /// Input sequence plugin.
 pub struct InputSequencePlugin {
     #[allow(clippy::type_complexity)]
     schedules: Vec<(Interned<dyn ScheduleLabel>, Option<Interned<dyn SystemSet>>)>,
+    match_key: Option<bool>,
+    match_button: Option<bool>,
 }
 
 impl Default for InputSequencePlugin {
     fn default() -> Self {
         InputSequencePlugin {
             schedules: vec![(Interned(Box::leak(Box::new(Update))), None)],
+            match_key: None,
+            match_button: None,
         }
     }
 }
 
 impl Plugin for InputSequencePlugin {
     fn build(&self, app: &mut App) {
-        if app.world.get_resource::<Input<KeyCode>>().is_some() {
+        if self.match_key.unwrap_or(app.world.get_resource::<Input<KeyCode>>().is_some()) {
             // Add key sequence.
             app.init_resource::<InputSequenceCache<KeyChord, ()>>();
 
@@ -67,7 +77,7 @@ impl Plugin for InputSequencePlugin {
             warn!("No key sequence matcher added; consider adding DefaultPlugins.");
         }
 
-        if app.world.get_resource::<Input<GamepadButton>>().is_some() {
+        if self.match_button.unwrap_or(app.world.get_resource::<Input<GamepadButton>>().is_some()) {
             // Add button sequences.
             app.init_resource::<InputSequenceCache<GamepadButtonType, Gamepad>>();
 
@@ -104,7 +114,11 @@ impl Plugin for InputSequencePlugin {
 impl InputSequencePlugin {
     /// Constructs an empty input sequence plugin with no default schedules.
     pub fn empty() -> Self {
-        Self { schedules: vec![] }
+        Self {
+            schedules: vec![],
+            match_key: None,
+            match_button: None,
+        }
     }
     /// Run the executor in a specific `Schedule`.
     pub fn run_in(mut self, schedule: impl ScheduleLabel) -> Self {
@@ -119,6 +133,20 @@ impl InputSequencePlugin {
             Interned(Box::leak(Box::new(schedule))),
             Some(Interned(Box::leak(Box::new(set)))),
         ));
+        self
+    }
+
+    /// Run systems to match keys. By default will match keys if resource
+    /// `ButtonInput<KeyCode>` exists.
+    pub fn match_key(mut self, yes: bool) -> Self {
+        self.match_key = Some(yes);
+        self
+    }
+
+    /// Run systems to match button. By default will match keys if resource
+    /// `ButtonInput<GamepadButton>` exists.
+    pub fn match_button(mut self, yes: bool) -> Self {
+        self.match_button = Some(yes);
         self
     }
 }

@@ -1,22 +1,12 @@
 use bevy::{
-    app::{App, Plugin, Update},
-    core::FrameCount,
-    ecs::{
-        schedule::{ScheduleLabel, SystemSet},
-        system::Commands,
-    },
-    log::warn,
     prelude::{
-        Added, ButtonInput as Input, Gamepad, GamepadButton, GamepadButtonType, IntoSystemConfigs,
-        KeyCode, Local, Query, RemovedComponents, Res, ResMut, Resource,
+        KeyCode,
     },
     reflect::{Enum, Reflect},
-    time::Time,
-    utils::intern::Interned,
 };
-use std::collections::HashMap;
+
 use std::fmt;
-use trie_rs::map::{Trie, TrieBuilder};
+
 use keyseq::Modifiers;
 
 /// Represents a key chord, i.e., a set of modifiers and a key code.

@@ -1,3 +1,4 @@
+//! Input sequences for keys and gamepad buttons
 use crate::{cond_system::IntoCondSystem, time_limit::TimeLimit, KeyChord};
 
 use bevy::{
@@ -25,7 +26,9 @@ pub struct InputSequence<Act, In> {
     pub time_limit: Option<TimeLimit>,
 }
 
+/// An input sequence builder.
 pub struct InputSequenceBuilder<Act, S> {
+    /// The action when to run when sequence matches
     pub system: S,
     /// Sequence of acts that trigger input sequence
     pub acts: Vec<Act>,
@@ -58,6 +61,7 @@ where
         self
     }
 
+    /// Build the InputSequence. Requires world to register the system.
     pub fn build(self, world: &mut World) -> InputSequence<Act, S::In> {
         InputSequence {
             system_id: world.register_system(self.system),

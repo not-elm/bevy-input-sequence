@@ -1,9 +1,5 @@
-use bevy::app::{App, Startup, Update};
-use bevy::prelude::{Commands, Event, EventReader, Gamepad, GamepadButtonType};
-use bevy::{utils::Duration, DefaultPlugins};
-
-use bevy_input_sequence::InputSequencePlugin;
-use bevy_input_sequence::{action, ButtonSequence};
+use bevy::prelude::*;
+use bevy_input_sequence::prelude::*;
 
 #[derive(Event, Clone, Debug)]
 struct MyEvent(usize, Gamepad);

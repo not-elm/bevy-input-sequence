@@ -1,7 +1,5 @@
 use bevy::prelude::*;
-use bevy_input_sequence::cond_system::*;
-use bevy_input_sequence::*;
-use std::time::Duration;
+use bevy_input_sequence::prelude::*;
 
 #[derive(Event, Clone, Debug)]
 struct MyEvent;

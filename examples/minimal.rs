@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy_input_sequence::*;
+use bevy_input_sequence::prelude::*;
 
 fn main() {
     App::new()

@@ -1,11 +1,10 @@
 use std::time::Duration;
-
-use bevy::app::{App, Startup, Update};
-use bevy::prelude::{Commands, Event, EventReader, Gamepad, GamepadButtonType};
-use bevy::DefaultPlugins;
-
-use bevy_input_sequence::InputSequencePlugin;
-use bevy_input_sequence::{action, keyseq, ButtonSequence, KeySequence};
+use bevy::{
+    app::{App, Startup, Update},
+    prelude::{Commands, Event, EventReader, Gamepad, GamepadButtonType},
+    DefaultPlugins,
+};
+use bevy_input_sequence::prelude::*;
 
 #[derive(Event, Clone, Debug)]
 struct MyEvent(u8, Option<Gamepad>);
