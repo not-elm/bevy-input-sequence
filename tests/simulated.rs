@@ -13,16 +13,21 @@ assert_eq!(format!("{}", keychord), "1");
 
 mod simulate_app {
 use bevy_input_sequence::prelude::*;
-use bevy::input::gamepad::{GamepadConnection, GamepadConnectionEvent, GamepadInfo};
-use bevy::input::{Axis, ButtonInput as Input};
-use bevy::prelude::{
-    Commands, Component, Event, EventReader, Gamepad, GamepadAxis, GamepadButton,
-    GamepadButtonType, Gamepads, KeyCode,
-};
-use bevy::MinimalPlugins;
 use bevy::{
+    MinimalPlugins,
+    input::{
+        gamepad::{GamepadConnection, GamepadConnectionEvent, GamepadInfo, Gamepad, GamepadAxis, GamepadButton, GamepadButtonType, Gamepads},
+        keyboard::KeyCode,
+        Axis,
+        ButtonInput as Input},
     app::{App, PostUpdate},
-    ecs::{system::{Query, Command}, world::World},
+    ecs::{system::{Query,
+                   Command, Commands},
+          component::Component,
+          event::{Event, EventReader},
+
+          world::World
+    },
 };
 
 

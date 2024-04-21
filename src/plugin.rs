@@ -2,14 +2,13 @@ use bevy::{
     app::{App, Plugin, Update},
     core::FrameCount,
     ecs::{
-        schedule::{ScheduleLabel, SystemSet},
-        system::Commands,
+        schedule::{ScheduleLabel, SystemSet, IntoSystemConfigs},
+        system::{Query, Commands, Res, ResMut, Local},
+        query::Added,
+        removal_detection::RemovedComponents,
     },
+    input::{ButtonInput, keyboard::KeyCode, gamepad::{GamepadButtonType, GamepadButton, Gamepad}},
     log::warn,
-    prelude::{
-        Added, ButtonInput as Input, Gamepad, GamepadButton, GamepadButtonType, IntoSystemConfigs,
-        KeyCode, Local, Query, RemovedComponents, Res, ResMut,
-    },
     time::Time,
     utils::intern::Interned,
 };
@@ -25,7 +24,7 @@ use crate::{
     frame_time::FrameTime,
 };
 
-/// Input sequence plugin.
+/// ButtonInput sequence plugin.
 pub struct InputSequencePlugin {
     #[allow(clippy::type_complexity)]
     schedules: Vec<(Interned<dyn ScheduleLabel>, Option<Interned<dyn SystemSet>>)>,
@@ -45,7 +44,7 @@ impl Default for InputSequencePlugin {
 
 impl Plugin for InputSequencePlugin {
     fn build(&self, app: &mut App) {
-        if self.match_key.unwrap_or(app.world.get_resource::<Input<KeyCode>>().is_some()) {
+        if self.match_key.unwrap_or(app.world.get_resource::<ButtonInput<KeyCode>>().is_some()) {
             // Add key sequence.
             app.init_resource::<InputSequenceCache<KeyChord, ()>>();
 
@@ -77,7 +76,7 @@ impl Plugin for InputSequencePlugin {
             warn!("No key sequence matcher added; consider adding DefaultPlugins.");
         }
 
-        if self.match_button.unwrap_or(app.world.get_resource::<Input<GamepadButton>>().is_some()) {
+        if self.match_button.unwrap_or(app.world.get_resource::<ButtonInput<GamepadButton>>().is_some()) {
             // Add button sequences.
             app.init_resource::<InputSequenceCache<GamepadButtonType, Gamepad>>();
 
@@ -173,7 +172,7 @@ fn detect_removals<A: Clone + Send + Sync + 'static, In: 'static>(
 fn button_sequence_matcher(
     secrets: Query<&ButtonSequence>,
     time: Res<Time>,
-    buttons: Res<Input<GamepadButton>>,
+    buttons: Res<ButtonInput<GamepadButton>>,
     mut last_buttons: Local<HashMap<usize, Covec<GamepadButtonType, FrameTime>>>,
     mut cache: ResMut<InputSequenceCache<GamepadButtonType, Gamepad>>,
     frame_count: Res<FrameCount>,
@@ -215,7 +214,7 @@ fn button_sequence_matcher(
 fn key_sequence_matcher(
     secrets: Query<&KeySequence>,
     time: Res<Time>,
-    keys: Res<Input<KeyCode>>,
+    keys: Res<ButtonInput<KeyCode>>,
     mut last_keys: Local<Covec<KeyChord, FrameTime>>,
     mut cache: ResMut<InputSequenceCache<KeyChord, ()>>,
     frame_count: Res<FrameCount>,

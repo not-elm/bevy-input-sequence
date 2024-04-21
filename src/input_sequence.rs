@@ -4,11 +4,11 @@ use crate::{cond_system::IntoCondSystem, time_limit::TimeLimit, KeyChord};
 use bevy::{
     ecs::{
         entity::Entity,
+        component::Component,
         system::{IntoSystem, System, SystemId},
         world::World,
     },
-    input::gamepad::Gamepad,
-    prelude::{Component, GamepadButtonType},
+    input::gamepad::{Gamepad, GamepadButtonType},
     reflect::Reflect,
 };
 
