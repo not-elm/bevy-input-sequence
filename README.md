@@ -132,6 +132,50 @@ fn check_events(mut events: EventReader<MyEvent>) {
 }
 ```
 
+## KeySequence creation patterns
+
+`KeySequence::new` now returns an implementing of `Command` instead of itself.
+Therefore, you need to call `Commands::add` instead of `Commands::spawn`.
+
+```rust
+use bevy::prelude::*;
+use bevy_input_sequence::prelude::*;
+
+#[derive(Event, Clone)]
+struct MyEvent;
+
+fn create_key_sequence(mut commands: Commands) {
+    commands.add(KeySequence::new(
+        action::send_event(bevy::app::AppExit), 
+        keyseq! { ctrl-E L M }
+    ));
+}
+
+fn create_key_sequence_and_add_it_to_an_entity(mut commands: Commands) {
+    let parent = commands.spawn_empty().id();
+    commands.entity(parent).add(KeySequence::new(
+        action::send_event(MyEvent), 
+        keyseq! { ctrl-E L M }
+    ));
+    // OR
+    commands.spawn_empty().add(KeySequence::new(
+        action::send_event(MyEvent), 
+        keyseq! { ctrl-E L M }
+    ));
+}
+
+fn create_key_sequence_within_command(mut commands: Commands) {
+    commands.add(|world: &mut World| {
+        let builder = KeySequence::new(
+            action::send_event(MyEvent), 
+            keyseq! { ctrl-E L M }
+        );
+        let key_sequence = builder.build(world);
+        // And then put it somewhere?
+    });
+}
+```
+
 # Runnable Examples
 
 ## keycode
