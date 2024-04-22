@@ -12,7 +12,7 @@ pub use plugin::InputSequencePlugin;
 pub use time_limit::TimeLimit;
 
 pub mod action;
-mod cache;
+pub mod cache;
 mod chord;
 pub mod cond_system;
 mod covec;
@@ -29,5 +29,5 @@ pub mod prelude {
 
     pub use super::{action, InputSequencePlugin, keyseq, Modifiers, TimeLimit};
     pub use super::cond_system::IntoCondSystem;
+    pub use super::chord::KeyChord;
 }
-

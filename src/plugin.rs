@@ -26,7 +26,10 @@ use crate::{
     input_sequence::{ButtonSequence, InputSequence, KeySequence},
     KeyChord, Modifiers,
 };
-use trie_rs::map::Trie;
+use trie_rs::{
+    map::Trie,
+    inc_search::{IncSearch, Answer},
+};
 
 /// ButtonInput sequence plugin.
 pub struct InputSequencePlugin {
@@ -166,7 +169,7 @@ fn detect_additions<A: Clone + Send + Sync + 'static, In: 'static>(
     mut cache: ResMut<InputSequenceCache<A, In>>,
 ) {
     if secrets.iter().next().is_some() {
-        cache.trie = None;
+        cache.reset();
     }
 }
 
@@ -175,7 +178,7 @@ fn detect_removals<A: Clone + Send + Sync + 'static, In: 'static>(
     mut removals: RemovedComponents<InputSequence<A, In>>,
 ) {
     if removals.read().next().is_some() {
-        cache.trie = None;
+        cache.reset();
     }
 }
 
@@ -232,38 +235,104 @@ fn key_sequence_matcher(
     mut commands: Commands,
 ) {
     let mods = Modifiers::from_input(&keys);
-    let trie = cache.trie(secrets.iter());
     let now = FrameTime {
         frame: frame_count.0,
         time: time.elapsed_seconds(),
     };
-    for key_code in keys.get_just_pressed() {
-        if is_modifier(*key_code) {
-            continue;
-        }
-        let key = KeyChord(mods, *key_code);
-        last_keys.push(key, now.clone());
-        let start = last_keys.1[0].clone();
-        for seq in consume_input(trie, &mut last_keys.0) {
+    let maybe_start = last_keys.1.first().cloned();
+    let mut input = keys.get_just_pressed()
+        .filter(|k| ! is_modifier(**k))
+        .map(|k| {
+            let chord = KeyChord(mods, *k);
+            last_keys.push(chord.clone(), now.clone());
+            chord
+        })
+        .peekable();
+    if input.peek().is_none() {
+        return;
+    }
+    let mut search = cache.recall(secrets.iter());
+    let mut min_prefix = None;
+
+    // eprintln!("maybe_start {maybe_start:?} now {now:?}");
+    for seq in inc_consume_input(&mut search,
+                                 input,
+                                 &mut min_prefix) {
+        if let Some(ref start) = maybe_start {
             if seq
-                .time_limit
-                .as_ref()
-                .map(|limit| (&now - &start).has_timedout(limit))
-                .unwrap_or(false)
+            .time_limit
+            .as_ref()
+            .map(|limit| (&now - &start).has_timedout(limit))
+            .unwrap_or(false)
             {
                 // Sequence timed out.
-            } else {
-                commands.run_system(seq.system_id);
+                continue;
             }
         }
-        last_keys.drain1_sync();
+        commands.run_system(seq.system_id);
     }
+    // eprintln!("min_prefix {min_prefix:?}");
+    match min_prefix {
+        Some(i) => {
+            let _ = last_keys.0.drain(0..i);
+        }
+        None => {
+            last_keys.0.clear();
+        }
+    }
+    last_keys.drain1_sync();
+    let position = search.into();
+    cache.store(position);
+}
+
+/// Incrementally consume the input.
+fn inc_consume_input<'a, 'b, K, V>(search: &'b mut IncSearch<'a, K, V>,
+                                   input: impl Iterator<Item = K> + 'b,
+                                   min_prefix: &'b mut Option<usize>)
+                                   -> impl Iterator<Item = &'a V> + 'b
+where
+    K: Clone + Eq + Ord,
+    'a: 'b,
+{
+    let mut i = 0;
+    input.filter_map(move |k| {
+        i += 1;
+        match search.query(&k) {
+            Some(Answer::Match) => {
+                let result = Some(search.value().unwrap());
+                search.reset();
+                *min_prefix = None;
+                result
+            }
+            Some(Answer::Prefix) if min_prefix.is_none() => {
+                *min_prefix = Some(i - 1);
+                None
+            }
+            Some(Answer::PrefixAndMatch) => {
+                Some(search.value().unwrap())
+            }
+            Some(Answer::Prefix) => {
+                None
+            }
+            None => {
+                search.reset();
+                *min_prefix = None;
+                // This could be the start of a new sequence.
+                if search.query(&k).is_none() {
+                    // This may not be necessary.
+                    search.reset();
+                } else {
+                    *min_prefix = Some(i - 1);
+                }
+                None
+            }
+        }
+    })
 }
 
 fn consume_input<'a, K, V>(trie: &'a Trie<K, V>, input: &mut Vec<K>) -> impl Iterator<Item = &'a V>
 where
     K: Clone + Eq + Ord,
-    // V: Clone,
 {
     let mut result = vec![];
     let mut min_prefix = None;

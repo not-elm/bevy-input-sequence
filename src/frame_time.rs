@@ -1,6 +1,6 @@
 use crate::time_limit::TimeLimit;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub(crate) struct FrameTime {
     pub(crate) frame: u32,
     pub(crate) time: f32,

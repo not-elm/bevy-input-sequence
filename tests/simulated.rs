@@ -498,6 +498,7 @@ mod simulate_app {
                 .time_limit(TimeLimit::Frames(1)),
         );
 
+        // eprintln!("t0");
         press_key(&mut app, KeyCode::KeyA);
         app.update();
         assert!(app
@@ -507,9 +508,11 @@ mod simulate_app {
             .next()
             .is_none());
 
+        // eprintln!("t1");
         clear_just_pressed(&mut app, KeyCode::KeyA);
         app.update();
 
+        // eprintln!("t2");
         press_key(&mut app, KeyCode::KeyB);
         app.update();
         assert!(app

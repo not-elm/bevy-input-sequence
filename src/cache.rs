@@ -1,11 +1,17 @@
+//! Cache the trie for reuse.
 use crate::input_sequence::InputSequence;
 use bevy::ecs::system::Resource;
-use trie_rs::map::{Trie, TrieBuilder};
+use trie_rs::{
+    map::{Trie, TrieBuilder},
+    inc_search::{IncSearch,
+                 Position}
+};
 
 /// Contains the trie for the input sequences.
 #[derive(Resource)]
 pub struct InputSequenceCache<A, In> {
-    pub(crate) trie: Option<Trie<A, InputSequence<A, In>>>,
+    trie: Option<Trie<A, InputSequence<A, In>>>,
+    position: Option<Position>,
 }
 
 impl<A, In> InputSequenceCache<A, In>
@@ -25,13 +31,43 @@ where
             for sequence in sequences {
                 builder.insert(sequence.acts.clone(), sequence.clone());
             }
+            assert!(self.position.is_none(), "Position should be none when rebuilding trie");
             builder.build()
         })
+    }
+
+    /// Store a search.
+    pub fn store(&mut self, position: Position) {
+        self.position = Some(position);
+    }
+
+    /// Recall a search OR create a new search.
+    // pub fn recall<'a>(&self, trie: &'a Trie<A, InputSequence<A, In>>) -> IncSearch<'a, A, InputSequence<A, In>> {
+    pub fn recall<'a, 'b>(&'b mut self, sequences: impl Iterator<Item = &'a InputSequence<A, In>>) -> IncSearch<'a, A, InputSequence<A, In>>
+    where 'b: 'a {
+        let position = self.position.clone();
+        let trie = self.trie(sequences);
+        position
+            .map(move |p| IncSearch::resume(trie, p))
+            .unwrap_or_else(move || trie.inc_search())
+    }
+
+}
+
+impl<A, In> InputSequenceCache<A, In>
+{
+    /// Clears the cache.
+    pub fn reset(&mut self) {
+        self.trie = None;
+        self.position = None;
     }
 }
 
 impl<A, In> Default for InputSequenceCache<A, In> {
     fn default() -> Self {
-        Self { trie: None }
+        Self {
+            trie: None,
+            position: None,
+        }
     }
 }
