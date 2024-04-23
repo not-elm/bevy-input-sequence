@@ -21,7 +21,12 @@ pub mod input_sequence;
 mod plugin;
 mod time_limit;
 
-/// Convenient splat import
+pub use keyseq::{
+    bevy::{pkey as key, pkeyseq as keyseq},
+    Modifiers,
+};
+
+/// Convenient glob import
 pub mod prelude {
     pub use std::time::Duration;
 
