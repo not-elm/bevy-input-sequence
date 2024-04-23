@@ -165,10 +165,10 @@ impl InputSequencePlugin {
 }
 
 fn detect_additions<A: Clone + Send + Sync + 'static, In: Send + Sync + 'static>(
-    secrets: Query<&InputSequence<A, In>, Added<InputSequence<A, In>>>,
+    sequences: Query<&InputSequence<A, In>, Added<InputSequence<A, In>>>,
     mut cache: ResMut<InputSequenceCache<A, In>>,
 ) {
-    if secrets.iter().next().is_some() {
+    if sequences.iter().next().is_some() {
         cache.reset();
     }
 }
@@ -184,31 +184,31 @@ fn detect_removals<A: Clone + Send + Sync + 'static, In: Send + Sync +'static>(
 
 #[allow(clippy::too_many_arguments)]
 fn button_sequence_matcher(
-    secrets: Query<&ButtonSequence>,
+    sequences: Query<&ButtonSequence>,
     time: Res<Time>,
     buttons: Res<ButtonInput<GamepadButton>>,
-    mut last_buttons: Local<HashMap<usize, Covec<GamepadButtonType, FrameTime>>>,
+    mut last_times: Local<HashMap<usize, VecDeque<FrameTime>>>,
     mut cache: ResMut<InputSequenceCache<GamepadButtonType, Gamepad>>,
     frame_count: Res<FrameCount>,
     mut commands: Commands,
 ) {
-    let trie = cache.trie(secrets.iter());
     let now = FrameTime {
         frame: frame_count.0,
         time: time.elapsed_seconds(),
     };
     for button in buttons.get_just_pressed() {
-        let pad_buttons = match last_buttons.get_mut(&button.gamepad.id) {
+        let last_times = match last_times.get_mut(&button.gamepad.id) {
             Some(x) => x,
             None => {
-                last_buttons.insert(button.gamepad.id, Covec::default());
-                last_buttons.get_mut(&button.gamepad.id).unwrap()
+                last_times.insert(button.gamepad.id, VecDeque::new());
+                last_times.get_mut(&button.gamepad.id).unwrap()
             }
         };
 
-        pad_buttons.push(button.button_type, now.clone());
-        let start = pad_buttons.1[0].clone();
-        for seq in consume_input(trie, &mut pad_buttons.0) {
+        last_times.push_front(now.clone());
+        let start = &last_times[0];
+        let mut search = cache.recall(button.gamepad, sequences.iter().by_ref());
+        for seq in inc_consume_input(&mut search, std::iter::once(button.button_type)) {
             if seq
                 .time_limit
                 .as_ref()
@@ -220,13 +220,17 @@ fn button_sequence_matcher(
                 commands.run_system_with_input(seq.system_id, button.gamepad);
             }
         }
-        pad_buttons.drain1_sync();
+        let prefix_len = search.prefix_len();
+        let l = last_times.len();
+        let _ = last_times.drain(0..l - prefix_len);
+        let position = search.into();
+        cache.store(button.gamepad, position);
     }
 }
 
 #[allow(clippy::too_many_arguments)]
 fn key_sequence_matcher(
-    secrets: Query<&InputSequence<KeyChord, ()>>,
+    sequences: Query<&InputSequence<KeyChord, ()>>,
     time: Res<Time>,
     keys: Res<ButtonInput<KeyCode>>,
     mut last_times: Local<VecDeque<FrameTime>>,
@@ -251,7 +255,7 @@ fn key_sequence_matcher(
     if input.peek().is_none() {
         return;
     }
-    let mut search = cache.recall((), secrets.iter());
+    let mut search = cache.recall((), sequences.iter());
 
     // eprintln!("maybe_start {maybe_start:?} now {now:?}");
     for seq in inc_consume_input(&mut search,
