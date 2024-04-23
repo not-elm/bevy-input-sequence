@@ -15,7 +15,6 @@ pub mod action;
 pub mod cache;
 mod chord;
 pub mod cond_system;
-mod covec;
 mod frame_time;
 pub mod input_sequence;
 mod plugin;

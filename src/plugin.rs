@@ -21,15 +21,11 @@ use std::collections::{VecDeque, HashMap};
 use crate::{
     cache::InputSequenceCache,
     chord::is_modifier,
-    covec::Covec,
     frame_time::FrameTime,
     input_sequence::{ButtonSequence, InputSequence, KeySequence},
     KeyChord, Modifiers,
 };
-use trie_rs::{
-    map::Trie,
-    inc_search::{IncSearch, Answer},
-};
+use trie_rs::inc_search::{IncSearch, Answer};
 
 /// ButtonInput sequence plugin.
 pub struct InputSequencePlugin {
@@ -205,14 +201,14 @@ fn button_sequence_matcher(
             }
         };
 
-        last_times.push_front(now.clone());
+        last_times.push_back(now.clone());
         let start = &last_times[0];
         let mut search = cache.recall(button.gamepad, sequences.iter().by_ref());
         for seq in inc_consume_input(&mut search, std::iter::once(button.button_type)) {
             if seq
                 .time_limit
                 .as_ref()
-                .map(|limit| (&now - &start).has_timedout(limit))
+                .map(|limit| (&now - start).has_timedout(limit))
                 .unwrap_or(false)
             {
                 // Sequence timed out.
@@ -230,7 +226,7 @@ fn button_sequence_matcher(
 
 #[allow(clippy::too_many_arguments)]
 fn key_sequence_matcher(
-    sequences: Query<&InputSequence<KeyChord, ()>>,
+    sequences: Query<&KeySequence>,
     time: Res<Time>,
     keys: Res<ButtonInput<KeyCode>>,
     mut last_times: Local<VecDeque<FrameTime>>,
@@ -248,7 +244,7 @@ fn key_sequence_matcher(
         .filter(|k| ! is_modifier(**k))
         .map(|k| {
             let chord = KeyChord(mods, *k);
-            last_times.push_front(now.clone());
+            last_times.push_back(now.clone());
             chord
         })
         .peekable();
@@ -264,7 +260,7 @@ fn key_sequence_matcher(
             if seq
             .time_limit
             .as_ref()
-            .map(|limit| (&now - &start).has_timedout(limit))
+            .map(|limit| (&now - start).has_timedout(limit))
             .unwrap_or(false)
             {
                 // Sequence timed out.
@@ -312,31 +308,4 @@ where
             }
         }
     })
-}
-
-fn consume_input<'a, K, V>(trie: &'a Trie<K, V>, input: &mut Vec<K>) -> impl Iterator<Item = &'a V>
-where
-    K: Clone + Eq + Ord,
-{
-    let mut result = vec![];
-    let mut min_prefix = None;
-    for i in 0..input.len() {
-        if let Some(seq) = trie.exact_match(&input[i..]) {
-            result.push(seq);
-        }
-        if min_prefix.is_none() && trie.is_prefix(&input[i..]) {
-            min_prefix = Some(i);
-            // let _ = input.drain(0..i);
-            // return result.into_iter();
-        }
-    }
-    match min_prefix {
-        Some(i) => {
-            let _ = input.drain(0..i);
-        }
-        None => {
-            input.clear();
-        }
-    }
-    result.into_iter()
 }

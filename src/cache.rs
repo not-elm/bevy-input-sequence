@@ -1,6 +1,10 @@
 //! Cache the trie for reuse.
 use crate::input_sequence::InputSequence;
-use bevy::ecs::system::Resource;
+use bevy::{
+    ecs::system::Resource,
+    log::info,
+    reflect::TypePath,
+};
 use trie_rs::{
     map::{Trie, TrieBuilder},
     inc_search::{IncSearch,
@@ -17,7 +21,7 @@ pub struct InputSequenceCache<A, In> {
 
 impl<A, In> InputSequenceCache<A, In>
 where
-    A: Ord + Clone + Send + Sync + 'static,
+    A: Ord + Clone + Send + Sync + TypePath + 'static,
     In: Send + Sync + Clone + Eq + Hash + 'static,
 {
     /// Retrieve the cached trie without iterating through `sequences`. Or if
@@ -32,7 +36,8 @@ where
             for sequence in sequences {
                 builder.insert(sequence.acts.clone(), sequence.clone());
             }
-            assert!(self.position.len() == 0, "Position should be none when rebuilding trie");
+            info!("Building trie for {} input sequences.", A::short_type_path());
+            assert!(self.position.is_empty(), "Position should be none when rebuilding trie");
             builder.build()
         })
     }
