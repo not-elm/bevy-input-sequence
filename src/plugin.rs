@@ -16,7 +16,7 @@ use bevy::{
     time::Time,
     utils::intern::Interned,
 };
-use std::collections::HashMap;
+use std::collections::{VecDeque, HashMap};
 
 use crate::{
     cache::InputSequenceCache,
@@ -164,7 +164,7 @@ impl InputSequencePlugin {
     }
 }
 
-fn detect_additions<A: Clone + Send + Sync + 'static, In: 'static>(
+fn detect_additions<A: Clone + Send + Sync + 'static, In: Send + Sync + 'static>(
     secrets: Query<&InputSequence<A, In>, Added<InputSequence<A, In>>>,
     mut cache: ResMut<InputSequenceCache<A, In>>,
 ) {
@@ -173,7 +173,7 @@ fn detect_additions<A: Clone + Send + Sync + 'static, In: 'static>(
     }
 }
 
-fn detect_removals<A: Clone + Send + Sync + 'static, In: 'static>(
+fn detect_removals<A: Clone + Send + Sync + 'static, In: Send + Sync +'static>(
     mut cache: ResMut<InputSequenceCache<A, In>>,
     mut removals: RemovedComponents<InputSequence<A, In>>,
 ) {
@@ -226,10 +226,10 @@ fn button_sequence_matcher(
 
 #[allow(clippy::too_many_arguments)]
 fn key_sequence_matcher(
-    secrets: Query<&KeySequence>,
+    secrets: Query<&InputSequence<KeyChord, ()>>,
     time: Res<Time>,
     keys: Res<ButtonInput<KeyCode>>,
-    mut last_keys: Local<Covec<KeyChord, FrameTime>>,
+    mut last_times: Local<VecDeque<FrameTime>>,
     mut cache: ResMut<InputSequenceCache<KeyChord, ()>>,
     frame_count: Res<FrameCount>,
     mut commands: Commands,
@@ -239,25 +239,23 @@ fn key_sequence_matcher(
         frame: frame_count.0,
         time: time.elapsed_seconds(),
     };
-    let maybe_start = last_keys.1.first().cloned();
+    let maybe_start = last_times.front().cloned();
     let mut input = keys.get_just_pressed()
         .filter(|k| ! is_modifier(**k))
         .map(|k| {
             let chord = KeyChord(mods, *k);
-            last_keys.push(chord.clone(), now.clone());
+            last_times.push_front(now.clone());
             chord
         })
         .peekable();
     if input.peek().is_none() {
         return;
     }
-    let mut search = cache.recall(secrets.iter());
-    let mut min_prefix = None;
+    let mut search = cache.recall((), secrets.iter());
 
     // eprintln!("maybe_start {maybe_start:?} now {now:?}");
     for seq in inc_consume_input(&mut search,
-                                 input,
-                                 &mut min_prefix) {
+                                 input) {
         if let Some(ref start) = maybe_start {
             if seq
             .time_limit
@@ -271,42 +269,27 @@ fn key_sequence_matcher(
         }
         commands.run_system(seq.system_id);
     }
-    // eprintln!("min_prefix {min_prefix:?}");
-    match min_prefix {
-        Some(i) => {
-            let _ = last_keys.0.drain(0..i);
-        }
-        None => {
-            last_keys.0.clear();
-        }
-    }
-    last_keys.drain1_sync();
+    let prefix_len = search.prefix_len();
+    let l = last_times.len();
+    let _ = last_times.drain(0..l - prefix_len);
     let position = search.into();
-    cache.store(position);
+    cache.store((), position);
 }
 
 /// Incrementally consume the input.
 fn inc_consume_input<'a, 'b, K, V>(search: &'b mut IncSearch<'a, K, V>,
-                                   input: impl Iterator<Item = K> + 'b,
-                                   min_prefix: &'b mut Option<usize>)
+                                   input: impl Iterator<Item = K> + 'b)
                                    -> impl Iterator<Item = &'a V> + 'b
 where
     K: Clone + Eq + Ord,
     'a: 'b,
 {
-    let mut i = 0;
     input.filter_map(move |k| {
-        i += 1;
         match search.query(&k) {
             Some(Answer::Match) => {
                 let result = Some(search.value().unwrap());
                 search.reset();
-                *min_prefix = None;
                 result
-            }
-            Some(Answer::Prefix) if min_prefix.is_none() => {
-                *min_prefix = Some(i - 1);
-                None
             }
             Some(Answer::PrefixAndMatch) => {
                 Some(search.value().unwrap())
@@ -316,13 +299,10 @@ where
             }
             None => {
                 search.reset();
-                *min_prefix = None;
                 // This could be the start of a new sequence.
                 if search.query(&k).is_none() {
                     // This may not be necessary.
                     search.reset();
-                } else {
-                    *min_prefix = Some(i - 1);
                 }
                 None
             }

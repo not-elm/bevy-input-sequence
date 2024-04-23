@@ -6,18 +6,19 @@ use trie_rs::{
     inc_search::{IncSearch,
                  Position}
 };
+use std::{hash::Hash, collections::HashMap};
 
 /// Contains the trie for the input sequences.
 #[derive(Resource)]
 pub struct InputSequenceCache<A, In> {
     trie: Option<Trie<A, InputSequence<A, In>>>,
-    position: Option<Position>,
+    position: HashMap<In, Position>,
 }
 
 impl<A, In> InputSequenceCache<A, In>
 where
     A: Ord + Clone + Send + Sync + 'static,
-    In: Send + Sync + Clone + 'static,
+    In: Send + Sync + Clone + Eq + Hash + 'static,
 {
     /// Retrieve the cached trie without iterating through `sequences`. Or if
     /// the cache has been invalidated, build and cache a new trie using the
@@ -31,21 +32,23 @@ where
             for sequence in sequences {
                 builder.insert(sequence.acts.clone(), sequence.clone());
             }
-            assert!(self.position.is_none(), "Position should be none when rebuilding trie");
+            assert!(self.position.len() == 0, "Position should be none when rebuilding trie");
             builder.build()
         })
     }
 
     /// Store a search.
-    pub fn store(&mut self, position: Position) {
-        self.position = Some(position);
+    pub fn store(&mut self, key: In, position: Position) {
+        self.position.insert(key, position);
     }
 
     /// Recall a search OR create a new search.
-    // pub fn recall<'a>(&self, trie: &'a Trie<A, InputSequence<A, In>>) -> IncSearch<'a, A, InputSequence<A, In>> {
-    pub fn recall<'a, 'b>(&'b mut self, sequences: impl Iterator<Item = &'a InputSequence<A, In>>) -> IncSearch<'a, A, InputSequence<A, In>>
+    pub fn recall<'a, 'b>(&'b mut self,
+                          key: In,
+                          sequences: impl Iterator<Item = &'a InputSequence<A, In>>)
+                          -> IncSearch<'a, A, InputSequence<A, In>>
     where 'b: 'a {
-        let position = self.position.clone();
+        let position = self.position.get(&key).cloned();
         let trie = self.trie(sequences);
         position
             .map(move |p| IncSearch::resume(trie, p))
@@ -59,7 +62,7 @@ impl<A, In> InputSequenceCache<A, In>
     /// Clears the cache.
     pub fn reset(&mut self) {
         self.trie = None;
-        self.position = None;
+        self.position.clear();
     }
 }
 
@@ -67,7 +70,7 @@ impl<A, In> Default for InputSequenceCache<A, In> {
     fn default() -> Self {
         Self {
             trie: None,
-            position: None,
+            position: HashMap::new(),
         }
     }
 }
