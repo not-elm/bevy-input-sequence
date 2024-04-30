@@ -31,10 +31,10 @@ where
             for sequence in sequences {
                 builder.insert(sequence.acts.clone(), sequence.clone());
             }
-            info!(
-                "Building trie for {} input sequences.",
-                A::short_type_path()
-            );
+            // info!(
+            //     "Building trie for {} input sequences.",
+            //     A::short_type_path()
+            // );
             assert!(
                 self.position.is_empty(),
                 "Position should be none when rebuilding trie"
