@@ -1,16 +1,11 @@
 //! Cache the trie for reuse.
 use crate::input_sequence::InputSequence;
-use bevy::{
-    ecs::system::Resource,
-    log::info,
-    reflect::TypePath,
-};
+use bevy::{ecs::system::Resource, log::info, reflect::TypePath};
+use std::{collections::HashMap, hash::Hash};
 use trie_rs::{
+    inc_search::{IncSearch, Position},
     map::{Trie, TrieBuilder},
-    inc_search::{IncSearch,
-                 Position}
 };
-use std::{hash::Hash, collections::HashMap};
 
 /// Contains the trie for the input sequences.
 #[derive(Resource)]
@@ -36,8 +31,14 @@ where
             for sequence in sequences {
                 builder.insert(sequence.acts.clone(), sequence.clone());
             }
-            info!("Building trie for {} input sequences.", A::short_type_path());
-            assert!(self.position.is_empty(), "Position should be none when rebuilding trie");
+            info!(
+                "Building trie for {} input sequences.",
+                A::short_type_path()
+            );
+            assert!(
+                self.position.is_empty(),
+                "Position should be none when rebuilding trie"
+            );
             builder.build()
         })
     }
@@ -48,22 +49,23 @@ where
     }
 
     /// Recall a search OR create a new search.
-    pub fn recall<'a, 'b>(&'b mut self,
-                          key: In,
-                          sequences: impl Iterator<Item = &'a InputSequence<A, In>>)
-                          -> IncSearch<'a, A, InputSequence<A, In>>
-    where 'b: 'a {
+    pub fn recall<'a, 'b>(
+        &'b mut self,
+        key: In,
+        sequences: impl Iterator<Item = &'a InputSequence<A, In>>,
+    ) -> IncSearch<'a, A, InputSequence<A, In>>
+    where
+        'b: 'a,
+    {
         let position = self.position.get(&key).cloned();
         let trie = self.trie(sequences);
         position
             .map(move |p| IncSearch::resume(trie, p))
             .unwrap_or_else(move || trie.inc_search())
     }
-
 }
 
-impl<A, In> InputSequenceCache<A, In>
-{
+impl<A, In> InputSequenceCache<A, In> {
     /// Clears the cache.
     pub fn reset(&mut self) {
         self.trie = None;

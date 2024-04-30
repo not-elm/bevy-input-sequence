@@ -16,7 +16,7 @@ use bevy::{
     time::Time,
     utils::intern::Interned,
 };
-use std::collections::{VecDeque, HashMap};
+use std::collections::{HashMap, VecDeque};
 
 use crate::{
     cache::InputSequenceCache,
@@ -25,7 +25,7 @@ use crate::{
     input_sequence::{ButtonSequence, InputSequence, KeySequence},
     KeyChord, Modifiers,
 };
-use trie_rs::inc_search::{IncSearch, Answer};
+use trie_rs::inc_search::{Answer, IncSearch};
 
 /// ButtonInput sequence plugin.
 pub struct InputSequencePlugin {
@@ -169,7 +169,7 @@ fn detect_additions<A: Clone + Send + Sync + 'static, In: Send + Sync + 'static>
     }
 }
 
-fn detect_removals<A: Clone + Send + Sync + 'static, In: Send + Sync +'static>(
+fn detect_removals<A: Clone + Send + Sync + 'static, In: Send + Sync + 'static>(
     mut cache: ResMut<InputSequenceCache<A, In>>,
     mut removals: RemovedComponents<InputSequence<A, In>>,
 ) {
@@ -240,8 +240,9 @@ fn key_sequence_matcher(
         time: time.elapsed_seconds(),
     };
     let maybe_start = last_times.front().cloned();
-    let mut input = keys.get_just_pressed()
-        .filter(|k| ! is_modifier(**k))
+    let mut input = keys
+        .get_just_pressed()
+        .filter(|k| !is_modifier(**k))
         .map(|k| {
             let chord = KeyChord(mods, *k);
             last_times.push_back(now.clone());
@@ -254,14 +255,13 @@ fn key_sequence_matcher(
     let mut search = cache.recall((), sequences.iter());
 
     // eprintln!("maybe_start {maybe_start:?} now {now:?}");
-    for seq in inc_consume_input(&mut search,
-                                 input) {
+    for seq in inc_consume_input(&mut search, input) {
         if let Some(ref start) = maybe_start {
             if seq
-            .time_limit
-            .as_ref()
-            .map(|limit| (&now - start).has_timedout(limit))
-            .unwrap_or(false)
+                .time_limit
+                .as_ref()
+                .map(|limit| (&now - start).has_timedout(limit))
+                .unwrap_or(false)
             {
                 // Sequence timed out.
                 continue;
@@ -277,9 +277,10 @@ fn key_sequence_matcher(
 }
 
 /// Incrementally consume the input.
-fn inc_consume_input<'a, 'b, K, V>(search: &'b mut IncSearch<'a, K, V>,
-                                   input: impl Iterator<Item = K> + 'b)
-                                   -> impl Iterator<Item = &'a V> + 'b
+fn inc_consume_input<'a, 'b, K, V>(
+    search: &'b mut IncSearch<'a, K, V>,
+    input: impl Iterator<Item = K> + 'b,
+) -> impl Iterator<Item = &'a V> + 'b
 where
     K: Clone + Eq + Ord,
     'a: 'b,
@@ -291,12 +292,8 @@ where
                 search.reset();
                 result
             }
-            Some(Answer::PrefixAndMatch) => {
-                Some(search.value().unwrap())
-            }
-            Some(Answer::Prefix) => {
-                None
-            }
+            Some(Answer::PrefixAndMatch) => Some(search.value().unwrap()),
+            Some(Answer::Prefix) => None,
             None => {
                 search.reset();
                 // This could be the start of a new sequence.
