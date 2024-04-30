@@ -2,11 +2,6 @@
 #![doc = include_str!("../README.md")]
 #![forbid(missing_docs)]
 
-pub use keyseq::{
-    bevy::{pkey as key, pkeyseq as keyseq},
-    Modifiers,
-};
-
 pub use chord::KeyChord;
 pub use plugin::InputSequencePlugin;
 pub use time_limit::TimeLimit;
