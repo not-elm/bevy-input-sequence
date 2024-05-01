@@ -33,6 +33,10 @@ path = "examples/gamepad_button.rs"
 name = "multiple_input"
 path = "examples/multiple_input.rs"
 
+[[bench]]
+name = "keycode"
+path = "benches/keycode.rs"
+harness = false
 
 [dependencies]
 bevy = { version = "0.13", default-features = false, features = [] }
@@ -43,3 +47,4 @@ keyseq = { version = "0.2.3", features = [ "bevy" ] }
 bevy = "0.13"
 trybuild = "1.0"
 version-sync = "0.9"
+criterion = { version = "0.5.1" }

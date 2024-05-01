@@ -48,6 +48,7 @@ impl Default for InputSequencePlugin {
 
 impl Plugin for InputSequencePlugin {
     fn build(&self, app: &mut App) {
+        
         if self
             .match_key
             .unwrap_or(app.world.get_resource::<ButtonInput<KeyCode>>().is_some())
@@ -237,6 +238,7 @@ fn key_sequence_matcher(
         frame: frame_count.0,
         time: time.elapsed_seconds(),
     };
+    
     for key_code in keys.get_just_pressed() {
         if is_modifier(*key_code) {
             continue;
