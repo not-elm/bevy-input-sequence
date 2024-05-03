@@ -4,20 +4,23 @@ All notable changes to this project will be documented in this file.
 
 ## [0.4.0] - 2024-04-23
 
+## [0.4.0] - 2024-04-23
+
 ### Features
 
 - Generalize to running one-shot systems instead of firing events.
-- Use a plugin, can configure schedule and system set.
+- Use plugin.
+- Can configure schedule and system set.
 - Remove `GamepadEvent`; use system with input `In<Gamepad>`.
-- Add IntoCondSystem that adds `only_if()` conditions to `IntoSystems`.
+- Add `IntoCondSystem` that adds `only_if()` conditions to `IntoSystems`.
 - Add `only_if` example.
-- Add prelude module for glob imports.
+- Add `prelude` module for glob imports.
 
 ### Refactor
 
 - Hollow out lib so it's just `mod` and `pub use` statements.
 - Extract sets of functionality from `lib.rs` into `chord.rs`, `cache.rs` and `plugin.rs`.
-- Extract simulated tests into `tests/` directory.
+- Extract tests into `tests/simulated.rs`.
 
 ## [0.3.0] - 2024-03-08
 

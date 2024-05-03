@@ -16,17 +16,16 @@ use bevy::{
     time::Time,
     utils::intern::Interned,
 };
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 
 use crate::{
     cache::InputSequenceCache,
     chord::is_modifier,
-    covec::Covec,
     frame_time::FrameTime,
     input_sequence::{ButtonSequence, InputSequence, KeySequence},
     KeyChord, Modifiers,
 };
-use trie_rs::map::Trie;
+use trie_rs::inc_search::{Answer, IncSearch};
 
 /// ButtonInput sequence plugin.
 pub struct InputSequencePlugin {
@@ -161,55 +160,55 @@ impl InputSequencePlugin {
     }
 }
 
-fn detect_additions<A: Clone + Send + Sync + 'static, In: 'static>(
-    secrets: Query<&InputSequence<A, In>, Added<InputSequence<A, In>>>,
+fn detect_additions<A: Clone + Send + Sync + 'static, In: Send + Sync + 'static>(
+    sequences: Query<&InputSequence<A, In>, Added<InputSequence<A, In>>>,
     mut cache: ResMut<InputSequenceCache<A, In>>,
 ) {
-    if secrets.iter().next().is_some() {
-        cache.trie = None;
+    if sequences.iter().next().is_some() {
+        cache.reset();
     }
 }
 
-fn detect_removals<A: Clone + Send + Sync + 'static, In: 'static>(
+fn detect_removals<A: Clone + Send + Sync + 'static, In: Send + Sync + 'static>(
     mut cache: ResMut<InputSequenceCache<A, In>>,
     mut removals: RemovedComponents<InputSequence<A, In>>,
 ) {
     if removals.read().next().is_some() {
-        cache.trie = None;
+        cache.reset();
     }
 }
 
 #[allow(clippy::too_many_arguments)]
 fn button_sequence_matcher(
-    secrets: Query<&ButtonSequence>,
+    sequences: Query<&ButtonSequence>,
     time: Res<Time>,
     buttons: Res<ButtonInput<GamepadButton>>,
-    mut last_buttons: Local<HashMap<usize, Covec<GamepadButtonType, FrameTime>>>,
+    mut last_times: Local<HashMap<usize, VecDeque<FrameTime>>>,
     mut cache: ResMut<InputSequenceCache<GamepadButtonType, Gamepad>>,
     frame_count: Res<FrameCount>,
     mut commands: Commands,
 ) {
-    let trie = cache.trie(secrets.iter());
     let now = FrameTime {
         frame: frame_count.0,
         time: time.elapsed_seconds(),
     };
     for button in buttons.get_just_pressed() {
-        let pad_buttons = match last_buttons.get_mut(&button.gamepad.id) {
+        let last_times = match last_times.get_mut(&button.gamepad.id) {
             Some(x) => x,
             None => {
-                last_buttons.insert(button.gamepad.id, Covec::default());
-                last_buttons.get_mut(&button.gamepad.id).unwrap()
+                last_times.insert(button.gamepad.id, VecDeque::new());
+                last_times.get_mut(&button.gamepad.id).unwrap()
             }
         };
 
-        pad_buttons.push(button.button_type, now.clone());
-        let start = pad_buttons.1[0].clone();
-        for seq in consume_input(trie, &mut pad_buttons.0) {
+        last_times.push_back(now.clone());
+        let start = &last_times[0];
+        let mut search = cache.recall(button.gamepad, sequences.iter().by_ref());
+        for seq in inc_consume_input(&mut search, std::iter::once(button.button_type)) {
             if seq
                 .time_limit
                 .as_ref()
-                .map(|limit| (&now - &start).has_timedout(limit))
+                .map(|limit| (&now - start).has_timedout(limit))
                 .unwrap_or(false)
             {
                 // Sequence timed out.
@@ -217,73 +216,93 @@ fn button_sequence_matcher(
                 commands.run_system_with_input(seq.system_id, button.gamepad);
             }
         }
-        pad_buttons.drain1_sync();
+        let prefix_len = search.prefix_len();
+        let l = last_times.len();
+        let _ = last_times.drain(0..l - prefix_len);
+        let position = search.into();
+        cache.store(button.gamepad, position);
     }
 }
 
 #[allow(clippy::too_many_arguments)]
 fn key_sequence_matcher(
-    secrets: Query<&KeySequence>,
+    sequences: Query<&KeySequence>,
     time: Res<Time>,
     keys: Res<ButtonInput<KeyCode>>,
-    mut last_keys: Local<Covec<KeyChord, FrameTime>>,
+    mut last_times: Local<VecDeque<FrameTime>>,
     mut cache: ResMut<InputSequenceCache<KeyChord, ()>>,
     frame_count: Res<FrameCount>,
     mut commands: Commands,
 ) {
     let mods = Modifiers::from_input(&keys);
-    let trie = cache.trie(secrets.iter());
     let now = FrameTime {
         frame: frame_count.0,
         time: time.elapsed_seconds(),
     };
-    for key_code in keys.get_just_pressed() {
-        if is_modifier(*key_code) {
-            continue;
-        }
-        let key = KeyChord(mods, *key_code);
-        last_keys.push(key, now.clone());
-        let start = last_keys.1[0].clone();
-        for seq in consume_input(trie, &mut last_keys.0) {
+    let maybe_start = last_times.front().cloned();
+    let mut input = keys
+        .get_just_pressed()
+        .filter(|k| !is_modifier(**k))
+        .map(|k| {
+            let chord = KeyChord(mods, *k);
+            last_times.push_back(now.clone());
+            chord
+        })
+        .peekable();
+    if input.peek().is_none() {
+        return;
+    }
+    let mut search = cache.recall((), sequences.iter());
+
+    // eprintln!("maybe_start {maybe_start:?} now {now:?}");
+    for seq in inc_consume_input(&mut search, input) {
+        if let Some(ref start) = maybe_start {
             if seq
                 .time_limit
                 .as_ref()
-                .map(|limit| (&now - &start).has_timedout(limit))
+                .map(|limit| (&now - start).has_timedout(limit))
                 .unwrap_or(false)
             {
                 // Sequence timed out.
-            } else {
-                commands.run_system(seq.system_id);
+                continue;
             }
         }
-        last_keys.drain1_sync();
+        commands.run_system(seq.system_id);
     }
+    let prefix_len = search.prefix_len();
+    let l = last_times.len();
+    let _ = last_times.drain(0..l - prefix_len);
+    let position = search.into();
+    cache.store((), position);
 }
 
-fn consume_input<'a, K, V>(trie: &'a Trie<K, V>, input: &mut Vec<K>) -> impl Iterator<Item = &'a V>
+/// Incrementally consume the input.
+fn inc_consume_input<'a, 'b, K, V>(
+    search: &'b mut IncSearch<'a, K, V>,
+    input: impl Iterator<Item = K> + 'b,
+) -> impl Iterator<Item = &'a V> + 'b
 where
     K: Clone + Eq + Ord,
-    // V: Clone,
+    'a: 'b,
 {
-    let mut result = vec![];
-    let mut min_prefix = None;
-    for i in 0..input.len() {
-        if let Some(seq) = trie.exact_match(&input[i..]) {
-            result.push(seq);
+    input.filter_map(move |k| {
+        match search.query(&k) {
+            Some(Answer::Match) => {
+                let result = Some(search.value().unwrap());
+                search.reset();
+                result
+            }
+            Some(Answer::PrefixAndMatch) => Some(search.value().unwrap()),
+            Some(Answer::Prefix) => None,
+            None => {
+                search.reset();
+                // This could be the start of a new sequence.
+                if search.query(&k).is_none() {
+                    // This may not be necessary.
+                    search.reset();
+                }
+                None
+            }
         }
-        if min_prefix.is_none() && trie.is_prefix(&input[i..]) {
-            min_prefix = Some(i);
-            // let _ = input.drain(0..i);
-            // return result.into_iter();
-        }
-    }
-    match min_prefix {
-        Some(i) => {
-            let _ = input.drain(0..i);
-        }
-        None => {
-            input.clear();
-        }
-    }
-    result.into_iter()
+    })
 }
