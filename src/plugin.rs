@@ -2,11 +2,11 @@ use bevy::{
     app::{App, Plugin, Update},
     core::FrameCount,
     ecs::{
+        intern::Interned,
         query::Added,
         removal_detection::RemovedComponents,
         schedule::{IntoSystemConfigs, ScheduleLabel, SystemSet},
         system::{Commands, Local, Query, Res, ResMut},
-        intern::Interned,
     },
     input::{
         gamepad::{Gamepad, GamepadButton, GamepadButtonType},

@@ -12,14 +12,14 @@ fn keychord_display() {
 
 mod simulate_app {
     use bevy::{
-        prelude::Commands,
         app::{App, PostUpdate},
         ecs::{
             component::Component,
             event::{Event, EventReader},
             system::{
                 //commands::Commands,
-                     Query},
+                Query,
+            },
             world::{Command, World},
         },
         input::{
@@ -30,6 +30,7 @@ mod simulate_app {
             keyboard::KeyCode,
             Axis, ButtonInput as Input,
         },
+        prelude::Commands,
         MinimalPlugins,
     };
     use bevy_input_sequence::prelude::*;
@@ -82,7 +83,13 @@ mod simulate_app {
         ));
         press_key(&mut app, KeyCode::KeyA);
         app.update();
-        assert_eq!(app.world_mut().query::<&EventSent>().iter(&app.world_mut()).count(), 1);
+        assert_eq!(
+            app.world_mut()
+                .query::<&EventSent>()
+                .iter(&app.world_mut())
+                .count(),
+            1
+        );
     }
 
     #[test]
@@ -100,7 +107,13 @@ mod simulate_app {
         press_key(&mut app, KeyCode::KeyA);
         press_key(&mut app, KeyCode::KeyB);
         app.update();
-        assert_eq!(app.world_mut().query::<&EventSent>().iter(&app.world_mut()).count(), 2);
+        assert_eq!(
+            app.world_mut()
+                .query::<&EventSent>()
+                .iter(&app.world_mut())
+                .count(),
+            2
+        );
     }
 
     #[test]
@@ -661,7 +674,9 @@ mod simulate_app {
     }
 
     fn release(app: &mut App, key: KeyCode) {
-        app.world_mut().resource_mut::<Input<KeyCode>>().release(key);
+        app.world_mut()
+            .resource_mut::<Input<KeyCode>>()
+            .release(key);
     }
 
     fn press_pad_button(app: &mut App, game_button: GamepadButtonType) {
