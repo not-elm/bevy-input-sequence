@@ -8,6 +8,7 @@ enum Direction {
 }
 
 #[derive(Event, Clone, Debug)]
+#[allow(dead_code)]
 struct MyEvent(Direction);
 
 fn main() {
@@ -49,6 +50,6 @@ fn setup(mut commands: Commands) {
 
 fn event_listener(mut er: EventReader<MyEvent>) {
     for e in er.read() {
-        println!("{e:?} emitted.");
+        println!("{:?} emitted.", e);
     }
 }

@@ -6,6 +6,7 @@ use bevy::{
         removal_detection::RemovedComponents,
         schedule::{IntoSystemConfigs, ScheduleLabel, SystemSet},
         system::{Commands, Local, Query, Res, ResMut},
+        intern::Interned,
     },
     input::{
         gamepad::{Gamepad, GamepadButton, GamepadButtonType},
@@ -14,7 +15,6 @@ use bevy::{
     },
     log::warn,
     time::Time,
-    utils::intern::Interned,
 };
 use std::collections::{HashMap, VecDeque};
 
@@ -49,7 +49,7 @@ impl Plugin for InputSequencePlugin {
     fn build(&self, app: &mut App) {
         if self
             .match_key
-            .unwrap_or(app.world.get_resource::<ButtonInput<KeyCode>>().is_some())
+            .unwrap_or(app.world().get_resource::<ButtonInput<KeyCode>>().is_some())
         {
             // Add key sequence.
             app.init_resource::<InputSequenceCache<KeyChord, ()>>();
@@ -83,7 +83,7 @@ impl Plugin for InputSequencePlugin {
         }
 
         if self.match_button.unwrap_or(
-            app.world
+            app.world()
                 .get_resource::<ButtonInput<GamepadButton>>()
                 .is_some(),
         ) {

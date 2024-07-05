@@ -1,6 +1,6 @@
 # bevy-input-sequence
 
-This crate recognizes input sequences from keyboard and gamepad.
+Detect input sequences from the keyboard or a gamepad.
 
 # Use Cases
 
@@ -19,14 +19,14 @@ cargo install bevy-input-sequence
 Here are some code snippets. These also run as doctests so they do a few things
 differently than a regular runnable example:
 
-- Use `MinimalPlugins` instead of `DefaultPlugins`,
-- and call `app.update()` instead of `app.run()`.
+- Instead of `DefaultPlugins` they use `MinimalPlugins`.
+- Instead of `app.run()` they call `app.update()`.
 
 The next section describes the runnable examples that come with the crate.
 
 ## Run a System on a Key Sequence
 
-Runs a system whenever the user presses the key sequence `H I` or "hi" within a
+Run a system whenever the user presses the key sequence `H I` or "hi" within a
 time limit.
 
 ```rust
@@ -56,8 +56,8 @@ fn say_hello() {
 
 ## Send an Event on Key Sequence
 
-Originally `bevy-input-sequence` always send an event. You can still do that
-with the `action::send_event()`.
+Originally `bevy-input-sequence` always sent an event. You can still do that
+with `action::send_event()`.
 
 ```rust
 use bevy::prelude::*;
@@ -94,7 +94,7 @@ fn check_events(mut events: EventReader<MyEvent>) {
 ## Send an Event on Gamepad Button Sequence
 
 Gamepads have something that keyboards don't: identity problems. Which player
-hit the button sequence may be important to know. So the systems it accepts will
+hit the button sequence may be important to know. So the systems it accepts 
 take an input of `Gamepad`.
 
 ```rust
@@ -132,9 +132,9 @@ fn check_events(mut events: EventReader<MyEvent>) {
 }
 ```
 
-## KeySequence creation patterns
+## KeySequence Creation Patterns
 
-`KeySequence::new` now returns an implementing of `Command` instead of itself.
+`KeySequence::new` now returns `KeySequenceBuilder`, which implements `Command`.
 Therefore, you need to call `Commands::add` instead of `Commands::spawn`.
 
 ```rust
@@ -146,7 +146,7 @@ struct MyEvent;
 
 fn create_key_sequence(mut commands: Commands) {
     commands.add(KeySequence::new(
-        action::send_event(bevy::app::AppExit), 
+        action::send_event(bevy::app::AppExit::default()), 
         keyseq! { ctrl-E L M }
     ));
 }
@@ -163,15 +163,25 @@ fn create_key_sequence_and_add_it_to_an_entity(mut commands: Commands) {
         keyseq! { ctrl-E L M }
     ));
 }
+```
+
+### Advanced Creation
+
+The `KeySequenceBuilder` requires a `&mut World` to build it. You can build it
+yourself like so:
+
+```rust
+use bevy::prelude::*;
+use bevy_input_sequence::prelude::*;
 
 fn create_key_sequence_within_command(mut commands: Commands) {
     commands.add(|world: &mut World| {
         let builder = KeySequence::new(
-            action::send_event(MyEvent), 
+            move || { info!("got it"); },
             keyseq! { ctrl-E L M }
         );
-        let key_sequence = builder.build(world);
-        // And then put it somewhere?
+        let key_sequence: KeySequence = builder.build(world);
+        // And then put it somewhere? It ought to go as a component.
     });
 }
 ```
@@ -244,6 +254,7 @@ cargo run --example run_if
 
 | bevy-input-sequence | bevy |
 |---------------------|------|
+| 0.5                 | 0.14 |
 | 0.3 ~ 0.4.0         | 0.13 |
 | 0.2                 | 0.12 |
 | 0.1                 | 0.11 |
