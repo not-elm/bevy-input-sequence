@@ -10,6 +10,7 @@ fn main() {
 }
 
 fn setup(mut commands: Commands) {
+    info!("Type H I or \"hi\".");
     commands.add(KeySequence::new(say_hi, keyseq! { H I }));
 }
 

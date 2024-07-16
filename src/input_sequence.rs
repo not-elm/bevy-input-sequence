@@ -71,7 +71,7 @@ where
     }
 }
 
-impl<Act, S> bevy::ecs::system::Command for InputSequenceBuilder<Act, S>
+impl<Act, S> bevy::ecs::world::Command for InputSequenceBuilder<Act, S>
 where
     Act: Send + Sync + 'static,
     S: System<Out = ()> + Send + Sync + 'static,

@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use bevy_input_sequence::prelude::*;
 
 #[derive(Event, Clone, Debug)]
+#[allow(dead_code)]
 struct MyEvent(u8, Option<Gamepad>);
 
 fn main() {

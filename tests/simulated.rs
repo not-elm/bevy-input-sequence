@@ -16,8 +16,11 @@ mod simulate_app {
         ecs::{
             component::Component,
             event::{Event, EventReader},
-            system::{Command, Commands, Query},
-            world::World,
+            system::{
+                //commands::Commands,
+                Query,
+            },
+            world::{Command, World},
         },
         input::{
             gamepad::{
@@ -27,6 +30,7 @@ mod simulate_app {
             keyboard::KeyCode,
             Axis, ButtonInput as Input,
         },
+        prelude::Commands,
         MinimalPlugins,
     };
     use bevy_input_sequence::prelude::*;
@@ -51,16 +55,16 @@ mod simulate_app {
     fn one_key() {
         let mut app = new_app();
 
-        app.world.add(KeySequence::new(
+        app.world_mut().add(KeySequence::new(
             action::send_event(MyEvent),
             [(Modifiers::empty(), KeyCode::KeyA)],
         ));
         press_key(&mut app, KeyCode::KeyA);
         app.update();
         assert!(app
-            .world
+            .world_mut()
             .query::<&EventSent>()
-            .iter(&app.world)
+            .iter(&app.world_mut())
             .next()
             .is_some());
     }
@@ -69,46 +73,58 @@ mod simulate_app {
     fn two_components_one_event() {
         let mut app = new_app();
 
-        app.world.add(KeySequence::new(
+        app.world_mut().add(KeySequence::new(
             action::send_event(MyEvent),
             [KeyCode::KeyA],
         ));
-        app.world.add(KeySequence::new(
+        app.world_mut().add(KeySequence::new(
             action::send_event(MyEvent),
             [KeyCode::KeyA],
         ));
         press_key(&mut app, KeyCode::KeyA);
         app.update();
-        assert_eq!(app.world.query::<&EventSent>().iter(&app.world).count(), 1);
+        assert_eq!(
+            app.world_mut()
+                .query::<&EventSent>()
+                .iter(&app.world_mut())
+                .count(),
+            1
+        );
     }
 
     #[test]
     fn two_presses_two_events() {
         let mut app = new_app();
 
-        app.world.add(KeySequence::new(
+        app.world_mut().add(KeySequence::new(
             action::send_event(MyEvent),
             [KeyCode::KeyA],
         ));
-        app.world.add(KeySequence::new(
+        app.world_mut().add(KeySequence::new(
             action::send_event(MyEvent),
             [KeyCode::KeyB],
         ));
         press_key(&mut app, KeyCode::KeyA);
         press_key(&mut app, KeyCode::KeyB);
         app.update();
-        assert_eq!(app.world.query::<&EventSent>().iter(&app.world).count(), 2);
+        assert_eq!(
+            app.world_mut()
+                .query::<&EventSent>()
+                .iter(&app.world_mut())
+                .count(),
+            2
+        );
     }
 
     #[test]
     fn two_keycodes_match_first() {
         let mut app = new_app();
 
-        app.world.add(KeySequence::new(
+        app.world_mut().add(KeySequence::new(
             action::send_event(MyEvent),
             [KeyCode::KeyA, KeyCode::KeyB],
         ));
-        app.world.add(KeySequence::new(
+        app.world_mut().add(KeySequence::new(
             action::send_event(MyEvent),
             [KeyCode::KeyA, KeyCode::KeyC],
         ));
@@ -116,9 +132,9 @@ mod simulate_app {
         press_key(&mut app, KeyCode::KeyA);
         app.update();
         assert!(app
-            .world
+            .world_mut()
             .query::<&EventSent>()
-            .iter(&app.world)
+            .iter(&app.world_mut())
             .next()
             .is_none());
 
@@ -126,9 +142,9 @@ mod simulate_app {
         press_key(&mut app, KeyCode::KeyB);
         app.update();
         assert!(app
-            .world
+            .world_mut()
             .query::<&EventSent>()
-            .iter(&app.world)
+            .iter(&app.world_mut())
             .next()
             .is_some());
     }
@@ -137,11 +153,11 @@ mod simulate_app {
     fn match_short_seq() {
         let mut app = new_app();
 
-        app.world.add(KeySequence::new(
+        app.world_mut().add(KeySequence::new(
             action::send_event(MyEvent),
             [KeyCode::KeyA, KeyCode::KeyB],
         ));
-        app.world.add(KeySequence::new(
+        app.world_mut().add(KeySequence::new(
             action::send_event(MyEvent),
             [KeyCode::KeyA, KeyCode::KeyB, KeyCode::KeyC],
         ));
@@ -149,9 +165,9 @@ mod simulate_app {
         press_key(&mut app, KeyCode::KeyA);
         app.update();
         assert!(app
-            .world
+            .world_mut()
             .query::<&EventSent>()
-            .iter(&app.world)
+            .iter(&app.world_mut())
             .next()
             .is_none());
 
@@ -159,9 +175,9 @@ mod simulate_app {
         press_key(&mut app, KeyCode::KeyB);
         app.update();
         assert_eq!(
-            app.world
+            app.world_mut()
                 .query::<&EventSent>()
-                .iter(&app.world)
+                .iter(&app.world_mut())
                 .next()
                 .map(|x| x.0)
                 .unwrap(),
@@ -172,9 +188,9 @@ mod simulate_app {
         press_key(&mut app, KeyCode::KeyC);
         app.update();
         assert_eq!(
-            app.world
+            app.world_mut()
                 .query::<&EventSent>()
-                .iter(&app.world)
+                .iter(&app.world_mut())
                 .next()
                 .map(|x| x.0)
                 .unwrap(),
@@ -185,9 +201,9 @@ mod simulate_app {
         press_key(&mut app, KeyCode::KeyD);
         app.update();
         assert_eq!(
-            app.world
+            app.world_mut()
                 .query::<&EventSent>()
-                .iter(&app.world)
+                .iter(&app.world_mut())
                 .next()
                 .map(|x| x.0)
                 .unwrap(),
@@ -199,11 +215,11 @@ mod simulate_app {
     fn two_keycodes_match_second() {
         let mut app = new_app();
 
-        app.world.add(KeySequence::new(
+        app.world_mut().add(KeySequence::new(
             action::send_event(MyEvent),
             [KeyCode::KeyA, KeyCode::KeyB],
         ));
-        app.world.add(KeySequence::new(
+        app.world_mut().add(KeySequence::new(
             action::send_event(MyEvent),
             [KeyCode::KeyA, KeyCode::KeyC],
         ));
@@ -211,9 +227,9 @@ mod simulate_app {
         press_key(&mut app, KeyCode::KeyA);
         app.update();
         assert!(app
-            .world
+            .world_mut()
             .query::<&EventSent>()
-            .iter(&app.world)
+            .iter(&app.world_mut())
             .next()
             .is_none());
 
@@ -221,9 +237,9 @@ mod simulate_app {
         press_key(&mut app, KeyCode::KeyC);
         app.update();
         assert!(app
-            .world
+            .world_mut()
             .query::<&EventSent>()
-            .iter(&app.world)
+            .iter(&app.world_mut())
             .next()
             .is_some());
     }
@@ -232,24 +248,24 @@ mod simulate_app {
     fn two_any_patterns() {
         let mut app = new_app();
 
-        app.world.add(KeySequence::new(
+        app.world_mut().add(KeySequence::new(
             action::send_event(MyEvent),
             [KeyCode::KeyA, KeyCode::KeyB],
         ));
-        app.world.add(KeySequence::new(
+        app.world_mut().add(KeySequence::new(
             action::send_event(MyEvent),
             [KeyCode::KeyA, KeyCode::KeyC],
         ));
-        app.world.add(KeySequence::new(
+        app.world_mut().add(KeySequence::new(
             action::send_event(MyEvent),
             [KeyCode::KeyA, KeyCode::KeyD],
         ));
         press_key(&mut app, KeyCode::KeyA);
         app.update();
         assert!(app
-            .world
+            .world_mut()
             .query::<&EventSent>()
-            .iter(&app.world)
+            .iter(&app.world_mut())
             .next()
             .is_none());
 
@@ -257,9 +273,9 @@ mod simulate_app {
         press_key(&mut app, KeyCode::KeyB);
         app.update();
         assert!(app
-            .world
+            .world_mut()
             .query::<&EventSent>()
-            .iter(&app.world)
+            .iter(&app.world_mut())
             .next()
             .is_some());
     }
@@ -268,24 +284,24 @@ mod simulate_app {
     fn two_any_patterns_match_2nd() {
         let mut app = new_app();
 
-        app.world.add(KeySequence::new(
+        app.world_mut().add(KeySequence::new(
             action::send_event(MyEvent),
             [KeyCode::KeyA, KeyCode::KeyB],
         ));
-        app.world.add(KeySequence::new(
+        app.world_mut().add(KeySequence::new(
             action::send_event(MyEvent),
             [KeyCode::KeyA, KeyCode::KeyC],
         ));
-        app.world.add(KeySequence::new(
+        app.world_mut().add(KeySequence::new(
             action::send_event(MyEvent),
             [KeyCode::KeyA, KeyCode::KeyD],
         ));
         press_key(&mut app, KeyCode::KeyA);
         app.update();
         assert!(app
-            .world
+            .world_mut()
             .query::<&EventSent>()
-            .iter(&app.world)
+            .iter(&app.world_mut())
             .next()
             .is_none());
 
@@ -293,9 +309,9 @@ mod simulate_app {
         press_key(&mut app, KeyCode::KeyD);
         app.update();
         assert!(app
-            .world
+            .world_mut()
             .query::<&EventSent>()
-            .iter(&app.world)
+            .iter(&app.world_mut())
             .next()
             .is_some());
     }
@@ -304,7 +320,7 @@ mod simulate_app {
     fn two_keycodes() {
         let mut app = new_app();
 
-        app.world.add(KeySequence::new(
+        app.world_mut().add(KeySequence::new(
             action::send_event(MyEvent),
             [KeyCode::KeyA, KeyCode::KeyB],
         ));
@@ -312,9 +328,9 @@ mod simulate_app {
         press_key(&mut app, KeyCode::KeyA);
         app.update();
         assert!(app
-            .world
+            .world_mut()
             .query::<&EventSent>()
-            .iter(&app.world)
+            .iter(&app.world_mut())
             .next()
             .is_none());
 
@@ -322,9 +338,9 @@ mod simulate_app {
         press_key(&mut app, KeyCode::KeyB);
         app.update();
         assert!(app
-            .world
+            .world_mut()
             .query::<&EventSent>()
-            .iter(&app.world)
+            .iter(&app.world_mut())
             .next()
             .is_some());
     }
@@ -333,7 +349,7 @@ mod simulate_app {
     fn delete_sequences_if_pressed_incorrect_key() {
         let mut app = new_app();
 
-        app.world.add(KeySequence::new(
+        app.world_mut().add(KeySequence::new(
             action::send_event(MyEvent),
             [KeyCode::KeyA, KeyCode::KeyB, KeyCode::KeyC],
         ));
@@ -341,9 +357,9 @@ mod simulate_app {
         press_key(&mut app, KeyCode::KeyA);
         app.update();
         assert!(app
-            .world
+            .world_mut()
             .query::<&EventSent>()
-            .iter(&app.world)
+            .iter(&app.world_mut())
             .next()
             .is_none());
 
@@ -351,9 +367,9 @@ mod simulate_app {
         press_key(&mut app, KeyCode::KeyB);
         app.update();
         assert!(app
-            .world
+            .world_mut()
             .query::<&EventSent>()
-            .iter(&app.world)
+            .iter(&app.world_mut())
             .next()
             .is_none());
 
@@ -361,9 +377,9 @@ mod simulate_app {
         press_key(&mut app, KeyCode::KeyD);
         app.update();
         assert!(app
-            .world
+            .world_mut()
             .query::<&EventSent>()
-            .iter(&app.world)
+            .iter(&app.world_mut())
             .next()
             .is_none());
     }
@@ -372,13 +388,13 @@ mod simulate_app {
     fn game_pad_button() {
         let mut app = new_app();
 
-        app.world.send_event(GamepadConnectionEvent::new(
+        app.world_mut().send_event(GamepadConnectionEvent::new(
             Gamepad::new(1),
             GamepadConnection::Connected(GamepadInfo {
                 name: "".to_string(),
             }),
         ));
-        app.world.add(ButtonSequence::new(
+        app.world_mut().add(ButtonSequence::new(
             action::send_event_with_input(|_: Gamepad| MyEvent),
             [
                 GamepadButtonType::North,
@@ -391,9 +407,9 @@ mod simulate_app {
         press_pad_button(&mut app, GamepadButtonType::North);
         app.update();
         assert!(app
-            .world
+            .world_mut()
             .query::<&EventSent>()
-            .iter(&app.world)
+            .iter(&app.world_mut())
             .next()
             .is_none());
 
@@ -401,9 +417,9 @@ mod simulate_app {
         press_pad_button(&mut app, GamepadButtonType::East);
         app.update();
         assert!(app
-            .world
+            .world_mut()
             .query::<&EventSent>()
-            .iter(&app.world)
+            .iter(&app.world_mut())
             .next()
             .is_none());
 
@@ -411,9 +427,9 @@ mod simulate_app {
         press_pad_button(&mut app, GamepadButtonType::South);
         app.update();
         assert!(app
-            .world
+            .world_mut()
             .query::<&EventSent>()
-            .iter(&app.world)
+            .iter(&app.world_mut())
             .next()
             .is_some());
     }
@@ -421,7 +437,7 @@ mod simulate_app {
     #[test]
     fn multiple_inputs() {
         let mut app = new_app();
-        app.world.send_event(GamepadConnectionEvent::new(
+        app.world_mut().send_event(GamepadConnectionEvent::new(
             Gamepad::new(1),
             GamepadConnection::Connected(GamepadInfo {
                 name: "".to_string(),
@@ -429,7 +445,7 @@ mod simulate_app {
         ));
         // This is no longer possible right now. We could introduce a
         // KeyButtonSequence mixture struct would allow it.
-        // app.world.add(KeySequence::new(
+        // app.world_mut().add(KeySequence::new(
         //     action::send_event(MyEvent),
         //     [
         //         (KeyCode::KeyA),
@@ -438,12 +454,12 @@ mod simulate_app {
         //         (GamepadButtonType::C.into()),
         //     ],
         // ));
-        app.world.add(KeySequence::new(
+        app.world_mut().add(KeySequence::new(
             action::send_event(MyEvent),
             [KeyCode::KeyA, KeyCode::KeyB, KeyCode::KeyX],
         ));
 
-        app.world.add(ButtonSequence::new(
+        app.world_mut().add(ButtonSequence::new(
             action::send_event_with_input(|_: Gamepad| MyEvent),
             [GamepadButtonType::North, GamepadButtonType::C],
         ));
@@ -452,9 +468,9 @@ mod simulate_app {
         press_key(&mut app, KeyCode::KeyA);
         app.update();
         assert!(app
-            .world
+            .world_mut()
             .query::<&EventSent>()
-            .iter(&app.world)
+            .iter(&app.world_mut())
             .next()
             .is_none());
 
@@ -462,9 +478,9 @@ mod simulate_app {
         press_key(&mut app, KeyCode::KeyB);
         app.update();
         assert!(app
-            .world
+            .world_mut()
             .query::<&EventSent>()
-            .iter(&app.world)
+            .iter(&app.world_mut())
             .next()
             .is_none());
 
@@ -472,9 +488,9 @@ mod simulate_app {
         press_pad_button(&mut app, GamepadButtonType::North);
         app.update();
         assert!(app
-            .world
+            .world_mut()
             .query::<&EventSent>()
-            .iter(&app.world)
+            .iter(&app.world_mut())
             .next()
             .is_none());
 
@@ -482,9 +498,9 @@ mod simulate_app {
         press_pad_button(&mut app, GamepadButtonType::C);
         app.update();
         assert!(app
-            .world
+            .world_mut()
             .query::<&EventSent>()
-            .iter(&app.world)
+            .iter(&app.world_mut())
             .next()
             .is_some());
     }
@@ -493,7 +509,7 @@ mod simulate_app {
     fn timeout_1frame() {
         let mut app = new_app();
 
-        app.world.add(
+        app.world_mut().add(
             KeySequence::new(action::send_event(MyEvent), [KeyCode::KeyA, KeyCode::KeyB])
                 .time_limit(TimeLimit::Frames(1)),
         );
@@ -502,9 +518,9 @@ mod simulate_app {
         press_key(&mut app, KeyCode::KeyA);
         app.update();
         assert!(app
-            .world
+            .world_mut()
             .query::<&EventSent>()
-            .iter(&app.world)
+            .iter(&app.world_mut())
             .next()
             .is_none());
 
@@ -516,9 +532,9 @@ mod simulate_app {
         press_key(&mut app, KeyCode::KeyB);
         app.update();
         assert!(app
-            .world
+            .world_mut()
             .query::<&EventSent>()
-            .iter(&app.world)
+            .iter(&app.world_mut())
             .next()
             .is_none());
     }
@@ -527,7 +543,7 @@ mod simulate_app {
     fn test_modifier() {
         let mut app = new_app();
 
-        app.world.add(KeySequence::new(
+        app.world_mut().add(KeySequence::new(
             action::send_event(MyEvent),
             [KeyCode::KeyA, KeyCode::KeyB],
         ));
@@ -535,9 +551,9 @@ mod simulate_app {
         press_key(&mut app, KeyCode::KeyA);
         app.update();
         assert!(app
-            .world
+            .world_mut()
             .query::<&EventSent>()
-            .iter(&app.world)
+            .iter(&app.world_mut())
             .next()
             .is_none());
 
@@ -547,9 +563,9 @@ mod simulate_app {
         press_key(&mut app, KeyCode::ControlLeft);
         app.update();
         assert!(app
-            .world
+            .world_mut()
             .query::<&EventSent>()
-            .iter(&app.world)
+            .iter(&app.world_mut())
             .next()
             .is_none());
         release(&mut app, KeyCode::ControlLeft);
@@ -558,9 +574,9 @@ mod simulate_app {
         press_key(&mut app, KeyCode::KeyB);
         app.update();
         assert!(app
-            .world
+            .world_mut()
             .query::<&EventSent>()
-            .iter(&app.world)
+            .iter(&app.world_mut())
             .next()
             .is_some());
     }
@@ -569,7 +585,7 @@ mod simulate_app {
     fn no_timeout_1frame() {
         let mut app = new_app();
 
-        app.world.add(
+        app.world_mut().add(
             KeySequence::new(action::send_event(MyEvent), [KeyCode::KeyA, KeyCode::KeyB])
                 .time_limit(TimeLimit::Frames(2)),
         );
@@ -577,9 +593,9 @@ mod simulate_app {
         press_key(&mut app, KeyCode::KeyA);
         app.update();
         assert!(app
-            .world
+            .world_mut()
             .query::<&EventSent>()
-            .iter(&app.world)
+            .iter(&app.world_mut())
             .next()
             .is_none());
 
@@ -589,9 +605,9 @@ mod simulate_app {
         press_key(&mut app, KeyCode::KeyB);
         app.update();
         assert!(app
-            .world
+            .world_mut()
             .query::<&EventSent>()
-            .iter(&app.world)
+            .iter(&app.world_mut())
             .next()
             .is_some());
     }
@@ -600,7 +616,7 @@ mod simulate_app {
     fn timeout_3frames() {
         let mut app = new_app();
 
-        app.world.add(
+        app.world_mut().add(
             KeySequence::new(
                 action::send_event(MyEvent),
                 [KeyCode::KeyA, KeyCode::KeyB, KeyCode::KeyC],
@@ -611,9 +627,9 @@ mod simulate_app {
         press_key(&mut app, KeyCode::KeyA);
         app.update();
         assert!(app
-            .world
+            .world_mut()
             .query::<&EventSent>()
-            .iter(&app.world)
+            .iter(&app.world_mut())
             .next()
             .is_none());
 
@@ -623,52 +639,54 @@ mod simulate_app {
         press_key(&mut app, KeyCode::KeyB);
         app.update();
         assert!(app
-            .world
+            .world_mut()
             .query::<&EventSent>()
-            .iter(&app.world)
+            .iter(&app.world_mut())
             .next()
             .is_none());
 
         clear_just_pressed(&mut app, KeyCode::KeyB);
         app.update();
         assert!(app
-            .world
+            .world_mut()
             .query::<&EventSent>()
-            .iter(&app.world)
+            .iter(&app.world_mut())
             .next()
             .is_none());
 
         app.update();
         assert!(app
-            .world
+            .world_mut()
             .query::<&EventSent>()
-            .iter(&app.world)
+            .iter(&app.world_mut())
             .next()
             .is_none());
     }
 
     fn press_key(app: &mut App, key: KeyCode) {
-        app.world.resource_mut::<Input<KeyCode>>().press(key);
+        app.world_mut().resource_mut::<Input<KeyCode>>().press(key);
     }
 
     fn clear_just_pressed(app: &mut App, key: KeyCode) {
-        app.world
+        app.world_mut()
             .resource_mut::<Input<KeyCode>>()
             .clear_just_pressed(key);
     }
 
     fn release(app: &mut App, key: KeyCode) {
-        app.world.resource_mut::<Input<KeyCode>>().release(key);
+        app.world_mut()
+            .resource_mut::<Input<KeyCode>>()
+            .release(key);
     }
 
     fn press_pad_button(app: &mut App, game_button: GamepadButtonType) {
-        app.world
+        app.world_mut()
             .resource_mut::<Input<GamepadButton>>()
             .press(GamepadButton::new(Gamepad::new(1), game_button))
     }
 
     fn clear_just_pressed_pad_button(app: &mut App, game_button: GamepadButtonType) {
-        app.world
+        app.world_mut()
             .resource_mut::<Input<GamepadButton>>()
             .clear_just_pressed(GamepadButton::new(Gamepad::new(1), game_button));
     }

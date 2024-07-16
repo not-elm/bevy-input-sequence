@@ -1,6 +1,6 @@
 //! Cache the trie for reuse.
 use crate::input_sequence::InputSequence;
-use bevy::{ecs::system::Resource, log::info, reflect::TypePath};
+use bevy::{ecs::system::Resource, reflect::TypePath};
 use std::{collections::HashMap, hash::Hash};
 use trie_rs::{
     inc_search::{IncSearch, Position},
