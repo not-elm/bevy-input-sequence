@@ -2,10 +2,10 @@ use bevy_input_sequence::{key, KeyChord};
 
 #[test]
 fn keychord_display() {
-    let keychord = KeyChord::from(key!(ctrl - A));
-    assert_eq!(format!("{}", keychord), "ctrl-A");
-    let keychord = KeyChord::from(key!(ctrl - 1));
-    assert_eq!(format!("{}", keychord), "ctrl-1");
+    let keychord = KeyChord::from(key!(Ctrl - A));
+    assert_eq!(format!("{}", keychord), "Ctrl-A");
+    let keychord = KeyChord::from(key!(Ctrl - 1));
+    assert_eq!(format!("{}", keychord), "Ctrl-1");
     let keychord = KeyChord::from(key!(1));
     assert_eq!(format!("{}", keychord), "1");
 }

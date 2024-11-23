@@ -80,7 +80,7 @@ fn main() {
 fn setup(mut commands: Commands) {
     commands.add(
         KeySequence::new(action::send_event(MyEvent), 
-                         keyseq! { ctrl-E L M })
+                         keyseq! { Ctrl-E L M })
     );
 }
 
@@ -147,7 +147,7 @@ struct MyEvent;
 fn create_key_sequence(mut commands: Commands) {
     commands.add(KeySequence::new(
         action::send_event(bevy::app::AppExit::default()), 
-        keyseq! { ctrl-E L M }
+        keyseq! { Ctrl-E L M }
     ));
 }
 
@@ -155,12 +155,12 @@ fn create_key_sequence_and_add_it_to_an_entity(mut commands: Commands) {
     let parent = commands.spawn_empty().id();
     commands.entity(parent).add(KeySequence::new(
         action::send_event(MyEvent), 
-        keyseq! { ctrl-E L M }
+        keyseq! { Ctrl-E L M }
     ));
     // OR
     commands.spawn_empty().add(KeySequence::new(
         action::send_event(MyEvent), 
-        keyseq! { ctrl-E L M }
+        keyseq! { Ctrl-E L M }
     ));
 }
 ```
@@ -178,7 +178,7 @@ fn create_key_sequence_within_command(mut commands: Commands) {
     commands.add(|world: &mut World| {
         let builder = KeySequence::new(
             move || { info!("got it"); },
-            keyseq! { ctrl-E L M }
+            keyseq! { Ctrl-E L M }
         );
         let key_sequence: KeySequence = builder.build(world);
         // And then put it somewhere? It ought to go as a component.
@@ -199,7 +199,7 @@ cargo run --example keycode
 
 ## keymod
 
-The `keymod` example recognizes `ctrl-W ctrl-D ctrl-S ctrl-A` and fires an event.
+The `keymod` example recognizes `Ctrl-W Ctrl-D Ctrl-S Ctrl-A` and fires an event.
 
 ``` sh
 cargo run --example keymod
