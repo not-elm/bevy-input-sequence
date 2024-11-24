@@ -2,7 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.4.0] - 2024-04-23
+## [0.5.0] - 2024-04-23
+
+### Features
+- Optimize look ups to incrementally search using O(log n) instead of O(m^2 log n). See [PR #7](https://github.com/not-elm/bevy-input-sequence/pull/7) for more details.
 
 ## [0.4.0] - 2024-04-23
 

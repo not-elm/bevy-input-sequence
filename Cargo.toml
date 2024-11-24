@@ -1,7 +1,7 @@
 [package]
 name = "bevy-input-sequence"
-description = "Recognizes input sequences and send events"
-version = "0.5.0"
+description = "Recognizes and acts on input sequences"
+version = "0.6.0"
 edition = "2021"
 authors = ["elm", "Shane Celis <shane.celis@gmail.com>"]
 keywords = [
@@ -18,21 +18,17 @@ readme = "README.md"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/elm-register/bevy-input-sequence"
 
-
 [[example]]
 name = "keycode"
 path = "examples/keycode.rs"
-
 
 [[example]]
 name = "gamepad_button"
 path = "examples/gamepad_button.rs"
 
-
 [[example]]
 name = "multiple_input"
 path = "examples/multiple_input.rs"
-
 
 [dependencies]
 bevy = { version = "0.14", default-features = false, features = [] }
@@ -43,3 +39,6 @@ keyseq = { version = "0.4.0", features = [ "bevy" ] }
 bevy = "0.14"
 trybuild = "1.0"
 version-sync = "0.9"
+
+[patch.crates-io]
+keyseq = { path = "../keyseq" }
