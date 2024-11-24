@@ -234,7 +234,7 @@ fn key_sequence_matcher(
     frame_count: Res<FrameCount>,
     mut commands: Commands,
 ) {
-    let mods = Modifiers::from_input(&keys);
+    let mods = Modifiers::from(&keys);
     let now = FrameTime {
         frame: frame_count.0,
         time: time.elapsed_seconds(),
