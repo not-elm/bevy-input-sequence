@@ -27,14 +27,14 @@ pub fn send_event<E: Event + Clone>(event: E) -> impl FnMut(EventWriter<E>) {
     }
 }
 
-/// Trigger and event.
+/// Trigger an event.
 pub fn trigger<E: Event + Clone>(event: E) -> impl FnMut(Commands) {
     move |mut commands: Commands| {
         commands.trigger(event.clone());
     }
 }
 
-/// Trigger and event with targets.
+/// Trigger an event with targets.
 pub fn trigger_targets<E: Event + Clone, T: TriggerTargets + Clone>(
     event: E,
     targets: T,
