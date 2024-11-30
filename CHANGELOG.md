@@ -6,6 +6,10 @@ All notable changes to this project will be documented in this file.
 
 ## [0.6.0] - 2024-11-24
 
+- Add `action::trigger` and `action::trigger_targets` convenience systems.
+- Bump keyseq to 0.4.0, which changes notation to be more standard: `Ctrl-A`
+  instead of `ctrl-A`.
+
 ## [0.5.0] - 2024-06-05
 
 ### Features
