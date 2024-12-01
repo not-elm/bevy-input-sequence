@@ -20,7 +20,7 @@ use std::collections::{HashMap, VecDeque};
 
 use crate::{
     cache::InputSequenceCache,
-    chord::{KeyChordQueue, is_modifier},
+    chord::{is_modifier, KeyChordQueue},
     frame_time::FrameTime,
     input_sequence::{ButtonSequence, InputSequence, KeySequence},
     KeyChord, Modifiers,
@@ -242,15 +242,17 @@ fn key_sequence_matcher(
         time: time.elapsed_seconds(),
     };
     let maybe_start = last_times.front().cloned();
-    let mut input = keychord_queue.drain(..).chain(
-        keys
-        .get_just_pressed()
-        .filter(|k| !is_modifier(**k))
-        .map(|k| {
-            let chord = KeyChord(mods, *k);
-            last_times.push_back(now.clone());
-            chord
-        }))
+    let mut input = keychord_queue
+        .drain(..)
+        .chain(
+            keys.get_just_pressed()
+                .filter(|k| !is_modifier(**k))
+                .map(|k| {
+                    let chord = KeyChord(mods, *k);
+                    last_times.push_back(now.clone());
+                    chord
+                }),
+        )
         .peekable();
     if input.peek().is_none() {
         return;

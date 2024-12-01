@@ -30,7 +30,7 @@ mod simulate_app {
             keyboard::KeyCode,
             Axis, ButtonInput as Input,
         },
-        prelude::{Resource, Commands, ResMut},
+        prelude::{Commands, ResMut, Resource},
         MinimalPlugins,
     };
     use bevy_input_sequence::prelude::*;
@@ -261,18 +261,12 @@ mod simulate_app {
     fn match_a_and_c() {
         let mut app = new_app();
 
-        app.world_mut().add(KeySequence::new(
-            set(1),
-            [KeyCode::KeyA],
-        ));
-        app.world_mut().add(KeySequence::new(
-            set(2),
-            [KeyCode::KeyA, KeyCode::KeyB],
-        ));
-        app.world_mut().add(KeySequence::new(
-            set(3),
-            [KeyCode::KeyC],
-        ));
+        app.world_mut()
+            .add(KeySequence::new(set(1), [KeyCode::KeyA]));
+        app.world_mut()
+            .add(KeySequence::new(set(2), [KeyCode::KeyA, KeyCode::KeyB]));
+        app.world_mut()
+            .add(KeySequence::new(set(3), [KeyCode::KeyC]));
         assert_eq!(get(app.world()), 0);
         press_key(&mut app, KeyCode::KeyA);
         app.update();

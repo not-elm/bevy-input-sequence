@@ -1,5 +1,7 @@
 use bevy::{
-    input::keyboard::KeyCode, prelude::{Deref, DerefMut, Resource}, reflect::{Enum, Reflect}
+    input::keyboard::KeyCode,
+    prelude::{Deref, DerefMut, Resource},
+    reflect::{Enum, Reflect},
 };
 
 use std::{collections::VecDeque, fmt};
