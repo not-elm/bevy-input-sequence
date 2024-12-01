@@ -243,6 +243,41 @@ mod simulate_app {
             .next()
             .is_some());
     }
+    #[test]
+    fn match_ab_and_c() {
+        let mut app = new_app();
+
+        app.world_mut().add(KeySequence::new(
+            action::send_event(EventSent(0)),
+            [KeyCode::KeyA, KeyCode::KeyB],
+        ));
+        app.world_mut().add(KeySequence::new(
+            action::send_event(EventSent(1)),
+            [KeyCode::KeyA],
+        ));
+        app.world_mut().add(KeySequence::new(
+            action::send_event(EventSent(2)),
+            [KeyCode::KeyC],
+        ));
+        press_key(&mut app, KeyCode::KeyA);
+        app.update();
+        assert!(app
+            .world_mut()
+            .query::<&EventSent>()
+            .iter(app.world_mut())
+            .next()
+            .is_none());
+
+        clear_just_pressed(&mut app, KeyCode::KeyA);
+        press_key(&mut app, KeyCode::KeyB);
+        app.update();
+        assert!(app
+                .world_mut()
+                .query::<&EventSent>()
+                .iter(app.world_mut())
+                .next()
+                .map(|x| x.0 == 0).unwrap_or(false));
+    }
 
     #[test]
     fn two_any_patterns() {
