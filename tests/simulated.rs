@@ -30,7 +30,7 @@ mod simulate_app {
             keyboard::KeyCode,
             Axis, ButtonInput as Input,
         },
-        prelude::Commands,
+        prelude::{Resource, Commands, ResMut},
         MinimalPlugins,
     };
     use bevy_input_sequence::prelude::*;
@@ -49,6 +49,19 @@ mod simulate_app {
         fn add(&mut self, command: impl Command) {
             command.apply(self);
         }
+    }
+
+    #[derive(Resource, Default)]
+    struct R(u8);
+
+    fn set(x: u8) -> impl Fn(ResMut<R>) {
+        move |mut r: ResMut<R>| {
+            r.0 = x;
+        }
+    }
+
+    fn get(world: &World) -> u8 {
+        world.resource::<R>().0
     }
 
     #[test]
@@ -243,40 +256,31 @@ mod simulate_app {
             .next()
             .is_some());
     }
+
     #[test]
-    fn match_ab_and_c() {
+    fn match_a_and_c() {
         let mut app = new_app();
 
         app.world_mut().add(KeySequence::new(
-            action::send_event(EventSent(0)),
-            [KeyCode::KeyA, KeyCode::KeyB],
-        ));
-        app.world_mut().add(KeySequence::new(
-            action::send_event(EventSent(1)),
+            set(1),
             [KeyCode::KeyA],
         ));
         app.world_mut().add(KeySequence::new(
-            action::send_event(EventSent(2)),
+            set(2),
+            [KeyCode::KeyA, KeyCode::KeyB],
+        ));
+        app.world_mut().add(KeySequence::new(
+            set(3),
             [KeyCode::KeyC],
         ));
+        assert_eq!(get(app.world()), 0);
         press_key(&mut app, KeyCode::KeyA);
         app.update();
-        assert!(app
-            .world_mut()
-            .query::<&EventSent>()
-            .iter(app.world_mut())
-            .next()
-            .is_none());
-
+        assert_eq!(get(app.world()), 1);
         clear_just_pressed(&mut app, KeyCode::KeyA);
-        press_key(&mut app, KeyCode::KeyB);
+        press_key(&mut app, KeyCode::KeyC);
         app.update();
-        assert!(app
-                .world_mut()
-                .query::<&EventSent>()
-                .iter(app.world_mut())
-                .next()
-                .map(|x| x.0 == 0).unwrap_or(false));
+        assert_eq!(get(app.world()), 3);
     }
 
     #[test]
@@ -754,6 +758,7 @@ mod simulate_app {
         );
         app.add_systems(PostUpdate, read);
         app.add_event::<MyEvent>();
+        app.init_resource::<R>();
         app.init_resource::<Gamepads>();
         app.init_resource::<Input<GamepadButton>>();
         app.init_resource::<Input<GamepadAxis>>();
