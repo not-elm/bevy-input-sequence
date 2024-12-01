@@ -2,10 +2,6 @@
 #![doc = include_str!("../README.md")]
 #![forbid(missing_docs)]
 
-pub use chord::KeyChord;
-pub use plugin::InputSequencePlugin;
-pub use time_limit::TimeLimit;
-
 pub mod action;
 pub mod cache;
 mod chord;
@@ -14,6 +10,10 @@ mod frame_time;
 pub mod input_sequence;
 mod plugin;
 mod time_limit;
+
+pub use chord::{KeyChord, KeyChordQueue};
+pub use plugin::{InputSequencePlugin};
+pub use time_limit::TimeLimit;
 
 pub use keyseq::{
     bevy::{pkey as key, pkeyseq as keyseq},
@@ -24,8 +24,7 @@ pub use keyseq::{
 pub mod prelude {
     pub use super::input_sequence::{ButtonSequence, InputSequence, KeySequence};
     pub use super::{action, keyseq, InputSequencePlugin, Modifiers, TimeLimit};
-
-    pub use super::chord::KeyChord;
+    pub use super::{KeyChordQueue, KeyChord};
     pub use super::cond_system::IntoCondSystem;
     pub use std::time::Duration;
 }
