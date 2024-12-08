@@ -1,6 +1,6 @@
 use bevy::{
     input::keyboard::KeyCode,
-    prelude::{Deref, DerefMut, Resource},
+    prelude::{Deref, DerefMut, Resource, ReflectResource},
     reflect::{Enum, Reflect},
 };
 
@@ -62,5 +62,6 @@ pub(crate) fn is_modifier(key: KeyCode) -> bool {
 /// user.
 ///
 /// Normally this does not need to be manipulated. It is a kind of escape hatch.
-#[derive(Resource, Debug, Deref, DerefMut, Default)]
+#[derive(Resource, Debug, Deref, DerefMut, Default, Reflect)]
+#[reflect(Resource)]
 pub struct KeyChordQueue(pub VecDeque<KeyChord>);

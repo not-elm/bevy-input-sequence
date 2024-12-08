@@ -1,6 +1,6 @@
 //! Cache the trie for reuse.
 use crate::input_sequence::InputSequence;
-use bevy::{ecs::system::Resource, reflect::TypePath};
+use bevy::{ecs::system::Resource, reflect::TypePath, prelude::{Reflect, ReflectResource}};
 use std::{collections::HashMap, hash::Hash};
 use trie_rs::{
     inc_search::{IncSearch, Position},
@@ -8,7 +8,8 @@ use trie_rs::{
 };
 
 /// Contains the trie for the input sequences.
-#[derive(Resource)]
+#[derive(Resource, Reflect)]
+#[reflect(Resource)]
 pub struct InputSequenceCache<A, In> {
     trie: Option<Trie<A, InputSequence<A, In>>>,
     position: HashMap<In, Position>,

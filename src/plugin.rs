@@ -51,6 +51,10 @@ impl Plugin for InputSequencePlugin {
             .match_key
             .unwrap_or(app.world().get_resource::<ButtonInput<KeyCode>>().is_some())
         {
+            app
+                .register_type::<InputSequence<KeyChord, ()>>()
+                // .register_type::<InputSequenceCache<KeyChord, ()>>()
+                ;
             // Add key sequence.
             app.init_resource::<InputSequenceCache<KeyChord, ()>>();
             app.init_resource::<KeyChordQueue>();
@@ -88,6 +92,10 @@ impl Plugin for InputSequencePlugin {
                 .get_resource::<ButtonInput<GamepadButton>>()
                 .is_some(),
         ) {
+            app
+                .register_type::<InputSequence<GamepadButtonType, Gamepad>>()
+                // .register_type::<InputSequenceCache<GamepadButtonType, Gamepad>>()
+                ;
             // Add button sequences.
             app.init_resource::<InputSequenceCache<GamepadButtonType, Gamepad>>();
 
