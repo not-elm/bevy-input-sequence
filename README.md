@@ -81,7 +81,7 @@ fn main() {
 fn setup(mut commands: Commands) {
     commands.add(
         KeySequence::new(action::send_event(MyEvent), 
-                         keyseq! { Ctrl-E L M })
+                         keyseq! { Ctrl-E Alt-L Shift-M })
     );
 }
 
@@ -159,7 +159,7 @@ fn main() {
 fn setup(mut commands: Commands) {
     commands.add(
         KeySequence::new(action::trigger(MyEvent), 
-                         keyseq! { Ctrl-E L M })
+                         keyseq! { Ctrl-E Alt-L Super-M })
     );
 }
 
