@@ -11,6 +11,7 @@ use bevy::{
     },
     input::gamepad::{Gamepad, GamepadButtonType},
     reflect::Reflect,
+    prelude::BuildWorldChildren,
 };
 
 /// An input sequence is a series of acts that fires an event when matched with
@@ -100,7 +101,10 @@ where
 {
     fn apply(self, world: &mut World) {
         let act = self.build(world);
-        world.spawn(act);
+        let system_entity = act.system_id.entity();
+        let id = world.spawn(act).id();
+        world.entity_mut(system_entity)
+            .set_parent(id);
     }
 }
 
@@ -112,8 +116,11 @@ where
 {
     fn apply(self, id: Entity, world: &mut World) {
         let act = self.build(world);
+        let system_entity = act.system_id.entity();
         let mut entity = world.get_entity_mut(id).unwrap();
         entity.insert(act);
+        world.entity_mut(system_entity)
+            .set_parent(id);
     }
 }
 
@@ -139,8 +146,10 @@ where
     }
 }
 
-/// Represents a key sequence.
+/// Represents a key sequence
 pub type KeySequence = InputSequence<KeyChord, ()>;
+/// Represents a key sequence builder
+pub type KeySequenceBuilder = InputSequenceBuilder<KeyChord, ()>;
 
-/// Represents a gamepad button sequence.
+/// Represents a gamepad button sequence
 pub type ButtonSequence = InputSequence<GamepadButtonType, Gamepad>;
