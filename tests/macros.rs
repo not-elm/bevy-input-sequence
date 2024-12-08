@@ -1,6 +1,62 @@
 use bevy::prelude::*;
 use bevy_input_sequence::*;
 
+#[rustfmt::skip]
+#[test]
+fn before_cargo_format() {
+    assert_eq!(
+        [key![Ctrl-A],
+         key! [Ctrl-A],
+         key! [ Ctrl-A ],
+         key!{Ctrl-A},
+         key! {Ctrl-A},
+         key! { Ctrl-A },
+         key!(Ctrl-A),
+         key! (Ctrl-A),
+         key! ( Ctrl-A ),
+        ],
+        [
+            (Modifiers::CONTROL, KeyCode::KeyA),
+            (Modifiers::CONTROL, KeyCode::KeyA),
+            (Modifiers::CONTROL, KeyCode::KeyA),
+            (Modifiers::CONTROL, KeyCode::KeyA),
+            (Modifiers::CONTROL, KeyCode::KeyA),
+            (Modifiers::CONTROL, KeyCode::KeyA),
+            (Modifiers::CONTROL, KeyCode::KeyA),
+            (Modifiers::CONTROL, KeyCode::KeyA),
+            (Modifiers::CONTROL, KeyCode::KeyA),
+        ]
+    );
+}
+
+#[test]
+fn after_cargo_format() {
+    assert_eq!(
+        [
+            key![Ctrl - A],
+            key![Ctrl - A],
+            key![Ctrl - A],
+            key! {Ctrl-A},
+            key! {Ctrl-A},
+            key! { Ctrl-A },
+            key!(Ctrl - A),
+            key!(Ctrl - A),
+            key!(Ctrl - A),
+        ],
+        [
+            (Modifiers::CONTROL, KeyCode::KeyA),
+            (Modifiers::CONTROL, KeyCode::KeyA),
+            (Modifiers::CONTROL, KeyCode::KeyA),
+            (Modifiers::CONTROL, KeyCode::KeyA),
+            (Modifiers::CONTROL, KeyCode::KeyA),
+            (Modifiers::CONTROL, KeyCode::KeyA),
+            (Modifiers::CONTROL, KeyCode::KeyA),
+            (Modifiers::CONTROL, KeyCode::KeyA),
+            (Modifiers::CONTROL, KeyCode::KeyA),
+        ]
+    );
+}
+
 #[test]
 fn test_keyseq_doc() {
     assert_eq!(
