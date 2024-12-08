@@ -1,6 +1,62 @@
 use bevy::prelude::*;
 use bevy_input_sequence::*;
 
+#[rustfmt::skip]
+#[test]
+fn before_cargo_format() {
+    assert_eq!(
+        [key![Ctrl-A],
+         key! [Ctrl-A],
+         key! [ Ctrl-A ],
+         key!{Ctrl-A},
+         key! {Ctrl-A},
+         key! { Ctrl-A },
+         key!(Ctrl-A),
+         key! (Ctrl-A),
+         key! ( Ctrl-A ),
+        ],
+        [
+            (Modifiers::CONTROL, KeyCode::KeyA),
+            (Modifiers::CONTROL, KeyCode::KeyA),
+            (Modifiers::CONTROL, KeyCode::KeyA),
+            (Modifiers::CONTROL, KeyCode::KeyA),
+            (Modifiers::CONTROL, KeyCode::KeyA),
+            (Modifiers::CONTROL, KeyCode::KeyA),
+            (Modifiers::CONTROL, KeyCode::KeyA),
+            (Modifiers::CONTROL, KeyCode::KeyA),
+            (Modifiers::CONTROL, KeyCode::KeyA),
+        ]
+    );
+}
+
+#[test]
+fn after_cargo_format() {
+    assert_eq!(
+        [
+            key![Ctrl - A],
+            key![Ctrl - A],
+            key![Ctrl - A],
+            key! {Ctrl-A},
+            key! {Ctrl-A},
+            key! { Ctrl-A },
+            key!(Ctrl - A),
+            key!(Ctrl - A),
+            key!(Ctrl - A),
+        ],
+        [
+            (Modifiers::CONTROL, KeyCode::KeyA),
+            (Modifiers::CONTROL, KeyCode::KeyA),
+            (Modifiers::CONTROL, KeyCode::KeyA),
+            (Modifiers::CONTROL, KeyCode::KeyA),
+            (Modifiers::CONTROL, KeyCode::KeyA),
+            (Modifiers::CONTROL, KeyCode::KeyA),
+            (Modifiers::CONTROL, KeyCode::KeyA),
+            (Modifiers::CONTROL, KeyCode::KeyA),
+            (Modifiers::CONTROL, KeyCode::KeyA),
+        ]
+    );
+}
+
 #[test]
 fn test_keyseq_doc() {
     assert_eq!(
@@ -11,25 +67,25 @@ fn test_keyseq_doc() {
         ]
     );
     assert_eq!(
-        keyseq! { ctrl-A B },
+        keyseq! { Ctrl-A B },
         [
             (Modifiers::CONTROL, KeyCode::KeyA),
             (Modifiers::empty(), KeyCode::KeyB)
         ]
     );
     assert_eq!(
-        keyseq! { ctrl-alt-A Escape },
+        keyseq! { Ctrl-Alt-A Escape },
         [
             (Modifiers::ALT | Modifiers::CONTROL, KeyCode::KeyA),
             (Modifiers::empty(), KeyCode::Escape)
         ]
     );
     assert_eq!(
-        keyseq! { ctrl-; },
+        keyseq! { Ctrl-; },
         [(Modifiers::CONTROL, KeyCode::Semicolon)]
     );
     assert_eq!(
-        keyseq! { ctrl-Semicolon },
+        keyseq! { Ctrl-Semicolon },
         [(Modifiers::CONTROL, KeyCode::Semicolon)]
     );
 }

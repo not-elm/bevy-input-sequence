@@ -30,12 +30,12 @@ fn main() {
 fn setup(mut commands: Commands) {
     commands.add(KeySequence::new(
         action::send_event(GlobalEvent),
-        keyseq!(Escape),
+        keyseq! { Escape },
     ));
     commands.add(
         KeySequence::new(
             action::send_event(MyEvent).only_if(in_state(AppState::Game)),
-            keyseq!(Space),
+            keyseq! { Space },
         )
         .time_limit(Duration::from_secs(1)),
     );

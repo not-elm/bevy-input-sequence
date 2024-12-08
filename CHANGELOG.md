@@ -2,7 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.4.0] - 2024-04-23
+## [unreleased]
+
+## [0.6.0] - 2024-11-24
+
+- Add `action::trigger` and `action::trigger_targets` convenience systems.
+- Bump keyseq to 0.4.0, which changes notation to be more standard: `Ctrl-A`
+  instead of `ctrl-A`.
+
+## [0.5.0] - 2024-06-05
+
+### Features
+- Optimize look ups to incrementally search using O(log n) instead of O(m^2 log n). See [PR #7](https://github.com/not-elm/bevy-input-sequence/pull/7) for more details.
+
+### Bugs
+- Fix bug where "W A S D" and "A S" sequences would match the latter pattern when "W A S P" was typed.
 
 ## [0.4.0] - 2024-04-23
 
@@ -12,7 +26,7 @@ All notable changes to this project will be documented in this file.
 - Use plugin.
 - Can configure schedule and system set.
 - Remove `GamepadEvent`; use system with input `In<Gamepad>`.
-- Add `IntoCondSystem` that adds `only_if()` conditions to `IntoSystems`.
+- Add `IntoCondSystem` that adds `only_if()` conditi:ons to `IntoSystems`.
 - Add `only_if` example.
 - Add `prelude` module for glob imports.
 

@@ -1,9 +1,10 @@
 use bevy::{
     input::keyboard::KeyCode,
+    prelude::{Deref, DerefMut, Resource},
     reflect::{Enum, Reflect},
 };
 
-use std::fmt;
+use std::{collections::VecDeque, fmt};
 
 use keyseq::Modifiers;
 
@@ -56,3 +57,10 @@ impl From<KeyCode> for KeyChord {
 pub(crate) fn is_modifier(key: KeyCode) -> bool {
     !Modifiers::from(key).is_empty()
 }
+
+/// Manually add key chords to be processed as through they were pressed by the
+/// user.
+///
+/// Normally this does not need to be manipulated. It is a kind of escape hatch.
+#[derive(Resource, Debug, Deref, DerefMut, Default)]
+pub struct KeyChordQueue(pub VecDeque<KeyChord>);

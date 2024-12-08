@@ -18,11 +18,11 @@ fn setup(mut commands: Commands) {
     commands.add(
         KeySequence::new(
             action::send_event(MyEvent),
-            keyseq!(ctrl-W ctrl-D ctrl-S ctrl-A),
+            keyseq! { Ctrl-W Ctrl-D Ctrl-S Ctrl-A },
         )
         .time_limit(Duration::from_secs(1)),
     );
-    println!("Press ctrl-W ctrl-D ctrl-S ctrl-A to emit event.");
+    println!("Press Ctrl-W Ctrl-D Ctrl-S Ctrl-A to emit event.");
 }
 
 fn input_sequence_event_system(mut er: EventReader<MyEvent>) {

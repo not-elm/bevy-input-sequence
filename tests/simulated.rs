@@ -2,10 +2,10 @@ use bevy_input_sequence::{key, KeyChord};
 
 #[test]
 fn keychord_display() {
-    let keychord = KeyChord::from(key!(ctrl - A));
-    assert_eq!(format!("{}", keychord), "ctrl-A");
-    let keychord = KeyChord::from(key!(ctrl - 1));
-    assert_eq!(format!("{}", keychord), "ctrl-1");
+    let keychord = KeyChord::from(key!(Ctrl - A));
+    assert_eq!(format!("{}", keychord), "Ctrl-A");
+    let keychord = KeyChord::from(key!(Ctrl - 1));
+    assert_eq!(format!("{}", keychord), "Ctrl-1");
     let keychord = KeyChord::from(key!(1));
     assert_eq!(format!("{}", keychord), "1");
 }
@@ -30,7 +30,7 @@ mod simulate_app {
             keyboard::KeyCode,
             Axis, ButtonInput as Input,
         },
-        prelude::Commands,
+        prelude::{Commands, ResMut, Resource},
         MinimalPlugins,
     };
     use bevy_input_sequence::prelude::*;
@@ -51,6 +51,19 @@ mod simulate_app {
         }
     }
 
+    #[derive(Resource, Default)]
+    struct R(u8);
+
+    fn set(x: u8) -> impl Fn(ResMut<R>) {
+        move |mut r: ResMut<R>| {
+            r.0 = x;
+        }
+    }
+
+    fn get(world: &World) -> u8 {
+        world.resource::<R>().0
+    }
+
     #[test]
     fn one_key() {
         let mut app = new_app();
@@ -64,7 +77,7 @@ mod simulate_app {
         assert!(app
             .world_mut()
             .query::<&EventSent>()
-            .iter(&app.world_mut())
+            .iter(app.world_mut())
             .next()
             .is_some());
     }
@@ -86,7 +99,7 @@ mod simulate_app {
         assert_eq!(
             app.world_mut()
                 .query::<&EventSent>()
-                .iter(&app.world_mut())
+                .iter(app.world_mut())
                 .count(),
             1
         );
@@ -110,7 +123,7 @@ mod simulate_app {
         assert_eq!(
             app.world_mut()
                 .query::<&EventSent>()
-                .iter(&app.world_mut())
+                .iter(app.world_mut())
                 .count(),
             2
         );
@@ -134,7 +147,7 @@ mod simulate_app {
         assert!(app
             .world_mut()
             .query::<&EventSent>()
-            .iter(&app.world_mut())
+            .iter(app.world_mut())
             .next()
             .is_none());
 
@@ -144,7 +157,7 @@ mod simulate_app {
         assert!(app
             .world_mut()
             .query::<&EventSent>()
-            .iter(&app.world_mut())
+            .iter(app.world_mut())
             .next()
             .is_some());
     }
@@ -167,7 +180,7 @@ mod simulate_app {
         assert!(app
             .world_mut()
             .query::<&EventSent>()
-            .iter(&app.world_mut())
+            .iter(app.world_mut())
             .next()
             .is_none());
 
@@ -177,7 +190,7 @@ mod simulate_app {
         assert_eq!(
             app.world_mut()
                 .query::<&EventSent>()
-                .iter(&app.world_mut())
+                .iter(app.world_mut())
                 .next()
                 .map(|x| x.0)
                 .unwrap(),
@@ -190,7 +203,7 @@ mod simulate_app {
         assert_eq!(
             app.world_mut()
                 .query::<&EventSent>()
-                .iter(&app.world_mut())
+                .iter(app.world_mut())
                 .next()
                 .map(|x| x.0)
                 .unwrap(),
@@ -203,7 +216,7 @@ mod simulate_app {
         assert_eq!(
             app.world_mut()
                 .query::<&EventSent>()
-                .iter(&app.world_mut())
+                .iter(app.world_mut())
                 .next()
                 .map(|x| x.0)
                 .unwrap(),
@@ -229,7 +242,7 @@ mod simulate_app {
         assert!(app
             .world_mut()
             .query::<&EventSent>()
-            .iter(&app.world_mut())
+            .iter(app.world_mut())
             .next()
             .is_none());
 
@@ -239,9 +252,29 @@ mod simulate_app {
         assert!(app
             .world_mut()
             .query::<&EventSent>()
-            .iter(&app.world_mut())
+            .iter(app.world_mut())
             .next()
             .is_some());
+    }
+
+    #[test]
+    fn match_a_and_c() {
+        let mut app = new_app();
+
+        app.world_mut()
+            .add(KeySequence::new(set(1), [KeyCode::KeyA]));
+        app.world_mut()
+            .add(KeySequence::new(set(2), [KeyCode::KeyA, KeyCode::KeyB]));
+        app.world_mut()
+            .add(KeySequence::new(set(3), [KeyCode::KeyC]));
+        assert_eq!(get(app.world()), 0);
+        press_key(&mut app, KeyCode::KeyA);
+        app.update();
+        assert_eq!(get(app.world()), 1);
+        clear_just_pressed(&mut app, KeyCode::KeyA);
+        press_key(&mut app, KeyCode::KeyC);
+        app.update();
+        assert_eq!(get(app.world()), 3);
     }
 
     #[test]
@@ -265,7 +298,7 @@ mod simulate_app {
         assert!(app
             .world_mut()
             .query::<&EventSent>()
-            .iter(&app.world_mut())
+            .iter(app.world_mut())
             .next()
             .is_none());
 
@@ -275,7 +308,7 @@ mod simulate_app {
         assert!(app
             .world_mut()
             .query::<&EventSent>()
-            .iter(&app.world_mut())
+            .iter(app.world_mut())
             .next()
             .is_some());
     }
@@ -301,7 +334,7 @@ mod simulate_app {
         assert!(app
             .world_mut()
             .query::<&EventSent>()
-            .iter(&app.world_mut())
+            .iter(app.world_mut())
             .next()
             .is_none());
 
@@ -311,7 +344,7 @@ mod simulate_app {
         assert!(app
             .world_mut()
             .query::<&EventSent>()
-            .iter(&app.world_mut())
+            .iter(app.world_mut())
             .next()
             .is_some());
     }
@@ -330,7 +363,7 @@ mod simulate_app {
         assert!(app
             .world_mut()
             .query::<&EventSent>()
-            .iter(&app.world_mut())
+            .iter(app.world_mut())
             .next()
             .is_none());
 
@@ -340,7 +373,7 @@ mod simulate_app {
         assert!(app
             .world_mut()
             .query::<&EventSent>()
-            .iter(&app.world_mut())
+            .iter(app.world_mut())
             .next()
             .is_some());
     }
@@ -359,7 +392,7 @@ mod simulate_app {
         assert!(app
             .world_mut()
             .query::<&EventSent>()
-            .iter(&app.world_mut())
+            .iter(app.world_mut())
             .next()
             .is_none());
 
@@ -369,7 +402,7 @@ mod simulate_app {
         assert!(app
             .world_mut()
             .query::<&EventSent>()
-            .iter(&app.world_mut())
+            .iter(app.world_mut())
             .next()
             .is_none());
 
@@ -379,7 +412,7 @@ mod simulate_app {
         assert!(app
             .world_mut()
             .query::<&EventSent>()
-            .iter(&app.world_mut())
+            .iter(app.world_mut())
             .next()
             .is_none());
     }
@@ -409,7 +442,7 @@ mod simulate_app {
         assert!(app
             .world_mut()
             .query::<&EventSent>()
-            .iter(&app.world_mut())
+            .iter(app.world_mut())
             .next()
             .is_none());
 
@@ -419,7 +452,7 @@ mod simulate_app {
         assert!(app
             .world_mut()
             .query::<&EventSent>()
-            .iter(&app.world_mut())
+            .iter(app.world_mut())
             .next()
             .is_none());
 
@@ -429,7 +462,7 @@ mod simulate_app {
         assert!(app
             .world_mut()
             .query::<&EventSent>()
-            .iter(&app.world_mut())
+            .iter(app.world_mut())
             .next()
             .is_some());
     }
@@ -470,7 +503,7 @@ mod simulate_app {
         assert!(app
             .world_mut()
             .query::<&EventSent>()
-            .iter(&app.world_mut())
+            .iter(app.world_mut())
             .next()
             .is_none());
 
@@ -480,7 +513,7 @@ mod simulate_app {
         assert!(app
             .world_mut()
             .query::<&EventSent>()
-            .iter(&app.world_mut())
+            .iter(app.world_mut())
             .next()
             .is_none());
 
@@ -490,7 +523,7 @@ mod simulate_app {
         assert!(app
             .world_mut()
             .query::<&EventSent>()
-            .iter(&app.world_mut())
+            .iter(app.world_mut())
             .next()
             .is_none());
 
@@ -500,7 +533,7 @@ mod simulate_app {
         assert!(app
             .world_mut()
             .query::<&EventSent>()
-            .iter(&app.world_mut())
+            .iter(app.world_mut())
             .next()
             .is_some());
     }
@@ -520,7 +553,7 @@ mod simulate_app {
         assert!(app
             .world_mut()
             .query::<&EventSent>()
-            .iter(&app.world_mut())
+            .iter(app.world_mut())
             .next()
             .is_none());
 
@@ -534,7 +567,7 @@ mod simulate_app {
         assert!(app
             .world_mut()
             .query::<&EventSent>()
-            .iter(&app.world_mut())
+            .iter(app.world_mut())
             .next()
             .is_none());
     }
@@ -553,7 +586,7 @@ mod simulate_app {
         assert!(app
             .world_mut()
             .query::<&EventSent>()
-            .iter(&app.world_mut())
+            .iter(app.world_mut())
             .next()
             .is_none());
 
@@ -565,7 +598,7 @@ mod simulate_app {
         assert!(app
             .world_mut()
             .query::<&EventSent>()
-            .iter(&app.world_mut())
+            .iter(app.world_mut())
             .next()
             .is_none());
         release(&mut app, KeyCode::ControlLeft);
@@ -576,7 +609,7 @@ mod simulate_app {
         assert!(app
             .world_mut()
             .query::<&EventSent>()
-            .iter(&app.world_mut())
+            .iter(app.world_mut())
             .next()
             .is_some());
     }
@@ -595,7 +628,7 @@ mod simulate_app {
         assert!(app
             .world_mut()
             .query::<&EventSent>()
-            .iter(&app.world_mut())
+            .iter(app.world_mut())
             .next()
             .is_none());
 
@@ -607,7 +640,7 @@ mod simulate_app {
         assert!(app
             .world_mut()
             .query::<&EventSent>()
-            .iter(&app.world_mut())
+            .iter(app.world_mut())
             .next()
             .is_some());
     }
@@ -629,7 +662,7 @@ mod simulate_app {
         assert!(app
             .world_mut()
             .query::<&EventSent>()
-            .iter(&app.world_mut())
+            .iter(app.world_mut())
             .next()
             .is_none());
 
@@ -641,7 +674,7 @@ mod simulate_app {
         assert!(app
             .world_mut()
             .query::<&EventSent>()
-            .iter(&app.world_mut())
+            .iter(app.world_mut())
             .next()
             .is_none());
 
@@ -650,7 +683,7 @@ mod simulate_app {
         assert!(app
             .world_mut()
             .query::<&EventSent>()
-            .iter(&app.world_mut())
+            .iter(app.world_mut())
             .next()
             .is_none());
 
@@ -658,7 +691,7 @@ mod simulate_app {
         assert!(app
             .world_mut()
             .query::<&EventSent>()
-            .iter(&app.world_mut())
+            .iter(app.world_mut())
             .next()
             .is_none());
     }
@@ -719,6 +752,7 @@ mod simulate_app {
         );
         app.add_systems(PostUpdate, read);
         app.add_event::<MyEvent>();
+        app.init_resource::<R>();
         app.init_resource::<Gamepads>();
         app.init_resource::<Input<GamepadButton>>();
         app.init_resource::<Input<GamepadAxis>>();

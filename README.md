@@ -1,6 +1,6 @@
 # bevy-input-sequence
 
-Detect input sequences from the keyboard or a gamepad.
+Recognizes and acts on input sequences from the keyboard or a gamepad.
 
 # Use Cases
 
@@ -42,6 +42,7 @@ fn main() {
 }
 
 fn setup(mut commands: Commands) {
+    // Add key sequence.
     commands.add(
         KeySequence::new(say_hello, 
                          keyseq! { H I })
@@ -63,11 +64,11 @@ with `action::send_event()`.
 use bevy::prelude::*;
 use bevy_input_sequence::prelude::*;
 
-// Define an event
+/// Define an event.
 #[derive(Event, Clone, Debug)]
 struct MyEvent;
 
-// Add event as an key sequence
+/// Add event as an key sequence.
 fn main() {
     App::new()
         .add_plugins(MinimalPlugins)
@@ -80,7 +81,7 @@ fn main() {
 fn setup(mut commands: Commands) {
     commands.add(
         KeySequence::new(action::send_event(MyEvent), 
-                         keyseq! { ctrl-E L M })
+                         keyseq! { Ctrl-E L M })
     );
 }
 
@@ -101,11 +102,11 @@ take an input of `Gamepad`.
 use bevy::prelude::*;
 use bevy_input_sequence::prelude::*;
 
-// Define an event
+/// Define an event.
 #[derive(Event, Clone, Debug)]
 struct MyEvent(Gamepad);
 
-// Add event as an key sequence
+/// Add event as an key sequence.
 fn main() {
     App::new()
         .add_plugins(MinimalPlugins)
@@ -132,6 +133,41 @@ fn check_events(mut events: EventReader<MyEvent>) {
 }
 ```
 
+## Trigger an Event on Key Sequence
+
+You can also trigger an event with `action::trigger()` or `action::trigger_targets()`.
+
+```rust
+use bevy::prelude::*;
+use bevy_input_sequence::prelude::*;
+
+/// Define an event.
+#[derive(Event, Clone, Debug)]
+struct MyEvent;
+
+/// Add event as an key sequence.
+fn main() {
+    App::new()
+        .add_plugins(MinimalPlugins)
+        .add_plugins(InputSequencePlugin::default())
+        .add_event::<MyEvent>()
+        .add_systems(Startup, setup)
+        .observe(check_trigger)
+        .update(); // Normally you'd run it here.
+}
+
+fn setup(mut commands: Commands) {
+    commands.add(
+        KeySequence::new(action::trigger(MyEvent), 
+                         keyseq! { Ctrl-E L M })
+    );
+}
+
+fn check_trigger(mut trigger: Trigger<MyEvent>) {
+    info!("got event {:?}", trigger.event());
+}
+```
+
 ## KeySequence Creation Patterns
 
 `KeySequence::new` now returns `KeySequenceBuilder`, which implements `Command`.
@@ -147,20 +183,20 @@ struct MyEvent;
 fn create_key_sequence(mut commands: Commands) {
     commands.add(KeySequence::new(
         action::send_event(bevy::app::AppExit::default()), 
-        keyseq! { ctrl-E L M }
+        keyseq! { Ctrl-E L M }
     ));
 }
 
 fn create_key_sequence_and_add_it_to_an_entity(mut commands: Commands) {
-    let parent = commands.spawn_empty().id();
-    commands.entity(parent).add(KeySequence::new(
+    let id = commands.spawn_empty().id();
+    commands.entity(id).add(KeySequence::new(
         action::send_event(MyEvent), 
-        keyseq! { ctrl-E L M }
+        keyseq! { Ctrl-E L M }
     ));
     // OR
     commands.spawn_empty().add(KeySequence::new(
         action::send_event(MyEvent), 
-        keyseq! { ctrl-E L M }
+        keyseq! { Ctrl-E L M }
     ));
 }
 ```
@@ -178,7 +214,7 @@ fn create_key_sequence_within_command(mut commands: Commands) {
     commands.add(|world: &mut World| {
         let builder = KeySequence::new(
             move || { info!("got it"); },
-            keyseq! { ctrl-E L M }
+            keyseq! { Ctrl-E L M }
         );
         let key_sequence: KeySequence = builder.build(world);
         // And then put it somewhere? It ought to go as a component.
@@ -199,7 +235,7 @@ cargo run --example keycode
 
 ## keymod
 
-The `keymod` example recognizes `ctrl-W ctrl-D ctrl-S ctrl-A` and fires an event.
+The `keymod` example recognizes `Ctrl-W Ctrl-D Ctrl-S Ctrl-A` and fires an event.
 
 ``` sh
 cargo run --example keymod
@@ -254,8 +290,8 @@ cargo run --example run_if
 
 | bevy-input-sequence | bevy |
 |---------------------|------|
-| 0.5                 | 0.14 |
-| 0.3 ~ 0.4.0         | 0.13 |
+| 0.5 ~ 0.6           | 0.14 |
+| 0.3 ~ 0.4           | 0.13 |
 | 0.2                 | 0.12 |
 | 0.1                 | 0.11 |
 

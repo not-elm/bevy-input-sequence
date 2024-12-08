@@ -34,7 +34,7 @@ pub trait IntoCondSystem<I, O, M>: IntoSystem<I, O, M> {
     }
 }
 
-impl<I, O, M, T> IntoCondSystem<I, O, M> for T where T: IntoSystem<I, O, M> + ?Sized {}
+impl<I, O, M, T> IntoCondSystem<I, O, M> for T where T: IntoSystem<I, O, M> {}
 
 /// A one-shot conditional system comprised of consequent `SystemA` and
 /// conditional `SystemB`.

@@ -39,7 +39,7 @@ fn setup(mut commands: Commands) {
     commands.add(
         KeySequence::new(
             action::send_event(MyEvent(Direction::CounterClockwise)),
-            keyseq!(W A S D),
+            keyseq!{ W A S D },
         )
         .time_limit(Duration::from_secs(1)),
     );

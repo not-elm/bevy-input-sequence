@@ -1,5 +1,6 @@
 //! Input sequences for keys and gamepad buttons
 use crate::{cond_system::IntoCondSystem, time_limit::TimeLimit, KeyChord};
+use std::fmt;
 
 use bevy::{
     ecs::{
@@ -24,6 +25,26 @@ pub struct InputSequence<Act, In> {
     pub acts: Vec<Act>,
     /// Optional time limit after first match
     pub time_limit: Option<TimeLimit>,
+}
+
+impl<Act: fmt::Debug, In> fmt::Debug for InputSequence<Act, In> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        #[derive(Debug)]
+        #[allow(dead_code)]
+        struct InputSequence<'a, Act> {
+            // system_id: SystemId<In>,
+            acts: &'a Vec<Act>,
+            time_limit: &'a Option<TimeLimit>,
+        }
+
+        let Self {
+            acts,
+            time_limit,
+            system_id: _,
+        } = self;
+
+        fmt::Debug::fmt(&InputSequence { acts, time_limit }, f)
+    }
 }
 
 /// An input sequence builder.

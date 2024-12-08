@@ -33,131 +33,131 @@ fn eq_if_contains_key_in_lhs() {
 
 // #[test]
 // fn test_shifted_key_macro() {
-//     assert_eq!((Modifiers::CONTROL, KeyCode::KeyB), key! { ctrl-* });
+//     assert_eq!((Modifiers::CONTROL, KeyCode::KeyB), key! { Ctrl-* });
 // }
 
 /// XXX: This doc test isn't working.
 ///
 /// ```compile_fail
-/// assert_eq!((Modifiers::CONTROL, KeyCode::F2), key!{ ctrl-f2 });
+/// assert_eq!((Modifiers::CONTROL, KeyCode::F2), key!{ Ctrl-f2 });
 /// ```
 ///
 /// ```
-/// let _ = key! { ctrl-* });
+/// let _ = key! { Ctrl-* });
 /// ```
 #[allow(unused_must_use)]
 #[test]
 fn test_key_macro() {
-    assert_eq!((Modifiers::CONTROL, KeyCode::KeyB), key! { ctrl-B });
-    assert_eq!((Modifiers::CONTROL, KeyCode::Digit1), key! { ctrl-1 });
-    assert_eq!((Modifiers::CONTROL, KeyCode::Digit2), key! { ctrl-2 });
-    assert_eq!((Modifiers::CONTROL, KeyCode::F2), key! { ctrl-F2 });
-    // assert_eq!((Modifiers::CONTROL, KeyCode::F2), key!{ ctrl-f2 });
-    assert_eq!((Modifiers::CONTROL, KeyCode::Semicolon), key! { ctrl-; });
-    // assert_eq!((Modifiers::CONTROL, KeyCode::Caret), key! { ctrl-^ });
-    // assert_eq!((Modifiers::CONTROL, KeyCode::Colon), key! { ctrl-: });
-    assert_eq!((Modifiers::CONTROL, KeyCode::Equal), key! { ctrl-= });
-    assert_eq!((Modifiers::CONTROL, KeyCode::Comma), key! { ctrl-, });
-    assert_eq!((Modifiers::CONTROL, KeyCode::Period), key! { ctrl-. });
-    assert_eq!((Modifiers::CONTROL, KeyCode::Slash), key! { ctrl-/ });
-    assert_eq!((Modifiers::CONTROL, KeyCode::Enter), key! { ctrl-Enter });
-    assert_eq!((Modifiers::CONTROL, KeyCode::Space), key! { ctrl-Space });
-    assert_eq!((Modifiers::CONTROL, KeyCode::Tab), key! { ctrl-Tab });
-    assert_eq!((Modifiers::CONTROL, KeyCode::Delete), key! { ctrl-Delete });
-    assert_eq!((Modifiers::CONTROL, KeyCode::Minus), key! { ctrl-- });
+    assert_eq!((Modifiers::CONTROL, KeyCode::KeyB), key! { Ctrl-B });
+    assert_eq!((Modifiers::CONTROL, KeyCode::Digit1), key! { Ctrl-1 });
+    assert_eq!((Modifiers::CONTROL, KeyCode::Digit2), key! { Ctrl-2 });
+    assert_eq!((Modifiers::CONTROL, KeyCode::F2), key! { Ctrl-F2 });
+    // assert_eq!((Modifiers::CONTROL, KeyCode::F2), key!{ Ctrl-f2 });
+    assert_eq!((Modifiers::CONTROL, KeyCode::Semicolon), key! { Ctrl-; });
+    // assert_eq!((Modifiers::CONTROL, KeyCode::Caret), key! { Ctrl-^ });
+    // assert_eq!((Modifiers::CONTROL, KeyCode::Colon), key! { Ctrl-: });
+    assert_eq!((Modifiers::CONTROL, KeyCode::Equal), key! { Ctrl-= });
+    assert_eq!((Modifiers::CONTROL, KeyCode::Comma), key! { Ctrl-, });
+    assert_eq!((Modifiers::CONTROL, KeyCode::Period), key! { Ctrl-. });
+    assert_eq!((Modifiers::CONTROL, KeyCode::Slash), key! { Ctrl-/ });
+    assert_eq!((Modifiers::CONTROL, KeyCode::Enter), key! { Ctrl-Enter });
+    assert_eq!((Modifiers::CONTROL, KeyCode::Space), key! { Ctrl-Space });
+    assert_eq!((Modifiers::CONTROL, KeyCode::Tab), key! { Ctrl-Tab });
+    assert_eq!((Modifiers::CONTROL, KeyCode::Delete), key! { Ctrl-Delete });
+    assert_eq!((Modifiers::CONTROL, KeyCode::Minus), key! { Ctrl-- });
     assert_eq!(
         (Modifiers::CONTROL | Modifiers::SHIFT, KeyCode::Minus),
-        key! { ctrl-shift-- }
+        key! { Ctrl-Shift-- }
     );
-    // assert_eq!((Modifiers::CONTROL, KeyCode::Underline), key! { ctrl-_ });
+    // assert_eq!((Modifiers::CONTROL, KeyCode::Underline), key! { Ctrl-_ });
     // No colon key.
-    // assert_eq!((Modifiers::CONTROL, KeyCode::Colon), key! { ctrl-: });
+    // assert_eq!((Modifiers::CONTROL, KeyCode::Colon), key! { Ctrl-: });
     assert_eq!(
         (Modifiers::CONTROL | Modifiers::SHIFT, KeyCode::Semicolon),
-        key! { ctrl-shift-; }
+        key! { Ctrl-Shift-; }
     );
-    assert_eq!((Modifiers::CONTROL, KeyCode::Quote), key! { ctrl-'\'' });
+    assert_eq!((Modifiers::CONTROL, KeyCode::Quote), key! { Ctrl-'\'' });
 
     assert_eq!(
         (Modifiers::CONTROL | Modifiers::SHIFT, KeyCode::KeyA),
-        key! { ctrl-shift-A }
+        key! { Ctrl-Shift-A }
     );
-    // assert_eq!((Modifiers::CONTROL, KeyCode::KeyA), key!{ ctrl-A });
-    assert_eq!((Modifiers::SUPER, KeyCode::KeyA), key! { super-A });
-    assert_eq!((Modifiers::CONTROL, KeyCode::KeyA), key! { ctrl-A }); // Allow lowercase or demand lowercase?
+    // assert_eq!((Modifiers::CONTROL, KeyCode::KeyA), key!{ Ctrl-A });
+    assert_eq!((Modifiers::SUPER, KeyCode::KeyA), key! { Super-A });
+    assert_eq!((Modifiers::CONTROL, KeyCode::KeyA), key! { Ctrl-A }); // Allow lowercase or demand lowercase?
     assert_eq!((Modifiers::empty(), KeyCode::KeyA), key! { A });
     let k = (Modifiers::empty(), KeyCode::KeyA);
     assert_eq!(k, key! { A });
     // assert_eq!(
     //     (Modifiers::CONTROL, KeyCode::Asterisk),
-    //     key! { ctrl-Asterisk }
+    //     key! { Ctrl-Asterisk }
     // );
     assert_eq!(
         (Modifiers::CONTROL | Modifiers::SHIFT, KeyCode::Digit8),
-        key! { ctrl-shift-8 }
+        key! { Ctrl-Shift-8 }
     );
 
     assert_eq!(
         (Modifiers::CONTROL | Modifiers::SHIFT, KeyCode::Digit8),
-        key! { ctrl-shift-Digit8 }
+        key! { Ctrl-Shift-Digit8 }
     );
     // All bevy KeyCode names work.
-    // assert_eq!((Modifiers::CONTROL, KeyCode::Asterisk), key! { ctrl-* }); // with some short hand.
+    // assert_eq!((Modifiers::CONTROL, KeyCode::Asterisk), key! { Ctrl-* }); // with some short hand.
 
-    // assert_eq!((Modifiers::CONTROL, KeyCode::Plus), key! { ctrl-+ });
+    // assert_eq!((Modifiers::CONTROL, KeyCode::Plus), key! { Ctrl-+ });
     assert_eq!(
         (Modifiers::CONTROL | Modifiers::SHIFT, KeyCode::Equal),
-        key! { ctrl-shift-= }
+        key! { Ctrl-Shift-= }
     );
-    // assert_eq!((Modifiers::CONTROL, KeyCode::At), key! { ctrl-@ });
+    // assert_eq!((Modifiers::CONTROL, KeyCode::At), key! { Ctrl-@ });
     assert_eq!(
         (Modifiers::CONTROL, KeyCode::BracketLeft),
-        key! { ctrl-'[' }
+        key! { Ctrl-'[' }
     );
     assert_eq!(
         (Modifiers::CONTROL, KeyCode::BracketRight),
-        key! { ctrl-']' }
+        key! { Ctrl-']' }
     );
     assert_eq!(
         (Modifiers::CONTROL, KeyCode::BracketRight),
-        key! { ctrl-']' }
+        key! { Ctrl-']' }
     );
-    assert_eq!((Modifiers::CONTROL, KeyCode::Backquote), key! { ctrl-'`' });
-    assert_eq!((Modifiers::CONTROL, KeyCode::Backslash), key! { ctrl-'\\' });
-    assert_eq!((Modifiers::CONTROL, KeyCode::Escape), key! { ctrl-Escape });
-    // assert_eq!((Modifiers::CONTROL, KeyCode::Escape), key!{ ctrl-Esc });
+    assert_eq!((Modifiers::CONTROL, KeyCode::Backquote), key! { Ctrl-'`' });
+    assert_eq!((Modifiers::CONTROL, KeyCode::Backslash), key! { Ctrl-'\\' });
+    assert_eq!((Modifiers::CONTROL, KeyCode::Escape), key! { Ctrl-Escape });
+    // assert_eq!((Modifiers::CONTROL, KeyCode::Escape), key!{ Ctrl-Esc });
     assert_eq!(
         (Modifiers::CONTROL | Modifiers::ALT, KeyCode::KeyA),
-        key! { ctrl-alt-A }
+        key! { Ctrl-Alt-A }
     );
 
     assert_eq!((Modifiers::empty(), KeyCode::KeyA), key! { A });
     assert_eq!(
         (Modifiers::CONTROL | Modifiers::ALT, KeyCode::KeyA),
-        key! { ctrl-alt-A }
+        key! { Ctrl-Alt-A }
     );
     assert_eq!(
         (Modifiers::CONTROL | Modifiers::ALT, KeyCode::KeyA),
-        key! { ctrl-alt-A }
+        key! { Ctrl-Alt-A }
     );
     assert_eq!(
         (Modifiers::CONTROL | Modifiers::ALT, KeyCode::Semicolon),
-        key! { ctrl-alt-Semicolon }
+        key! { Ctrl-Alt-Semicolon }
     );
     assert_eq!(
         (Modifiers::CONTROL | Modifiers::ALT, KeyCode::Semicolon),
-        key! { ctrl-alt-; }
+        key! { Ctrl-Alt-; }
     );
     assert_eq!(
         (
             Modifiers::CONTROL | Modifiers::ALT | Modifiers::SHIFT,
             KeyCode::Semicolon
         ),
-        key! { ctrl-alt-shift-; } // ctrl-alt-:
+        key! { Ctrl-Alt-Shift-; } // Ctrl-Alt-:
     );
     assert_eq!(
         (Modifiers::CONTROL | Modifiers::ALT, KeyCode::Slash),
-        key! { ctrl-alt-/ }
+        key! { Ctrl-Alt-/ }
     );
 }
 
@@ -166,18 +166,18 @@ fn test_key_macro() {
 fn test_keyseq() {
     assert_eq!(
         vec![(Modifiers::CONTROL, KeyCode::KeyA)],
-        keyseq! { ctrl-A }
+        keyseq! { Ctrl-A }
     );
     assert_eq!(
         vec![(Modifiers::CONTROL, KeyCode::KeyA)],
-        keyseq! { ctrl-ctrl-A }
+        keyseq! { Ctrl-Ctrl-A }
     );
     assert_eq!(
         vec![
             (Modifiers::CONTROL, KeyCode::KeyA),
             (Modifiers::ALT, KeyCode::KeyB)
         ],
-        keyseq! { ctrl-A alt-B }
+        keyseq! { Ctrl-A Alt-B }
     );
 
     assert_eq!(

@@ -1,6 +1,8 @@
 //! Common actions to do on key sequence matches
 use bevy::ecs::{
     event::{Event, EventWriter},
+    observer::TriggerTargets,
+    prelude::Commands,
     system::In,
 };
 
@@ -22,6 +24,23 @@ use bevy::ecs::{
 pub fn send_event<E: Event + Clone>(event: E) -> impl FnMut(EventWriter<E>) {
     move |mut writer: EventWriter<E>| {
         writer.send(event.clone());
+    }
+}
+
+/// Trigger an event.
+pub fn trigger<E: Event + Clone>(event: E) -> impl FnMut(Commands) {
+    move |mut commands: Commands| {
+        commands.trigger(event.clone());
+    }
+}
+
+/// Trigger an event with targets.
+pub fn trigger_targets<E: Event + Clone, T: TriggerTargets + Clone>(
+    event: E,
+    targets: T,
+) -> impl FnMut(Commands) {
+    move |mut commands: Commands| {
+        commands.trigger_targets(event.clone(), targets.clone());
     }
 }
 

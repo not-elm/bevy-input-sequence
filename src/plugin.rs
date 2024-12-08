@@ -20,7 +20,7 @@ use std::collections::{HashMap, VecDeque};
 
 use crate::{
     cache::InputSequenceCache,
-    chord::is_modifier,
+    chord::{is_modifier, KeyChordQueue},
     frame_time::FrameTime,
     input_sequence::{ButtonSequence, InputSequence, KeySequence},
     KeyChord, Modifiers,
@@ -53,6 +53,7 @@ impl Plugin for InputSequencePlugin {
         {
             // Add key sequence.
             app.init_resource::<InputSequenceCache<KeyChord, ()>>();
+            app.init_resource::<KeyChordQueue>();
 
             for (schedule, set) in &self.schedules {
                 if let Some(set) = set {
@@ -233,21 +234,25 @@ fn key_sequence_matcher(
     mut cache: ResMut<InputSequenceCache<KeyChord, ()>>,
     frame_count: Res<FrameCount>,
     mut commands: Commands,
+    mut keychord_queue: ResMut<KeyChordQueue>,
 ) {
-    let mods = Modifiers::from_input(&keys);
+    let mods = Modifiers::from(&keys);
     let now = FrameTime {
         frame: frame_count.0,
         time: time.elapsed_seconds(),
     };
     let maybe_start = last_times.front().cloned();
-    let mut input = keys
-        .get_just_pressed()
-        .filter(|k| !is_modifier(**k))
-        .map(|k| {
-            let chord = KeyChord(mods, *k);
-            last_times.push_back(now.clone());
-            chord
-        })
+    let mut input = keychord_queue
+        .drain(..)
+        .chain(
+            keys.get_just_pressed()
+                .filter(|k| !is_modifier(**k))
+                .map(|k| {
+                    let chord = KeyChord(mods, *k);
+                    last_times.push_back(now.clone());
+                    chord
+                }),
+        )
         .peekable();
     if input.peek().is_none() {
         return;
@@ -297,11 +302,22 @@ where
             None => {
                 search.reset();
                 // This could be the start of a new sequence.
-                if search.query(&k).is_none() {
-                    // This may not be necessary.
-                    search.reset();
+                //
+                // Let's check it.
+                match search.query(&k) {
+                    Some(Answer::Match) => {
+                        let result = Some(search.value().unwrap());
+                        search.reset();
+                        result
+                    }
+                    Some(Answer::PrefixAndMatch) => Some(search.value().unwrap()),
+                    Some(Answer::Prefix) => None,
+                    None => {
+                        // This may not be necessary.
+                        search.reset();
+                        None
+                    }
                 }
-                None
             }
         }
     })
