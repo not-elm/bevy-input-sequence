@@ -18,7 +18,7 @@ fn setup(mut commands: Commands) {
     commands.add(
         KeySequence::new(
             action::send_event(MyEvent),
-            keyseq!(Ctrl-W Ctrl-D Ctrl-S Ctrl-A),
+            keyseq! { Ctrl-W Ctrl-D Ctrl-S Ctrl-A },
         )
         .time_limit(Duration::from_secs(1)),
     );

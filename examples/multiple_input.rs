@@ -17,7 +17,7 @@ fn main() {
 
 fn setup(mut commands: Commands) {
     commands.add(
-        KeySequence::new(action::send_event(MyEvent(1, None)), keyseq!(W D S A))
+        KeySequence::new(action::send_event(MyEvent(1, None)), keyseq! { W D S A })
             .time_limit(Duration::from_secs(5)),
     );
 
@@ -35,7 +35,7 @@ fn setup(mut commands: Commands) {
     );
 
     commands.add(
-        KeySequence::new(action::send_event(MyEvent(3, None)), keyseq!(W A S D))
+        KeySequence::new(action::send_event(MyEvent(3, None)), keyseq! { W A S D })
             .time_limit(Duration::from_secs(5)),
     );
 
