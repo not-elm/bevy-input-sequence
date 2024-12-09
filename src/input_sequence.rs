@@ -14,7 +14,7 @@ use bevy::{
         system::{IntoSystem, System, SystemId, SystemInput},
         world::World,
     },
-    input::gamepad::{Gamepad, GamepadButton},
+    input::gamepad::GamepadButton,
     reflect::Reflect,
 };
 

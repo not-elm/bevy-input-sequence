@@ -8,7 +8,7 @@ use bevy::{
         query::Added,
         removal_detection::RemovedComponents,
         schedule::{IntoSystemConfigs, ScheduleLabel, SystemSet},
-        system::{Commands, Local, Query, Res, ResMut, SystemInput},
+        system::{Commands, Local, Query, Res, ResMut},
     },
     input::{
         gamepad::{Gamepad, GamepadButton},
@@ -27,7 +27,7 @@ use crate::{
     input_sequence::{ButtonSequence, InputSequence, KeySequence},
     KeyChord, Modifiers,
 };
-use trie_rs::inc_search::{Answer, IncSearch, Position};
+use trie_rs::inc_search::{Answer, IncSearch};
 
 /// ButtonInput sequence plugin.
 pub struct InputSequencePlugin {
@@ -183,6 +183,7 @@ fn detect_key_additions(
     }
 }
 
+#[allow(clippy::type_complexity)]
 fn detect_button_additions(
     sequences: Query<&InputSequence<GamepadButton, In<Entity>>, Added<InputSequence<GamepadButton, In<Entity>>>>,
     mut cache: ResMut<ButtonSequenceCache>,

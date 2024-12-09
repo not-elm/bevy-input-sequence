@@ -1,7 +1,6 @@
 //! Cache the trie for reuse.
 use crate::{KeyChord, input_sequence::InputSequence};
-use bevy::{ecs::system::{SystemInput, Resource}, reflect::TypePath, prelude::{Reflect, ReflectResource}, prelude::{In, Entity}};
-use std::{collections::HashMap, hash::Hash};
+use bevy::ecs::system::Resource;
 use trie_rs::{
     inc_search::{IncSearch, Position},
     map::{Trie, TrieBuilder},
@@ -49,7 +48,7 @@ impl KeySequenceCache
     where
         'b: 'a,
     {
-        let position = self.position.clone();
+        let position = self.position;
         let trie = self.trie(sequences);
         position
             .map(move |p| IncSearch::resume(trie, p))
@@ -60,12 +59,5 @@ impl KeySequenceCache
     pub fn reset(&mut self) {
         self.trie = None;
         self.position = None;
-    }
-
-    fn default() -> Self {
-        Self {
-            trie: None,
-            position: None,
-        }
     }
 }

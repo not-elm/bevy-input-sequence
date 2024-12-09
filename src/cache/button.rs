@@ -1,7 +1,7 @@
 //! Cache the trie for reuse.
 use crate::input_sequence::InputSequence;
-use bevy::{ecs::system::{SystemInput, Resource}, reflect::TypePath, prelude::{Reflect, ReflectResource}, prelude::{In, Entity, GamepadButton}};
-use std::{collections::HashMap, hash::Hash};
+use bevy::{ecs::system::Resource, prelude::{In, Entity, GamepadButton}};
+use std::collections::HashMap;
 use trie_rs::{
     inc_search::{IncSearch, Position},
     map::{Trie, TrieBuilder},
@@ -117,12 +117,5 @@ impl ButtonSequenceCache
     pub fn reset(&mut self) {
         self.trie = None;
         self.position.clear();
-    }
-
-    fn default() -> Self {
-        Self {
-            trie: None,
-            position: HashMap::new(),
-        }
     }
 }

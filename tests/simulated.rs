@@ -23,13 +23,11 @@ mod simulate_app {
             world::{Command, World},
         },
         input::{
-            ButtonState,
             gamepad::{
-                Gamepad, GamepadAxis, GamepadButton, GamepadConnection::*,
+                GamepadButton, GamepadConnection::*,
                 GamepadButtonChangedEvent,
                 GamepadConnectionEvent, *},
-            keyboard::KeyCode,
-            Axis, ButtonInput as Input,
+            keyboard::KeyCode, ButtonInput as Input,
         },
         prelude::{Commands, ResMut, Resource, Entity, PreUpdate, Events, IntoSystemConfigs, Deref, DerefMut},
         MinimalPlugins,
@@ -743,6 +741,7 @@ mod simulate_app {
         pub app: App,
     }
 
+    #[allow(dead_code)]
     impl TestContext {
         pub fn new() -> Self {
             let mut app = App::new();
