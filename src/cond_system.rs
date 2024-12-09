@@ -1,12 +1,14 @@
 //! Extend [IntoSystem] for conditional execution
-use bevy::ecs::system::{CombinatorSystem, Combine, IntoSystem, System};
+use bevy::ecs::system::{CombinatorSystem, Combine, IntoSystem, System, SystemInput, SystemIn};
 use std::borrow::Cow;
 
 /// Extend [IntoSystem] to allow for some conditional execution. Probably only
 /// appropriate for one-shot systems. Prefer
 /// [`run_if()`](bevy::ecs::schedule::IntoSystemConfigs::run_if()) when directly
 /// adding to the scheduler.
-pub trait IntoCondSystem<I, O, M>: IntoSystem<I, O, M> {
+pub trait IntoCondSystem<I, O, M>: IntoSystem<I, O, M>
+    where I: SystemInput,
+{
     /// Only run self's system if the given `system` parameter returns true. No
     /// output is provided. (This is convenient for running systems with
     /// [bevy::prelude::Commands::run_system]).
@@ -34,7 +36,8 @@ pub trait IntoCondSystem<I, O, M>: IntoSystem<I, O, M> {
     }
 }
 
-impl<I, O, M, T> IntoCondSystem<I, O, M> for T where T: IntoSystem<I, O, M> {}
+impl<I, O, M, T> IntoCondSystem<I, O, M> for T where T: IntoSystem<I, O, M>,
+I: SystemInput {}
 
 /// A one-shot conditional system comprised of consequent `SystemA` and
 /// conditional `SystemB`.
@@ -52,9 +55,9 @@ where
     type Out = Option<A::Out>;
 
     fn combine(
-        input: Self::In,
-        a: impl FnOnce(A::In) -> A::Out,
-        b: impl FnOnce(B::In) -> B::Out,
+        input: <Self::In as SystemInput>::Inner<'_>,
+        a: impl FnOnce(SystemIn<'_, A>) -> A::Out,
+        b: impl FnOnce(SystemIn<'_, B>) -> B::Out,
     ) -> Self::Out {
         b(()).then(|| a(input))
     }
@@ -76,9 +79,9 @@ where
     type Out = ();
 
     fn combine(
-        input: Self::In,
-        a: impl FnOnce(A::In) -> A::Out,
-        b: impl FnOnce(B::In) -> B::Out,
+        input: <Self::In as SystemInput>::Inner<'_>,
+        a: impl FnOnce(SystemIn<'_, A>) -> A::Out,
+        b: impl FnOnce(SystemIn<'_, B>) -> B::Out,
     ) -> Self::Out {
         if b(()) {
             a(input);

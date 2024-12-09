@@ -1,6 +1,6 @@
 //! Cache the trie for reuse.
 use crate::input_sequence::InputSequence;
-use bevy::{ecs::system::Resource, reflect::TypePath, prelude::{Reflect, ReflectResource}};
+use bevy::{ecs::system::{SystemInput, Resource}, reflect::TypePath, prelude::{Reflect, ReflectResource}};
 use std::{collections::HashMap, hash::Hash};
 use trie_rs::{
     inc_search::{IncSearch, Position},
@@ -10,7 +10,7 @@ use trie_rs::{
 /// Contains the trie for the input sequences.
 #[derive(Resource, Reflect)]
 #[reflect(Resource)]
-pub struct InputSequenceCache<A, In> {
+pub struct InputSequenceCache<A, In: 'static> {
     trie: Option<Trie<A, InputSequence<A, In>>>,
     position: HashMap<In, Position>,
 }
@@ -18,7 +18,7 @@ pub struct InputSequenceCache<A, In> {
 impl<A, In> InputSequenceCache<A, In>
 where
     A: Ord + Clone + Send + Sync + TypePath + 'static,
-    In: Send + Sync + Clone + Eq + Hash + 'static,
+    In: SystemInput + Send + Sync + Clone + Eq + Hash + 'static,
 {
     /// Retrieve the cached trie without iterating through `sequences`. Or if
     /// the cache has been invalidated, build and cache a new trie using the
@@ -66,7 +66,7 @@ where
     }
 }
 
-impl<A, In> InputSequenceCache<A, In> {
+impl<A, In: SystemInput> InputSequenceCache<A, In> {
     /// Clears the cache.
     pub fn reset(&mut self) {
         self.trie = None;
@@ -74,7 +74,7 @@ impl<A, In> InputSequenceCache<A, In> {
     }
 }
 
-impl<A, In> Default for InputSequenceCache<A, In> {
+impl<A, In: SystemInput> Default for InputSequenceCache<A, In> {
     fn default() -> Self {
         Self {
             trie: None,

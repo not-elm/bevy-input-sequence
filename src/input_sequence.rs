@@ -1,34 +1,38 @@
 //! Input sequences for keys and gamepad buttons
 use crate::{cond_system::IntoCondSystem, time_limit::TimeLimit, KeyChord};
-use std::fmt;
+use std::{
+    fmt,
+    marker::PhantomData,
+};
 
 use bevy::{
+    hierarchy::BuildChildren,
     ecs::{
+        prelude::In,
         component::Component,
         entity::Entity,
-        system::{IntoSystem, System, SystemId},
+        system::{IntoSystem, System, SystemId, SystemInput},
         world::World,
     },
-    input::gamepad::{Gamepad, GamepadButtonType},
+    input::gamepad::{Gamepad, GamepadButton},
     reflect::Reflect,
-    prelude::BuildWorldChildren,
 };
 
 /// An input sequence is a series of acts that fires an event when matched with
 /// inputs within the given time limit.
 #[derive(Component, Reflect, Clone)]
 #[reflect(from_reflect = false)]
-pub struct InputSequence<Act, In> {
+pub struct InputSequence<Act, I: 'static> {
     /// Event emitted
     #[reflect(ignore)]
-    pub system_id: SystemId<In>,
+    pub system_id: SystemId<In<I>>,
     /// Sequence of acts that trigger input sequence
     pub acts: Vec<Act>,
     /// Optional time limit after first match
     pub time_limit: Option<TimeLimit>,
 }
 
-impl<Act: fmt::Debug, In> fmt::Debug for InputSequence<Act, In> {
+impl<Act: fmt::Debug, In: SystemInput> fmt::Debug for InputSequence<Act, In> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         #[derive(Debug)]
         #[allow(dead_code)]
@@ -49,13 +53,14 @@ impl<Act: fmt::Debug, In> fmt::Debug for InputSequence<Act, In> {
 }
 
 /// An input sequence builder.
-pub struct InputSequenceBuilder<Act, S> {
+pub struct InputSequenceBuilder<Act, S, I> {
     /// The action when to run when sequence matches
     pub system: S,
     /// Sequence of acts that trigger input sequence
     pub acts: Vec<Act>,
     /// Optional time limit after first match
     pub time_limit: Option<TimeLimit>,
+    input: PhantomData<I>,
 }
 
 impl<Act> InputSequenceBuilder<Act, ()> {
@@ -63,7 +68,7 @@ impl<Act> InputSequenceBuilder<Act, ()> {
     pub fn new<C, I, M>(system: C) -> InputSequenceBuilder<Act, C::System>
     where
         C: IntoCondSystem<I, (), M> + 'static,
-        I: Send + Sync + 'static,
+        I: SystemInput + Send + Sync + 'static,
     {
         InputSequenceBuilder {
             acts: Vec::new(),
@@ -124,7 +129,7 @@ where
     }
 }
 
-impl<Act, In> InputSequence<Act, In>
+impl<Act, In: SystemInput> InputSequence<Act, In>
 where
     In: 'static,
 {
@@ -138,7 +143,7 @@ where
     where
         C: IntoCondSystem<I, (), M> + 'static,
         Act: From<T>,
-        I: Send + Sync + 'static,
+        I: SystemInput + Send + Sync + 'static,
     {
         let mut builder = InputSequenceBuilder::new(system);
         builder.acts = Vec::from_iter(acts.into_iter().map(Act::from));
@@ -152,4 +157,4 @@ pub type KeySequence = InputSequence<KeyChord, ()>;
 pub type KeySequenceBuilder = InputSequenceBuilder<KeyChord, ()>;
 
 /// Represents a gamepad button sequence
-pub type ButtonSequence = InputSequence<GamepadButtonType, Gamepad>;
+pub type ButtonSequence = InputSequence<GamepadButton, In<Gamepad>>;

@@ -2,14 +2,16 @@ use bevy::{
     app::{App, Plugin, Update},
     core::FrameCount,
     ecs::{
+        entity::Entity,
+        prelude::In,
         intern::Interned,
         query::Added,
         removal_detection::RemovedComponents,
         schedule::{IntoSystemConfigs, ScheduleLabel, SystemSet},
-        system::{Commands, Local, Query, Res, ResMut},
+        system::{Commands, Local, Query, Res, ResMut, SystemInput},
     },
     input::{
-        gamepad::{Gamepad, GamepadButton, GamepadButtonType},
+        gamepad::{Gamepad, GamepadButton},
         keyboard::KeyCode,
         ButtonInput,
     },
@@ -92,20 +94,20 @@ impl Plugin for InputSequencePlugin {
                 .get_resource::<ButtonInput<GamepadButton>>()
                 .is_some(),
         ) {
-            app
-                .register_type::<InputSequence<GamepadButtonType, Gamepad>>()
-                // .register_type::<InputSequenceCache<GamepadButtonType, Gamepad>>()
-                ;
+            // app
+            //     .register_type::<InputSequence<GamepadButton, In<Entity>>>()
+            //     // .register_type::<InputSequenceCache<GamepadButton, Gamepad>>()
+            //     ;
             // Add button sequences.
-            app.init_resource::<InputSequenceCache<GamepadButtonType, Gamepad>>();
+            app.init_resource::<InputSequenceCache<GamepadButton, In<Gamepad>>>();
 
             for (schedule, set) in &self.schedules {
                 if let Some(set) = set {
                     app.add_systems(
                         *schedule,
                         (
-                            detect_removals::<GamepadButtonType, Gamepad>,
-                            detect_additions::<GamepadButtonType, Gamepad>,
+                            detect_removals::<GamepadButton, In<Gamepad>>,
+                            detect_additions::<GamepadButton, In<Gamepad>>,
                             button_sequence_matcher,
                         )
                             .chain()
@@ -115,8 +117,8 @@ impl Plugin for InputSequencePlugin {
                     app.add_systems(
                         *schedule,
                         (
-                            detect_removals::<GamepadButtonType, Gamepad>,
-                            detect_additions::<GamepadButtonType, Gamepad>,
+                            detect_removals::<GamepadButton, In<Gamepad>>,
+                            detect_additions::<GamepadButton, In<Gamepad>>,
                             button_sequence_matcher,
                         )
                             .chain(),
@@ -169,7 +171,7 @@ impl InputSequencePlugin {
     }
 }
 
-fn detect_additions<A: Clone + Send + Sync + 'static, In: Send + Sync + 'static>(
+fn detect_additions<A: Clone + Send + Sync + 'static, In: SystemInput + Send + Sync + 'static>(
     sequences: Query<&InputSequence<A, In>, Added<InputSequence<A, In>>>,
     mut cache: ResMut<InputSequenceCache<A, In>>,
 ) {
@@ -178,7 +180,7 @@ fn detect_additions<A: Clone + Send + Sync + 'static, In: Send + Sync + 'static>
     }
 }
 
-fn detect_removals<A: Clone + Send + Sync + 'static, In: Send + Sync + 'static>(
+fn detect_removals<A: Clone + Send + Sync + 'static, In: SystemInput + Send + Sync + 'static>(
     mut cache: ResMut<InputSequenceCache<A, In>>,
     mut removals: RemovedComponents<InputSequence<A, In>>,
 ) {
@@ -191,45 +193,48 @@ fn detect_removals<A: Clone + Send + Sync + 'static, In: Send + Sync + 'static>(
 fn button_sequence_matcher(
     sequences: Query<&ButtonSequence>,
     time: Res<Time>,
-    buttons: Res<ButtonInput<GamepadButton>>,
-    mut last_times: Local<HashMap<usize, VecDeque<FrameTime>>>,
-    mut cache: ResMut<InputSequenceCache<GamepadButtonType, Gamepad>>,
+    // buttons: Res<ButtonInput<GamepadButton>>,
+    mut last_times: Local<HashMap<Entity, VecDeque<FrameTime>>>,
+    mut cache: ResMut<InputSequenceCache<GamepadButton, In<Entity>>>,
     frame_count: Res<FrameCount>,
     mut commands: Commands,
+    gamepads: Query<(Entity, &Gamepad)>,
 ) {
     let now = FrameTime {
         frame: frame_count.0,
-        time: time.elapsed_seconds(),
+        time: time.elapsed_secs(),
     };
-    for button in buttons.get_just_pressed() {
-        let last_times = match last_times.get_mut(&button.gamepad.id) {
-            Some(x) => x,
-            None => {
-                last_times.insert(button.gamepad.id, VecDeque::new());
-                last_times.get_mut(&button.gamepad.id).unwrap()
-            }
-        };
+    for (id, gamepad) in &gamepads {
+        for button in gamepad.get_just_pressed() {
+            let last_times = match last_times.get_mut(&id) {
+                Some(x) => x,
+                None => {
+                    last_times.insert(id, VecDeque::new());
+                    last_times.get_mut(&id).unwrap()
+                }
+            };
 
-        last_times.push_back(now.clone());
-        let start = &last_times[0];
-        let mut search = cache.recall(button.gamepad, sequences.iter().by_ref());
-        for seq in inc_consume_input(&mut search, std::iter::once(button.button_type)) {
-            if seq
-                .time_limit
-                .as_ref()
-                .map(|limit| (&now - start).has_timedout(limit))
-                .unwrap_or(false)
-            {
-                // Sequence timed out.
-            } else {
-                commands.run_system_with_input(seq.system_id, button.gamepad);
+            last_times.push_back(now.clone());
+            let start = &last_times[0];
+            let mut search = cache.recall(button.gamepad, sequences.iter().by_ref());
+            for seq in inc_consume_input(&mut search, std::iter::once(button.button_type)) {
+                if seq
+                    .time_limit
+                    .as_ref()
+                    .map(|limit| (&now - start).has_timedout(limit))
+                    .unwrap_or(false)
+                {
+                    // Sequence timed out.
+                } else {
+                    commands.run_system_with_input(seq.system_id, button.gamepad);
+                }
             }
+            let prefix_len = search.prefix_len();
+            let l = last_times.len();
+            let _ = last_times.drain(0..l - prefix_len);
+            let position = search.into();
+            cache.store(button.gamepad, position);
         }
-        let prefix_len = search.prefix_len();
-        let l = last_times.len();
-        let _ = last_times.drain(0..l - prefix_len);
-        let position = search.into();
-        cache.store(button.gamepad, position);
     }
 }
 

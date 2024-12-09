@@ -31,11 +31,14 @@ name = "multiple_input"
 path = "examples/multiple_input.rs"
 
 [dependencies]
-bevy = { version = "0.14", default-features = false, features = [] }
+bevy = { version = "0.15", default-features = false, features = [] }
 trie-rs = { version = "0.4" }
-keyseq = { version = "0.4.1", features = [ "bevy" ] }
+keyseq = { version = "0.5.0", features = [ "bevy" ] }
+
+[patch.crates-io]
+keyseq = { path = "../keyseq" }
 
 [dev-dependencies]
-bevy = "0.14"
+bevy = "0.15"
 trybuild = "1.0"
 version-sync = "0.9"

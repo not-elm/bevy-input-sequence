@@ -35,7 +35,7 @@ pub fn trigger<E: Event + Clone>(event: E) -> impl FnMut(Commands) {
 }
 
 /// Trigger an event with targets.
-pub fn trigger_targets<E: Event + Clone, T: TriggerTargets + Clone>(
+pub fn trigger_targets<E: Event + Clone, T: TriggerTargets + Clone + Send + Sync + 'static>(
     event: E,
     targets: T,
 ) -> impl FnMut(Commands) {
