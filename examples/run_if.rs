@@ -28,7 +28,7 @@ fn main() {
 }
 
 fn setup(mut commands: Commands) {
-    commands.add(
+    commands.queue(
         KeySequence::new(
             action::send_event(MyEvent).only_if(in_state(AppState::Game)),
             keyseq! { Space },

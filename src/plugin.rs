@@ -21,13 +21,13 @@ use bevy::{
 use std::collections::{HashMap, VecDeque};
 
 use crate::{
-    cache::InputSequenceCache,
+    cache::{ButtonSequenceCache, KeySequenceCache},
     chord::{is_modifier, KeyChordQueue},
     frame_time::FrameTime,
     input_sequence::{ButtonSequence, InputSequence, KeySequence},
     KeyChord, Modifiers,
 };
-use trie_rs::inc_search::{Answer, IncSearch};
+use trie_rs::inc_search::{Answer, IncSearch, Position};
 
 /// ButtonInput sequence plugin.
 pub struct InputSequencePlugin {
@@ -58,7 +58,7 @@ impl Plugin for InputSequencePlugin {
                 // .register_type::<InputSequenceCache<KeyChord, ()>>()
                 ;
             // Add key sequence.
-            app.init_resource::<InputSequenceCache<KeyChord, ()>>();
+            app.init_resource::<KeySequenceCache>();
             app.init_resource::<KeyChordQueue>();
 
             for (schedule, set) in &self.schedules {
@@ -66,8 +66,8 @@ impl Plugin for InputSequencePlugin {
                     app.add_systems(
                         *schedule,
                         (
-                            detect_removals::<KeyChord, ()>,
-                            detect_additions::<KeyChord, ()>,
+                            detect_key_removals,
+                            detect_key_additions,
                             key_sequence_matcher,
                         )
                             .chain()
@@ -77,8 +77,8 @@ impl Plugin for InputSequencePlugin {
                     app.add_systems(
                         *schedule,
                         (
-                            detect_removals::<KeyChord, ()>,
-                            detect_additions::<KeyChord, ()>,
+                            detect_key_removals,
+                            detect_key_additions,
                             key_sequence_matcher,
                         )
                             .chain(),
@@ -99,15 +99,15 @@ impl Plugin for InputSequencePlugin {
             //     // .register_type::<InputSequenceCache<GamepadButton, Gamepad>>()
             //     ;
             // Add button sequences.
-            app.init_resource::<InputSequenceCache<GamepadButton, In<Gamepad>>>();
+            app.init_resource::<ButtonSequenceCache>();
 
             for (schedule, set) in &self.schedules {
                 if let Some(set) = set {
                     app.add_systems(
                         *schedule,
                         (
-                            detect_removals::<GamepadButton, In<Gamepad>>,
-                            detect_additions::<GamepadButton, In<Gamepad>>,
+                            detect_button_removals,
+                            detect_button_additions,
                             button_sequence_matcher,
                         )
                             .chain()
@@ -117,8 +117,8 @@ impl Plugin for InputSequencePlugin {
                     app.add_systems(
                         *schedule,
                         (
-                            detect_removals::<GamepadButton, In<Gamepad>>,
-                            detect_additions::<GamepadButton, In<Gamepad>>,
+                            detect_button_removals,
+                            detect_button_additions,
                             button_sequence_matcher,
                         )
                             .chain(),
@@ -171,18 +171,38 @@ impl InputSequencePlugin {
     }
 }
 
-fn detect_additions<A: Clone + Send + Sync + 'static, In: SystemInput + Send + Sync + 'static>(
-    sequences: Query<&InputSequence<A, In>, Added<InputSequence<A, In>>>,
-    mut cache: ResMut<InputSequenceCache<A, In>>,
-) {
+fn detect_key_additions(
+    sequences: Query<&InputSequence<KeyChord, ()>, Added<InputSequence<KeyChord, ()>>>,
+    mut cache: ResMut<KeySequenceCache>,
+)
+{
     if sequences.iter().next().is_some() {
         cache.reset();
     }
 }
 
-fn detect_removals<A: Clone + Send + Sync + 'static, In: SystemInput + Send + Sync + 'static>(
-    mut cache: ResMut<InputSequenceCache<A, In>>,
-    mut removals: RemovedComponents<InputSequence<A, In>>,
+fn detect_button_additions(
+    sequences: Query<&InputSequence<GamepadButton, In<Entity>>, Added<InputSequence<GamepadButton, In<Entity>>>>,
+    mut cache: ResMut<ButtonSequenceCache>,
+)
+{
+    if sequences.iter().next().is_some() {
+        cache.reset();
+    }
+}
+
+fn detect_key_removals(
+    mut cache: ResMut<KeySequenceCache>,
+    mut removals: RemovedComponents<InputSequence<KeyChord, ()>>,
+) {
+    if removals.read().next().is_some() {
+        cache.reset();
+    }
+}
+
+fn detect_button_removals(
+    mut cache: ResMut<ButtonSequenceCache>,
+    mut removals: RemovedComponents<InputSequence<GamepadButton, In<Entity>>>,
 ) {
     if removals.read().next().is_some() {
         cache.reset();
@@ -195,7 +215,7 @@ fn button_sequence_matcher(
     time: Res<Time>,
     // buttons: Res<ButtonInput<GamepadButton>>,
     mut last_times: Local<HashMap<Entity, VecDeque<FrameTime>>>,
-    mut cache: ResMut<InputSequenceCache<GamepadButton, In<Entity>>>,
+    mut cache: ResMut<ButtonSequenceCache>,
     frame_count: Res<FrameCount>,
     mut commands: Commands,
     gamepads: Query<(Entity, &Gamepad)>,
@@ -216,8 +236,8 @@ fn button_sequence_matcher(
 
             last_times.push_back(now.clone());
             let start = &last_times[0];
-            let mut search = cache.recall(button.gamepad, sequences.iter().by_ref());
-            for seq in inc_consume_input(&mut search, std::iter::once(button.button_type)) {
+            let mut search = cache.recall(id, sequences.iter().by_ref());
+            for seq in inc_consume_input(&mut search, std::iter::once(*button)) {
                 if seq
                     .time_limit
                     .as_ref()
@@ -226,14 +246,14 @@ fn button_sequence_matcher(
                 {
                     // Sequence timed out.
                 } else {
-                    commands.run_system_with_input(seq.system_id, button.gamepad);
+                    commands.run_system_with_input(seq.system_id, id);
                 }
             }
             let prefix_len = search.prefix_len();
             let l = last_times.len();
             let _ = last_times.drain(0..l - prefix_len);
             let position = search.into();
-            cache.store(button.gamepad, position);
+            cache.store(id, position);
         }
     }
 }
@@ -244,7 +264,7 @@ fn key_sequence_matcher(
     time: Res<Time>,
     keys: Res<ButtonInput<KeyCode>>,
     mut last_times: Local<VecDeque<FrameTime>>,
-    mut cache: ResMut<InputSequenceCache<KeyChord, ()>>,
+    mut cache: ResMut<KeySequenceCache>,
     frame_count: Res<FrameCount>,
     mut commands: Commands,
     mut keychord_queue: ResMut<KeyChordQueue>,
@@ -252,7 +272,7 @@ fn key_sequence_matcher(
     let mods = Modifiers::from(&keys);
     let now = FrameTime {
         frame: frame_count.0,
-        time: time.elapsed_seconds(),
+        time: time.elapsed_secs(),
     };
     let maybe_start = last_times.front().cloned();
     let mut input = keychord_queue
@@ -270,7 +290,8 @@ fn key_sequence_matcher(
     if input.peek().is_none() {
         return;
     }
-    let mut search = cache.recall((), sequences.iter());
+
+    let mut search = cache.recall(sequences.iter());
 
     // eprintln!("maybe_start {maybe_start:?} now {now:?}");
     for seq in inc_consume_input(&mut search, input) {
@@ -291,7 +312,7 @@ fn key_sequence_matcher(
     let l = last_times.len();
     let _ = last_times.drain(0..l - prefix_len);
     let position = search.into();
-    cache.store((), position);
+    cache.store(position);
 }
 
 /// Incrementally consume the input.

@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy_input_sequence::prelude::*;
 
 #[derive(Event, Clone, Debug)]
-struct MyEvent(usize, Gamepad);
+struct MyEvent(usize, Entity);
 
 fn main() {
     App::new()
@@ -15,27 +15,27 @@ fn main() {
 }
 
 fn setup(mut commands: Commands) {
-    commands.add(
+    commands.queue(
         ButtonSequence::new(
             action::send_event_with_input(|gamepad| MyEvent(0, gamepad)),
             [
-                GamepadButtonType::North,
-                GamepadButtonType::East,
-                GamepadButtonType::South,
-                GamepadButtonType::West,
+                GamepadButton::North,
+                GamepadButton::East,
+                GamepadButton::South,
+                GamepadButton::West,
             ],
         )
         .time_limit(Duration::from_secs(1)),
     );
 
-    commands.add(
+    commands.queue(
         ButtonSequence::new(
             action::send_event_with_input(|gamepad| MyEvent(1, gamepad)),
             [
-                GamepadButtonType::North,
-                GamepadButtonType::West,
-                GamepadButtonType::South,
-                GamepadButtonType::East,
+                GamepadButton::North,
+                GamepadButton::West,
+                GamepadButton::South,
+                GamepadButton::East,
             ],
         )
         .time_limit(Duration::from_secs(1)),

@@ -43,7 +43,7 @@ fn main() {
 
 fn setup(mut commands: Commands) {
     // Add key sequence.
-    commands.add(
+    commands.queue(
         KeySequence::new(say_hello, 
                          keyseq! { H I })
         .time_limit(Duration::from_secs(2))
@@ -79,7 +79,7 @@ fn main() {
 }
 
 fn setup(mut commands: Commands) {
-    commands.add(
+    commands.queue(
         KeySequence::new(action::send_event(MyEvent), 
                          keyseq! { Ctrl-E Alt-L Shift-M })
     );
@@ -117,7 +117,7 @@ fn main() {
 }
 
 fn setup(mut commands: Commands) {
-    commands.add(
+    commands.queue(
         ButtonSequence::new(action::send_event_with_input(|gamepad| MyEvent(gamepad)), 
             [GamepadButtonType::North,
              GamepadButtonType::East,
@@ -157,7 +157,7 @@ fn main() {
 }
 
 fn setup(mut commands: Commands) {
-    commands.add(
+    commands.queue(
         KeySequence::new(action::trigger(MyEvent), 
                          keyseq! { Ctrl-E Alt-L Super-M })
     );
@@ -181,7 +181,7 @@ use bevy_input_sequence::prelude::*;
 struct MyEvent;
 
 fn create_key_sequence(mut commands: Commands) {
-    commands.add(KeySequence::new(
+    commands.queue(KeySequence::new(
         action::send_event(bevy::app::AppExit::default()), 
         keyseq! { Ctrl-E L M }
     ));
@@ -211,7 +211,7 @@ use bevy::prelude::*;
 use bevy_input_sequence::prelude::*;
 
 fn create_key_sequence_within_command(mut commands: Commands) {
-    commands.add(|world: &mut World| {
+    commands.queue(|world: &mut World| {
         let builder = KeySequence::new(
             move || { info!("got it"); },
             keyseq! { Ctrl-E L M }

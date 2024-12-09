@@ -20,19 +20,43 @@ use bevy::{
 
 /// An input sequence is a series of acts that fires an event when matched with
 /// inputs within the given time limit.
-#[derive(Component, Reflect, Clone)]
+///
+/// InputSequence<KeyChord, ()>
+/// InputSequence<GamepadButton, In<Entity>>
+#[derive(Component, Reflect)]
 #[reflect(from_reflect = false)]
-pub struct InputSequence<Act, I: 'static> {
+pub struct InputSequence<Act, I: SystemInput + 'static> {
     /// Event emitted
     #[reflect(ignore)]
-    pub system_id: SystemId<In<I>>,
+    pub system_id: SystemId<I>,
     /// Sequence of acts that trigger input sequence
     pub acts: Vec<Act>,
     /// Optional time limit after first match
     pub time_limit: Option<TimeLimit>,
 }
 
-impl<Act: fmt::Debug, In: SystemInput> fmt::Debug for InputSequence<Act, In> {
+
+impl<Act: Clone> Clone for InputSequence<Act, ()> {
+    fn clone(&self) -> Self {
+        Self {
+            system_id: self.system_id,
+            acts: self.acts.clone(),
+            time_limit: self.time_limit.clone(),
+        }
+    }
+}
+
+impl<Act: Clone> Clone for InputSequence<Act, In<Entity>> {
+    fn clone(&self) -> Self {
+        Self {
+            system_id: self.system_id,
+            acts: self.acts.clone(),
+            time_limit: self.time_limit.clone(),
+        }
+    }
+}
+
+impl<Act: fmt::Debug, In: SystemInput + Clone> fmt::Debug for InputSequence<Act, In> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         #[derive(Debug)]
         #[allow(dead_code)]
@@ -63,9 +87,9 @@ pub struct InputSequenceBuilder<Act, S, I> {
     input: PhantomData<I>,
 }
 
-impl<Act> InputSequenceBuilder<Act, ()> {
+impl<Act> InputSequenceBuilder<Act, (), ()> {
     /// Create new input sequence. Not operant until added to an entity.
-    pub fn new<C, I, M>(system: C) -> InputSequenceBuilder<Act, C::System>
+    pub fn new<C, I, M>(system: C) -> InputSequenceBuilder<Act, C::System, I>
     where
         C: IntoCondSystem<I, (), M> + 'static,
         I: SystemInput + Send + Sync + 'static,
@@ -74,11 +98,12 @@ impl<Act> InputSequenceBuilder<Act, ()> {
             acts: Vec::new(),
             system: IntoSystem::into_system(system),
             time_limit: None,
+            input: PhantomData,
         }
     }
 }
 
-impl<Act, S> InputSequenceBuilder<Act, S>
+impl<Act, S, I> InputSequenceBuilder<Act, S, I>
 where
     S: System<Out = ()>,
 {
@@ -98,11 +123,11 @@ where
     }
 }
 
-impl<Act, S> bevy::ecs::world::Command for InputSequenceBuilder<Act, S>
+impl<Act, S, I> bevy::ecs::world::Command for InputSequenceBuilder<Act, S, I>
 where
     Act: Send + Sync + 'static,
-    S: System<Out = ()> + Send + Sync + 'static,
-    S::In: Send + Sync + 'static,
+    S: System<In = I, Out = ()> + Send + Sync + 'static,
+    I: SystemInput + Send + Sync + 'static,
 {
     fn apply(self, world: &mut World) {
         let act = self.build(world);
@@ -113,11 +138,11 @@ where
     }
 }
 
-impl<Act, S> bevy::ecs::system::EntityCommand for InputSequenceBuilder<Act, S>
+impl<Act, S, I> bevy::ecs::system::EntityCommand for InputSequenceBuilder<Act, S, I>
 where
     Act: Send + Sync + 'static,
-    S: System<Out = ()> + Send + Sync + 'static,
-    S::In: Send + Sync + 'static,
+    S: System<In = I, Out = ()> + Send + Sync + 'static,
+    I: SystemInput + Send + Sync + 'static,
 {
     fn apply(self, id: Entity, world: &mut World) {
         let act = self.build(world);
@@ -129,21 +154,20 @@ where
     }
 }
 
-impl<Act, In: SystemInput> InputSequence<Act, In>
+impl<Act, In: SystemInput + Send + Sync + 'static> InputSequence<Act, In>
 where
     In: 'static,
 {
     /// Create new input sequence. Not operant until added to an entity.
     #[inline(always)]
     #[allow(clippy::new_ret_no_self)]
-    pub fn new<T, C, I, M>(
+    pub fn new<T, C, M>(
         system: C,
         acts: impl IntoIterator<Item = T>,
-    ) -> InputSequenceBuilder<Act, C::System>
+    ) -> InputSequenceBuilder<Act, C::System, In>
     where
-        C: IntoCondSystem<I, (), M> + 'static,
+        C: IntoCondSystem<In, (), M> + 'static,
         Act: From<T>,
-        I: SystemInput + Send + Sync + 'static,
     {
         let mut builder = InputSequenceBuilder::new(system);
         builder.acts = Vec::from_iter(acts.into_iter().map(Act::from));
@@ -154,7 +178,7 @@ where
 /// Represents a key sequence
 pub type KeySequence = InputSequence<KeyChord, ()>;
 /// Represents a key sequence builder
-pub type KeySequenceBuilder = InputSequenceBuilder<KeyChord, ()>;
+pub type KeySequenceBuilder = InputSequenceBuilder<KeyChord, (), ()>;
 
 /// Represents a gamepad button sequence
-pub type ButtonSequence = InputSequence<GamepadButton, In<Gamepad>>;
+pub type ButtonSequence = InputSequence<GamepadButton, In<Entity>>;

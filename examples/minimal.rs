@@ -11,7 +11,7 @@ fn main() {
 
 fn setup(mut commands: Commands) {
     info!("Type H I or \"hi\".");
-    commands.add(KeySequence::new(say_hi, keyseq! { H I }));
+    commands.queue(KeySequence::new(say_hi, keyseq! { H I }));
 }
 
 fn say_hi() {

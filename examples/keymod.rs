@@ -15,7 +15,7 @@ fn main() {
 }
 
 fn setup(mut commands: Commands) {
-    commands.add(
+    commands.queue(
         KeySequence::new(
             action::send_event(MyEvent),
             keyseq! { Ctrl-W Ctrl-D Ctrl-S Ctrl-A },

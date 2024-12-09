@@ -24,7 +24,7 @@ fn main() {
 #[rustfmt::skip]
 fn setup(mut commands: Commands) {
     // Specify key codes directly.
-    commands.add(
+    commands.queue(
         KeySequence::new(
             action::send_event(MyEvent(Direction::Clockwise)),
             [KeyCode::KeyW,
@@ -36,7 +36,7 @@ fn setup(mut commands: Commands) {
     );
 
     // Use keyseq! macro.
-    commands.add(
+    commands.queue(
         KeySequence::new(
             action::send_event(MyEvent(Direction::CounterClockwise)),
             keyseq!{ W A S D },
