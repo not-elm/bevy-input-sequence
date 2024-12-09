@@ -7,7 +7,7 @@ struct MyEvent(usize, Entity);
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        .add_plugins(InputSequencePlugin::default())
+        .add_plugins(InputSequencePlugin::default().match_button(true))
         .add_event::<MyEvent>()
         .add_systems(Startup, setup)
         .add_systems(Update, input_sequence_event_system)

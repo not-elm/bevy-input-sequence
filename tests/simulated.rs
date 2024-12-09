@@ -23,14 +23,15 @@ mod simulate_app {
             world::{Command, World},
         },
         input::{
+            ButtonState,
             gamepad::{
-                Gamepad, GamepadAxis, GamepadButton, GamepadButtonType, GamepadConnection,
-                GamepadConnectionEvent, GamepadInfo, Gamepads,
-            },
+                Gamepad, GamepadAxis, GamepadButton, GamepadConnection::*,
+                GamepadButtonChangedEvent,
+                GamepadConnectionEvent, *},
             keyboard::KeyCode,
             Axis, ButtonInput as Input,
         },
-        prelude::{Commands, ResMut, Resource},
+        prelude::{Commands, ResMut, Resource, Entity, PreUpdate, Events, IntoSystemConfigs, Deref, DerefMut},
         MinimalPlugins,
     };
     use bevy_input_sequence::prelude::*;
@@ -421,23 +422,19 @@ mod simulate_app {
     fn game_pad_button() {
         let mut app = new_app();
 
-        app.world_mut().send_event(GamepadConnectionEvent::new(
-            Gamepad::new(1),
-            GamepadConnection::Connected(GamepadInfo {
-                name: "".to_string(),
-            }),
-        ));
+        let id = app.send_gamepad_connection_event(None);
+
         app.world_mut().add(ButtonSequence::new(
-            action::send_event_with_input(|_: Gamepad| MyEvent),
+            action::send_event_with_input(|_: Entity| MyEvent),
             [
-                GamepadButtonType::North,
-                GamepadButtonType::East,
-                GamepadButtonType::South,
+                GamepadButton::North,
+                GamepadButton::East,
+                GamepadButton::South,
             ],
         ));
         app.update();
 
-        press_pad_button(&mut app, GamepadButtonType::North);
+        app.press_pad_button(GamepadButton::North, id);
         app.update();
         assert!(app
             .world_mut()
@@ -446,8 +443,8 @@ mod simulate_app {
             .next()
             .is_none());
 
-        clear_just_pressed_pad_button(&mut app, GamepadButtonType::North);
-        press_pad_button(&mut app, GamepadButtonType::East);
+        app.clear_just_pressed_pad_button(GamepadButton::North, id);
+        app.press_pad_button(GamepadButton::East, id);
         app.update();
         assert!(app
             .world_mut()
@@ -456,8 +453,8 @@ mod simulate_app {
             .next()
             .is_none());
 
-        clear_just_pressed_pad_button(&mut app, GamepadButtonType::East);
-        press_pad_button(&mut app, GamepadButtonType::South);
+        app.clear_just_pressed_pad_button(GamepadButton::East, id);
+        app.press_pad_button(GamepadButton::South, id);
         app.update();
         assert!(app
             .world_mut()
@@ -470,12 +467,7 @@ mod simulate_app {
     #[test]
     fn multiple_inputs() {
         let mut app = new_app();
-        app.world_mut().send_event(GamepadConnectionEvent::new(
-            Gamepad::new(1),
-            GamepadConnection::Connected(GamepadInfo {
-                name: "".to_string(),
-            }),
-        ));
+        let id = app.send_gamepad_connection_event(None);
         // This is no longer possible right now. We could introduce a
         // KeyButtonSequence mixture struct would allow it.
         // app.world_mut().add(KeySequence::new(
@@ -483,8 +475,8 @@ mod simulate_app {
         //     [
         //         (KeyCode::KeyA),
         //         (KeyCode::KeyB),
-        //         (KeyCode::KeyC) | Act::PadButton(GamepadButtonType::North.into()),
-        //         (GamepadButtonType::C.into()),
+        //         (KeyCode::KeyC) | Act::PadButton(GamepadButton::North.into()),
+        //         (GamepadButton::C.into()),
         //     ],
         // ));
         app.world_mut().add(KeySequence::new(
@@ -493,8 +485,8 @@ mod simulate_app {
         ));
 
         app.world_mut().add(ButtonSequence::new(
-            action::send_event_with_input(|_: Gamepad| MyEvent),
-            [GamepadButtonType::North, GamepadButtonType::C],
+            action::send_event_with_input(|_: Entity| MyEvent),
+            [GamepadButton::North, GamepadButton::C],
         ));
         app.update();
 
@@ -517,8 +509,8 @@ mod simulate_app {
             .next()
             .is_none());
 
-        clear_just_pressed(&mut app, KeyCode::KeyB);
-        press_pad_button(&mut app, GamepadButtonType::North);
+        clear_just_pressed(&mut app,KeyCode::KeyB);
+        app.press_pad_button(GamepadButton::North, id);
         app.update();
         assert!(app
             .world_mut()
@@ -527,8 +519,8 @@ mod simulate_app {
             .next()
             .is_none());
 
-        clear_just_pressed_pad_button(&mut app, GamepadButtonType::North);
-        press_pad_button(&mut app, GamepadButtonType::C);
+        app.clear_just_pressed_pad_button(GamepadButton::North, id);
+        app.press_pad_button(GamepadButton::C, id);
         app.update();
         assert!(app
             .world_mut()
@@ -712,18 +704,6 @@ mod simulate_app {
             .release(key);
     }
 
-    fn press_pad_button(app: &mut App, game_button: GamepadButtonType) {
-        app.world_mut()
-            .resource_mut::<Input<GamepadButton>>()
-            .press(GamepadButton::new(Gamepad::new(1), game_button))
-    }
-
-    fn clear_just_pressed_pad_button(app: &mut App, game_button: GamepadButtonType) {
-        app.world_mut()
-            .resource_mut::<Input<GamepadButton>>()
-            .clear_just_pressed(GamepadButton::new(Gamepad::new(1), game_button));
-    }
-
     fn read(
         mut commands: Commands,
         mut er: EventReader<MyEvent>,
@@ -741,8 +721,8 @@ mod simulate_app {
         }
     }
 
-    fn new_app() -> App {
-        let mut app = App::new();
+    fn new_app() -> TestContext {
+        let mut app = TestContext::new();
         app.add_plugins(MinimalPlugins);
         // app.add_plugins(DefaultPlugins);
         app.add_plugins(
@@ -753,12 +733,91 @@ mod simulate_app {
         app.add_systems(PostUpdate, read);
         app.add_event::<MyEvent>();
         app.init_resource::<R>();
-        app.init_resource::<Gamepads>();
-        app.init_resource::<Input<GamepadButton>>();
-        app.init_resource::<Input<GamepadAxis>>();
-        app.init_resource::<Axis<GamepadButton>>();
-        app.init_resource::<Axis<GamepadAxis>>();
         app.init_resource::<Input<KeyCode>>();
         app
+    }
+
+    #[derive(Deref, DerefMut)]
+    // Found in bevy's gamepad.rs.
+    struct TestContext {
+        pub app: App,
+    }
+
+    impl TestContext {
+        pub fn new() -> Self {
+            let mut app = App::new();
+            app.add_systems(
+                PreUpdate,
+                (
+                    gamepad_connection_system,
+                    gamepad_event_processing_system.after(gamepad_connection_system),
+                ),
+            )
+            .add_event::<GamepadEvent>()
+            .add_event::<GamepadConnectionEvent>()
+            .add_event::<RawGamepadButtonChangedEvent>()
+            .add_event::<GamepadButtonChangedEvent>()
+            .add_event::<GamepadButtonStateChangedEvent>()
+            .add_event::<GamepadAxisChangedEvent>()
+            .add_event::<RawGamepadAxisChangedEvent>()
+            .add_event::<RawGamepadEvent>();
+            Self { app }
+        }
+
+        pub fn send_gamepad_connection_event(&mut self, gamepad: Option<Entity>) -> Entity {
+            let gamepad = gamepad.unwrap_or_else(|| self.app.world_mut().spawn_empty().id());
+            self.app
+                .world_mut()
+                .resource_mut::<Events<GamepadConnectionEvent>>()
+                .send(GamepadConnectionEvent::new(
+                    gamepad,
+                    Connected {
+                        name: "Test gamepad".to_string(),
+                        vendor_id: None,
+                        product_id: None,
+                    },
+                ));
+            gamepad
+        }
+
+        pub fn send_gamepad_disconnection_event(&mut self, gamepad: Entity) {
+            self.app
+                .world_mut()
+                .resource_mut::<Events<GamepadConnectionEvent>>()
+                .send(GamepadConnectionEvent::new(gamepad, Disconnected));
+        }
+
+        pub fn send_raw_gamepad_event(&mut self, event: RawGamepadEvent) {
+            self.app
+                .world_mut()
+                .resource_mut::<Events<RawGamepadEvent>>()
+                .send(event);
+        }
+
+        fn press_pad_button(&mut self, button: GamepadButton, id: Entity) {
+            self.send_raw_gamepad_event(RawGamepadButtonChangedEvent {
+                gamepad: id,
+                button,
+                value: 1.0
+            }.into());
+        }
+
+        fn clear_just_pressed_pad_button(&mut self, button: GamepadButton, id: Entity) {
+            self.send_raw_gamepad_event(RawGamepadButtonChangedEvent {
+                gamepad: id,
+                button,
+                value: 0.0
+            }.into());
+        }
+
+        pub fn send_raw_gamepad_event_batch(
+            &mut self,
+            events: impl IntoIterator<Item = RawGamepadEvent>,
+        ) {
+            self.app
+                .world_mut()
+                .resource_mut::<Events<RawGamepadEvent>>()
+                .send_batch(events);
+        }
     }
 }

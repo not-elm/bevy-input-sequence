@@ -96,7 +96,7 @@ fn check_events(mut events: EventReader<MyEvent>) {
 
 Gamepads have something that keyboards don't: identity problems. Which player
 hit the button sequence may be important to know. So the systems it accepts 
-take an input of `Gamepad`.
+take an input of `Entity`.
 
 ```rust
 use bevy::prelude::*;
@@ -104,7 +104,7 @@ use bevy_input_sequence::prelude::*;
 
 /// Define an event.
 #[derive(Event, Clone, Debug)]
-struct MyEvent(Gamepad);
+struct MyEvent(Entity);
 
 /// Add event as an key sequence.
 fn main() {
@@ -119,10 +119,10 @@ fn main() {
 fn setup(mut commands: Commands) {
     commands.queue(
         ButtonSequence::new(action::send_event_with_input(|gamepad| MyEvent(gamepad)), 
-            [GamepadButtonType::North,
-             GamepadButtonType::East,
-             GamepadButtonType::South,
-             GamepadButtonType::West])
+            [GamepadButton::North,
+             GamepadButton::East,
+             GamepadButton::South,
+             GamepadButton::West])
     );
 }
 
@@ -152,7 +152,7 @@ fn main() {
         .add_plugins(InputSequencePlugin::default())
         .add_event::<MyEvent>()
         .add_systems(Startup, setup)
-        .observe(check_trigger)
+        .add_observer(check_trigger)
         .update(); // Normally you'd run it here.
 }
 
@@ -171,7 +171,7 @@ fn check_trigger(mut trigger: Trigger<MyEvent>) {
 ## KeySequence Creation Patterns
 
 `KeySequence::new` now returns `KeySequenceBuilder`, which implements `Command`.
-Therefore, you need to call `Commands::add` instead of `Commands::spawn`.
+Therefore, you need to call `Commands::queue` instead of `Commands::spawn`.
 
 ```rust
 use bevy::prelude::*;
@@ -189,12 +189,12 @@ fn create_key_sequence(mut commands: Commands) {
 
 fn create_key_sequence_and_add_it_to_an_entity(mut commands: Commands) {
     let id = commands.spawn_empty().id();
-    commands.entity(id).add(KeySequence::new(
+    commands.entity(id).queue(KeySequence::new(
         action::send_event(MyEvent), 
         keyseq! { Ctrl-E L M }
     ));
     // OR
-    commands.spawn_empty().add(KeySequence::new(
+    commands.spawn_empty().queue(KeySequence::new(
         action::send_event(MyEvent), 
         keyseq! { Ctrl-E L M }
     ));

@@ -38,8 +38,8 @@ fn eq_if_contains_key_in_lhs() {
 
 /// XXX: This doc test isn't working.
 ///
-/// ```compile_fail
-/// assert_eq!((Modifiers::CONTROL, KeyCode::F2), key!{ Ctrl-f2 });
+/// ```
+/// assert_eq!((Modifiers::CONTROL, KeyCode::F2), key!{ Ctrl-F2 });
 /// ```
 ///
 /// ```

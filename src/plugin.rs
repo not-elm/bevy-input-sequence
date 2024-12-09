@@ -90,9 +90,11 @@ impl Plugin for InputSequencePlugin {
         }
 
         if self.match_button.unwrap_or(
-            app.world()
-                .get_resource::<ButtonInput<GamepadButton>>()
-                .is_some(),
+            false
+            // NOTE: Is there a way to detect whether gamepad input is available post 0.14?
+            // app.world()
+            //     .get_resource::<ButtonInput<GamepadButton>>()
+            //     .is_some(),
         ) {
             // app
             //     .register_type::<InputSequence<GamepadButton, In<Entity>>>()
@@ -213,7 +215,6 @@ fn detect_button_removals(
 fn button_sequence_matcher(
     sequences: Query<&ButtonSequence>,
     time: Res<Time>,
-    // buttons: Res<ButtonInput<GamepadButton>>,
     mut last_times: Local<HashMap<Entity, VecDeque<FrameTime>>>,
     mut cache: ResMut<ButtonSequenceCache>,
     frame_count: Res<FrameCount>,
