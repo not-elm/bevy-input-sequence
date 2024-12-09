@@ -4,7 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [unreleased]
 
-## [0.6.0] - 2024-11-24
+## [0.7.0] - 2024-12-09
+
+- Add support for bevy v0.15
+
+## [0.6.0] - 2024-12-08
 
 - Add `action::trigger` and `action::trigger_targets` convenience systems.
 - Bump keyseq to 0.4.0, which changes notation to be more standard: `Ctrl-A`
