@@ -311,7 +311,7 @@ dependencies = [
 
 [[package]]
 name = "bevy-input-sequence"
-version = "0.6.0"
+version = "0.7.0"
 dependencies = [
  "bevy",
  "keyseq",
