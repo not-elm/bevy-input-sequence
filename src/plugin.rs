@@ -312,7 +312,7 @@ fn key_sequence_matcher(
     }
     let prefix_len = search.prefix_len();
     let l = last_times.len();
-    let _ = last_times.drain(0..l - prefix_len);
+    let _ = last_times.drain(0..l.saturating_sub(prefix_len));
     let position = search.into();
     cache.store(position);
 }
