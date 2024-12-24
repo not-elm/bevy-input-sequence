@@ -9,7 +9,7 @@ use std::{collections::VecDeque, fmt};
 use keyseq::Modifiers;
 
 /// Represents a key chord, i.e., a set of modifiers and a key code.
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Reflect)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Reflect)]
 pub struct KeyChord(pub Modifiers, pub KeyCode);
 
 impl fmt::Display for KeyChord {
