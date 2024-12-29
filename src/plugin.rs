@@ -128,7 +128,10 @@ impl Plugin for InputSequencePlugin {
                 }
             }
         } else {
-            warn!("No button sequence matcher added; consider adding DefaultPlugins.");
+            // Only warn if not specified.
+            if self.match_button.is_none() {
+                warn!("No button sequence matcher added; consider adding DefaultPlugins.");
+            }
         }
     }
 }
