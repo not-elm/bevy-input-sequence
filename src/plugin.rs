@@ -2,6 +2,7 @@ use bevy::{
     app::{App, Plugin, Update},
     diagnostic::FrameCount,
     ecs::{
+        event::Events,
         entity::Entity,
         intern::Interned,
         prelude::In,
@@ -11,7 +12,7 @@ use bevy::{
         system::{Commands, Local, Query, Res, ResMut},
     },
     input::{
-        gamepad::{Gamepad, GamepadButton},
+        gamepad::{Gamepad, GamepadButton, GamepadEvent},
         keyboard::KeyCode,
         ButtonInput,
     },
@@ -56,11 +57,9 @@ impl Plugin for InputSequencePlugin {
         {
             app
                 .register_type::<InputSequence<KeyChord, ()>>()
-                // .register_type::<InputSequenceCache<KeyChord, ()>>()
-                ;
-            // Add key sequence.
-            app.init_resource::<KeySequenceCache>();
-            app.init_resource::<KeyChordQueue>();
+                // Add key sequence.
+                .init_resource::<KeySequenceCache>()
+                .init_resource::<KeyChordQueue>();
 
             for (schedule, set) in &self.schedules {
                 if let Some(set) = set {
@@ -91,14 +90,11 @@ impl Plugin for InputSequencePlugin {
         }
 
         if self.match_button.unwrap_or(
-            false, // NOTE: Is there a way to detect whether gamepad input is available post 0.14?
-                  // app.world()
-                  //     .get_resource::<ButtonInput<GamepadButton>>()
-                  //     .is_some(),
+            app.world()
+                .contains_resource::<Events<GamepadEvent>>()
         ) {
             // app
             //     .register_type::<InputSequence<GamepadButton, In<Entity>>>()
-            //     // .register_type::<InputSequenceCache<GamepadButton, Gamepad>>()
             //     ;
             // Add button sequences.
             app.init_resource::<ButtonSequenceCache>();
