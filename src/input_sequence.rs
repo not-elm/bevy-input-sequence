@@ -1,20 +1,17 @@
 //! Input sequences for keys and gamepad buttons
 use crate::{cond_system::IntoCondSystem, time_limit::TimeLimit, KeyChord};
-use std::{
-    fmt,
-    marker::PhantomData,
-};
+use std::{fmt, marker::PhantomData};
 
 use bevy::{
-    prelude::{ChildOf, EntityWorldMut},
     ecs::{
-        prelude::In,
         component::Component,
         entity::Entity,
+        prelude::In,
         system::{IntoSystem, System, SystemId, SystemInput},
         world::World,
     },
     input::gamepad::GamepadButton,
+    prelude::{ChildOf, EntityWorldMut},
     reflect::Reflect,
 };
 
@@ -34,7 +31,6 @@ pub struct InputSequence<Act, I: SystemInput + 'static> {
     /// Optional time limit after first match
     pub time_limit: Option<TimeLimit>,
 }
-
 
 impl<Act: Clone> Clone for InputSequence<Act, ()> {
     fn clone(&self) -> Self {
@@ -133,8 +129,7 @@ where
         let act = self.build(world);
         let system_entity = act.system_id.entity();
         let id = world.spawn(act).id();
-        world.entity_mut(system_entity)
-            .insert(ChildOf(id));
+        world.entity_mut(system_entity).insert(ChildOf(id));
     }
 }
 
@@ -151,8 +146,7 @@ where
             let system_entity = act.system_id.entity();
             let mut entity = world.get_entity_mut(id).unwrap();
             entity.insert(act);
-            world.entity_mut(system_entity)
-                 .insert(ChildOf(id));
+            world.entity_mut(system_entity).insert(ChildOf(id));
         });
     }
 }

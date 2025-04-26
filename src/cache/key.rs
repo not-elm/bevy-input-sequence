@@ -1,5 +1,5 @@
 //! Cache the trie for reuse.
-use crate::{KeyChord, input_sequence::InputSequence};
+use crate::{input_sequence::InputSequence, KeyChord};
 use bevy::ecs::prelude::Resource;
 use trie_rs::{
     inc_search::{IncSearch, Position},
@@ -13,8 +13,7 @@ pub struct KeySequenceCache {
     position: Option<Position>,
 }
 
-impl KeySequenceCache
-{
+impl KeySequenceCache {
     /// Retrieve the cached trie without iterating through `sequences`. Or if
     /// the cache has been invalidated, build and cache a new trie using the
     /// `sequences` iterator.
@@ -23,7 +22,8 @@ impl KeySequenceCache
         sequences: impl Iterator<Item = &'a InputSequence<KeyChord, ()>>,
     ) -> &Trie<KeyChord, InputSequence<KeyChord, ()>> {
         self.trie.get_or_insert_with(|| {
-            let mut builder: TrieBuilder<KeyChord, InputSequence<KeyChord, ()>> = TrieBuilder::new();
+            let mut builder: TrieBuilder<KeyChord, InputSequence<KeyChord, ()>> =
+                TrieBuilder::new();
             for sequence in sequences {
                 builder.insert(sequence.acts.clone(), sequence.clone());
             }

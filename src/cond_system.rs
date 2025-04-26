@@ -1,5 +1,5 @@
 //! Extend [IntoSystem] for conditional execution
-use bevy::ecs::system::{CombinatorSystem, Combine, IntoSystem, System, SystemInput, SystemIn};
+use bevy::ecs::system::{CombinatorSystem, Combine, IntoSystem, System, SystemIn, SystemInput};
 use std::borrow::Cow;
 
 /// Extend [IntoSystem] to allow for some conditional execution. Probably only
@@ -7,7 +7,8 @@ use std::borrow::Cow;
 /// [`run_if()`](bevy::ecs::schedule::IntoSystemConfigs::run_if()) when directly
 /// adding to the scheduler.
 pub trait IntoCondSystem<I, O, M>: IntoSystem<I, O, M>
-    where I: SystemInput,
+where
+    I: SystemInput,
 {
     /// Only run self's system if the given `system` parameter returns true. No
     /// output is provided. (This is convenient for running systems with
@@ -36,8 +37,12 @@ pub trait IntoCondSystem<I, O, M>: IntoSystem<I, O, M>
     }
 }
 
-impl<I, O, M, T> IntoCondSystem<I, O, M> for T where T: IntoSystem<I, O, M>,
-I: SystemInput {}
+impl<I, O, M, T> IntoCondSystem<I, O, M> for T
+where
+    T: IntoSystem<I, O, M>,
+    I: SystemInput,
+{
+}
 
 /// A one-shot conditional system comprised of consequent `SystemA` and
 /// conditional `SystemB`.

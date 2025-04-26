@@ -21,12 +21,16 @@ mod simulate_app {
         },
         input::{
             gamepad::{
-                GamepadButton, GamepadConnection::*,
-                GamepadButtonChangedEvent,
-                GamepadConnectionEvent, *},
-            keyboard::KeyCode, ButtonInput as Input,
+                GamepadButton, GamepadButtonChangedEvent, GamepadConnection::*,
+                GamepadConnectionEvent, *,
+            },
+            keyboard::KeyCode,
+            ButtonInput as Input,
         },
-        prelude::{Command, Commands, ResMut, Resource, Entity, PreUpdate, Events, Deref, DerefMut, IntoScheduleConfigs},
+        prelude::{
+            Command, Commands, Deref, DerefMut, Entity, Events, IntoScheduleConfigs, PreUpdate,
+            ResMut, Resource,
+        },
         MinimalPlugins,
     };
     use bevy_input_sequence::prelude::*;
@@ -504,7 +508,7 @@ mod simulate_app {
             .next()
             .is_none());
 
-        clear_just_pressed(&mut app,KeyCode::KeyB);
+        clear_just_pressed(&mut app, KeyCode::KeyB);
         app.press_pad_button(GamepadButton::North, id);
         app.update();
         assert!(app
@@ -791,19 +795,25 @@ mod simulate_app {
         }
 
         fn press_pad_button(&mut self, button: GamepadButton, id: Entity) {
-            self.send_raw_gamepad_event(RawGamepadButtonChangedEvent {
-                gamepad: id,
-                button,
-                value: 1.0
-            }.into());
+            self.send_raw_gamepad_event(
+                RawGamepadButtonChangedEvent {
+                    gamepad: id,
+                    button,
+                    value: 1.0,
+                }
+                .into(),
+            );
         }
 
         fn clear_just_pressed_pad_button(&mut self, button: GamepadButton, id: Entity) {
-            self.send_raw_gamepad_event(RawGamepadButtonChangedEvent {
-                gamepad: id,
-                button,
-                value: 0.0
-            }.into());
+            self.send_raw_gamepad_event(
+                RawGamepadButtonChangedEvent {
+                    gamepad: id,
+                    button,
+                    value: 0.0,
+                }
+                .into(),
+            );
         }
 
         pub fn send_raw_gamepad_event_batch(
