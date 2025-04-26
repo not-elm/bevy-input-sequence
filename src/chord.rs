@@ -1,6 +1,6 @@
 use bevy::{
     input::keyboard::KeyCode,
-    prelude::{Deref, DerefMut, Resource, ReflectResource},
+    prelude::{Deref, DerefMut, ReflectResource, Resource},
     reflect::{Enum, Reflect},
 };
 

@@ -1,4 +1,4 @@
-use bevy::{reflect::Reflect};
+use bevy::reflect::Reflect;
 use std::time::Duration;
 /// A time limit specified as frame counts or duration.
 #[derive(Clone, Debug, Reflect)]

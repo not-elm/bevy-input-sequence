@@ -1,13 +1,13 @@
 use bevy::{
     app::{App, Plugin, Update},
-    core::FrameCount,
+    diagnostic::FrameCount,
     ecs::{
         entity::Entity,
-        prelude::In,
         intern::Interned,
+        prelude::In,
         query::Added,
         removal_detection::RemovedComponents,
-        schedule::{IntoSystemConfigs, ScheduleLabel, SystemSet},
+        schedule::{ScheduleLabel, SystemSet},
         system::{Commands, Local, Query, Res, ResMut},
     },
     input::{
@@ -16,6 +16,7 @@ use bevy::{
         ButtonInput,
     },
     log::warn,
+    prelude::IntoScheduleConfigs,
     time::Time,
 };
 use std::collections::{HashMap, VecDeque};
@@ -90,11 +91,10 @@ impl Plugin for InputSequencePlugin {
         }
 
         if self.match_button.unwrap_or(
-            false
-            // NOTE: Is there a way to detect whether gamepad input is available post 0.14?
-            // app.world()
-            //     .get_resource::<ButtonInput<GamepadButton>>()
-            //     .is_some(),
+            false, // NOTE: Is there a way to detect whether gamepad input is available post 0.14?
+                  // app.world()
+                  //     .get_resource::<ButtonInput<GamepadButton>>()
+                  //     .is_some(),
         ) {
             // app
             //     .register_type::<InputSequence<GamepadButton, In<Entity>>>()
@@ -176,8 +176,7 @@ impl InputSequencePlugin {
 fn detect_key_additions(
     sequences: Query<&InputSequence<KeyChord, ()>, Added<InputSequence<KeyChord, ()>>>,
     mut cache: ResMut<KeySequenceCache>,
-)
-{
+) {
     if sequences.iter().next().is_some() {
         cache.reset();
     }
@@ -185,10 +184,12 @@ fn detect_key_additions(
 
 #[allow(clippy::type_complexity)]
 fn detect_button_additions(
-    sequences: Query<&InputSequence<GamepadButton, In<Entity>>, Added<InputSequence<GamepadButton, In<Entity>>>>,
+    sequences: Query<
+        &InputSequence<GamepadButton, In<Entity>>,
+        Added<InputSequence<GamepadButton, In<Entity>>>,
+    >,
     mut cache: ResMut<ButtonSequenceCache>,
-)
-{
+) {
     if sequences.iter().next().is_some() {
         cache.reset();
     }
@@ -248,7 +249,7 @@ fn button_sequence_matcher(
                 {
                     // Sequence timed out.
                 } else {
-                    commands.run_system_with_input(seq.system_id, id);
+                    commands.run_system_with(seq.system_id, id);
                 }
             }
             let prefix_len = search.prefix_len();

@@ -23,7 +23,7 @@ use bevy::ecs::{
 /// ```
 pub fn send_event<E: Event + Clone>(event: E) -> impl FnMut(EventWriter<E>) {
     move |mut writer: EventWriter<E>| {
-        writer.send(event.clone());
+        writer.write(event.clone());
     }
 }
 
@@ -49,6 +49,6 @@ pub fn send_event_with_input<E: Event, Input: 'static, F: FnMut(Input) -> E>(
     mut f: F,
 ) -> impl FnMut(In<Input>, EventWriter<E>) {
     move |In(x), mut writer: EventWriter<E>| {
-        writer.send(f(x));
+        writer.write(f(x));
     }
 }

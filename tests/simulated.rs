@@ -16,20 +16,21 @@ mod simulate_app {
         ecs::{
             component::Component,
             event::{Event, EventReader},
-            system::{
-                //commands::Commands,
-                Query,
-            },
-            world::{Command, World},
+            system::Query,
+            world::World,
         },
         input::{
             gamepad::{
-                GamepadButton, GamepadConnection::*,
-                GamepadButtonChangedEvent,
-                GamepadConnectionEvent, *},
-            keyboard::KeyCode, ButtonInput as Input,
+                GamepadButton, GamepadButtonChangedEvent, GamepadConnection::*,
+                GamepadConnectionEvent, *,
+            },
+            keyboard::KeyCode,
+            ButtonInput as Input,
         },
-        prelude::{Commands, ResMut, Resource, Entity, PreUpdate, Events, IntoSystemConfigs, Deref, DerefMut},
+        prelude::{
+            Command, Commands, Deref, DerefMut, Entity, Events, IntoScheduleConfigs, PreUpdate,
+            ResMut, Resource,
+        },
         MinimalPlugins,
     };
     use bevy_input_sequence::prelude::*;
@@ -507,7 +508,7 @@ mod simulate_app {
             .next()
             .is_none());
 
-        clear_just_pressed(&mut app,KeyCode::KeyB);
+        clear_just_pressed(&mut app, KeyCode::KeyB);
         app.press_pad_button(GamepadButton::North, id);
         app.update();
         assert!(app
@@ -708,7 +709,7 @@ mod simulate_app {
         mut query: Query<&mut EventSent>,
     ) {
         for _ in er.read() {
-            match query.get_single_mut() {
+            match query.single_mut() {
                 Ok(ref mut event_sent) => {
                     event_sent.0 += 1;
                 }
@@ -794,19 +795,25 @@ mod simulate_app {
         }
 
         fn press_pad_button(&mut self, button: GamepadButton, id: Entity) {
-            self.send_raw_gamepad_event(RawGamepadButtonChangedEvent {
-                gamepad: id,
-                button,
-                value: 1.0
-            }.into());
+            self.send_raw_gamepad_event(
+                RawGamepadButtonChangedEvent {
+                    gamepad: id,
+                    button,
+                    value: 1.0,
+                }
+                .into(),
+            );
         }
 
         fn clear_just_pressed_pad_button(&mut self, button: GamepadButton, id: Entity) {
-            self.send_raw_gamepad_event(RawGamepadButtonChangedEvent {
-                gamepad: id,
-                button,
-                value: 0.0
-            }.into());
+            self.send_raw_gamepad_event(
+                RawGamepadButtonChangedEvent {
+                    gamepad: id,
+                    button,
+                    value: 0.0,
+                }
+                .into(),
+            );
         }
 
         pub fn send_raw_gamepad_event_batch(
