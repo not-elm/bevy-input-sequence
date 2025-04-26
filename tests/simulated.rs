@@ -16,11 +16,8 @@ mod simulate_app {
         ecs::{
             component::Component,
             event::{Event, EventReader},
-            system::{
-                //commands::Commands,
-                Query,
-            },
-            world::{Command, World},
+            system::Query,
+            world::World,
         },
         input::{
             gamepad::{
@@ -29,7 +26,7 @@ mod simulate_app {
                 GamepadConnectionEvent, *},
             keyboard::KeyCode, ButtonInput as Input,
         },
-        prelude::{Commands, ResMut, Resource, Entity, PreUpdate, Events, IntoSystemConfigs, Deref, DerefMut},
+        prelude::{Command, Commands, ResMut, Resource, Entity, PreUpdate, Events, Deref, DerefMut, IntoScheduleConfigs},
         MinimalPlugins,
     };
     use bevy_input_sequence::prelude::*;
@@ -708,7 +705,7 @@ mod simulate_app {
         mut query: Query<&mut EventSent>,
     ) {
         for _ in er.read() {
-            match query.get_single_mut() {
+            match query.single_mut() {
                 Ok(ref mut event_sent) => {
                     event_sent.0 += 1;
                 }

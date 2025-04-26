@@ -1,6 +1,6 @@
 //! Cache the trie for reuse.
 use crate::input_sequence::InputSequence;
-use bevy::{ecs::system::Resource, prelude::{In, Entity, GamepadButton}};
+use bevy::{ecs::prelude::Resource, prelude::{In, Entity, GamepadButton}};
 use std::collections::HashMap;
 use trie_rs::{
     inc_search::{IncSearch, Position},

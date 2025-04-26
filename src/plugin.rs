@@ -1,13 +1,13 @@
 use bevy::{
     app::{App, Plugin, Update},
-    core::FrameCount,
+    diagnostic::FrameCount,
     ecs::{
         entity::Entity,
         prelude::In,
         intern::Interned,
         query::Added,
         removal_detection::RemovedComponents,
-        schedule::{IntoSystemConfigs, ScheduleLabel, SystemSet},
+        schedule::{ScheduleLabel, SystemSet},
         system::{Commands, Local, Query, Res, ResMut},
     },
     input::{
@@ -17,6 +17,7 @@ use bevy::{
     },
     log::warn,
     time::Time,
+    prelude::IntoScheduleConfigs,
 };
 use std::collections::{HashMap, VecDeque};
 
@@ -248,7 +249,7 @@ fn button_sequence_matcher(
                 {
                     // Sequence timed out.
                 } else {
-                    commands.run_system_with_input(seq.system_id, id);
+                    commands.run_system_with(seq.system_id, id);
                 }
             }
             let prefix_len = search.prefix_len();

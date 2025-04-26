@@ -1,6 +1,6 @@
 //! Cache the trie for reuse.
 use crate::{KeyChord, input_sequence::InputSequence};
-use bevy::ecs::system::Resource;
+use bevy::ecs::prelude::Resource;
 use trie_rs::{
     inc_search::{IncSearch, Position},
     map::{Trie, TrieBuilder},
