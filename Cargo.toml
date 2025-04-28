@@ -39,3 +39,9 @@ keyseq = { version = "0.6.0", features = [ "bevy" ] }
 bevy = "0.16"
 trybuild = "1.0"
 version-sync = "0.9"
+
+[features]
+x11 = ["bevy/x11"]
+
+[package.metadata.docs.rs]
+features = ["x11"]
