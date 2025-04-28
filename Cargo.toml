@@ -1,7 +1,7 @@
 [package]
 name = "bevy-input-sequence"
 description = "Recognizes and acts on input sequences"
-version = "0.8.0"
+version = "0.8.1"
 edition = "2021"
 authors = ["elm", "Shane Celis <shane.celis@gmail.com>"]
 keywords = [
