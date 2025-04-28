@@ -18,8 +18,9 @@ use bevy::{
 /// An input sequence is a series of acts that fires an event when matched with
 /// inputs within the given time limit.
 ///
-/// InputSequence<KeyChord, ()>
-/// InputSequence<GamepadButton, In<Entity>>
+/// `InputSequence<KeyChord, ()>`, a keychord sequence doesn't have an input,
+/// but a gamepad `InputSequence<GamepadButton, In<Entity>>` provides an entity
+/// for the controller the input came from.
 #[derive(Component, Reflect)]
 #[reflect(from_reflect = false)]
 pub struct InputSequence<Act, I: SystemInput + 'static> {
