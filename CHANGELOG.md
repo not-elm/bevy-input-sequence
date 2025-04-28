@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [unreleased]
 
+## [0.8.1] - 2025-04-28
+
+- Fix docs.rs build
+
+## [0.8.0] - 2025-04-27
+
+- Add support for bevy v0.16
+
 ## [0.7.0] - 2024-12-09
 
 - Add support for bevy v0.15
