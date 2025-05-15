@@ -4,7 +4,7 @@ use std::borrow::Cow;
 
 /// Extend [IntoSystem] to allow for some conditional execution. Probably only
 /// appropriate for one-shot systems. Prefer
-/// [`run_if()`](bevy::ecs::schedule::IntoSystemConfigs::run_if()) when directly
+/// [`run_if()`](bevy::ecs::schedule::IntoScheduleConfigs::run_if()) when directly
 /// adding to the scheduler.
 pub trait IntoCondSystem<I, O, M>: IntoSystem<I, O, M>
 where

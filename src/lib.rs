@@ -1,4 +1,4 @@
-#![doc(html_root_url = "https://docs.rs/bevy-input-sequence/0.8.0")]
+#![doc(html_root_url = "https://docs.rs/bevy-input-sequence/0.8.1")]
 #![doc = include_str!("../README.md")]
 #![forbid(missing_docs)]
 
