@@ -1,8 +1,6 @@
 //! Common actions to do on key sequence matches
 use bevy::ecs::{
-    event::{Event, EventWriter},
-    observer::TriggerTargets,
-    prelude::Commands,
+    prelude::{Commands, Event, Message, MessageWriter},
     system::In,
 };
 
@@ -21,34 +19,30 @@ use bevy::ecs::{
 ///    action::send_event(MyEvent),
 ///    keyseq! { Space });
 /// ```
-pub fn send_event<E: Event + Clone>(event: E) -> impl FnMut(EventWriter<E>) {
-    move |mut writer: EventWriter<E>| {
+pub fn send_event<E: Message + Clone>(event: E) -> impl FnMut(MessageWriter<E>) {
+    move |mut writer: MessageWriter<E>| {
         writer.write(event.clone());
     }
 }
 
 /// Trigger an event.
-pub fn trigger<E: Event + Clone>(event: E) -> impl FnMut(Commands) {
+pub fn trigger<'a, E>(event: E) -> impl FnMut(Commands)
+where
+    E: Event + Clone,
+    <E as Event>::Trigger<'a>: Default,
+{
     move |mut commands: Commands| {
         commands.trigger(event.clone());
     }
 }
 
-/// Trigger an event with targets.
-pub fn trigger_targets<E: Event + Clone, T: TriggerTargets + Clone + Send + Sync + 'static>(
-    event: E,
-    targets: T,
-) -> impl FnMut(Commands) {
-    move |mut commands: Commands| {
-        commands.trigger_targets(event.clone(), targets.clone());
-    }
-}
-
-/// Sends an event with input, .e.g, [ButtonSequence](crate::input_sequence::ButtonSequence) provides a [Gamepad](bevy::input::gamepad::Gamepad) identifier.
-pub fn send_event_with_input<E: Event, Input: 'static, F: FnMut(Input) -> E>(
+/// Sends an event with input, .e.g,
+/// [ButtonSequence](crate::input_sequence::ButtonSequence) provides a
+/// [Gamepad](bevy::input::gamepad::Gamepad) identifier.
+pub fn send_event_with_input<E: Message, Input: 'static, F: FnMut(Input) -> E>(
     mut f: F,
-) -> impl FnMut(In<Input>, EventWriter<E>) {
-    move |In(x), mut writer: EventWriter<E>| {
+) -> impl FnMut(In<Input>, MessageWriter<E>) {
+    move |In(x), mut writer: MessageWriter<E>| {
         writer.write(f(x));
     }
 }

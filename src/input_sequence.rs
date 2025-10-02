@@ -11,8 +11,7 @@ use bevy::{
         world::World,
     },
     input::gamepad::GamepadButton,
-    prelude::{ChildOf, EntityWorldMut},
-    reflect::Reflect,
+    prelude::{BuildChildrenTransformExt, ChildOf, Command, EntityWorldMut, Reflect},
 };
 
 /// An input sequence is a series of acts that fires an event when matched with
@@ -25,7 +24,6 @@ use bevy::{
 #[reflect(from_reflect = false)]
 pub struct InputSequence<Act, I: SystemInput + 'static> {
     /// Event emitted
-    #[reflect(ignore)]
     pub system_id: SystemId<I>,
     /// Sequence of acts that trigger input sequence
     pub acts: Vec<Act>,
@@ -120,7 +118,7 @@ where
     }
 }
 
-impl<Act, S, I> bevy::prelude::Command for InputSequenceBuilder<Act, S, I>
+impl<Act, S, I> Command for InputSequenceBuilder<Act, S, I>
 where
     Act: Send + Sync + 'static,
     S: System<In = I, Out = ()> + Send + Sync + 'static,
@@ -130,7 +128,7 @@ where
         let act = self.build(world);
         let system_entity = act.system_id.entity();
         let id = world.spawn(act).id();
-        world.entity_mut(system_entity).insert(ChildOf(id));
+        world.entity_mut(system_entity).set_parent_in_place(id);
     }
 }
 
@@ -147,7 +145,7 @@ where
             let system_entity = act.system_id.entity();
             let mut entity = world.get_entity_mut(id).unwrap();
             entity.insert(act);
-            world.entity_mut(system_entity).insert(ChildOf(id));
+            world.entity_mut(system_entity).set_parent_in_place(id);
         });
     }
 }

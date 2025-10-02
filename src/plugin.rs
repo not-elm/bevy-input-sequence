@@ -2,12 +2,10 @@ use bevy::{
     app::{App, Plugin, Update},
     diagnostic::FrameCount,
     ecs::{
-        event::Events,
         entity::Entity,
         intern::Interned,
-        prelude::In,
+        prelude::{In, IntoScheduleConfigs, Messages, RemovedComponents},
         query::Added,
-        removal_detection::RemovedComponents,
         schedule::{ScheduleLabel, SystemSet},
         system::{Commands, Local, Query, Res, ResMut},
     },
@@ -17,7 +15,6 @@ use bevy::{
         ButtonInput,
     },
     log::warn,
-    prelude::IntoScheduleConfigs,
     time::Time,
 };
 use std::collections::{HashMap, VecDeque};
@@ -56,7 +53,6 @@ impl Plugin for InputSequencePlugin {
             .unwrap_or(app.world().get_resource::<ButtonInput<KeyCode>>().is_some())
         {
             app
-                .register_type::<InputSequence<KeyChord, ()>>()
                 // Add key sequence.
                 .init_resource::<KeySequenceCache>()
                 .init_resource::<KeyChordQueue>();
@@ -89,10 +85,10 @@ impl Plugin for InputSequencePlugin {
             warn!("No key sequence matcher added; consider adding DefaultPlugins.");
         }
 
-        if self.match_button.unwrap_or(
-            app.world()
-                .contains_resource::<Events<GamepadEvent>>()
-        ) {
+        if self
+            .match_button
+            .unwrap_or(app.world().contains_resource::<Messages<GamepadEvent>>())
+        {
             // app
             //     .register_type::<InputSequence<GamepadButton, In<Entity>>>()
             //     ;

@@ -1,7 +1,7 @@
 use bevy::{
     input::keyboard::KeyCode,
-    prelude::{Deref, DerefMut, ReflectResource, Resource},
-    reflect::{Enum, Reflect},
+    prelude::{Deref, DerefMut, Resource},
+    reflect::Enum,
 };
 
 use std::{collections::VecDeque, fmt};
@@ -9,7 +9,7 @@ use std::{collections::VecDeque, fmt};
 use keyseq::Modifiers;
 
 /// Represents a key chord, i.e., a set of modifiers and a key code.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Reflect)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct KeyChord(pub Modifiers, pub KeyCode);
 
 impl fmt::Display for KeyChord {
@@ -55,13 +55,22 @@ impl From<KeyCode> for KeyChord {
 }
 
 pub(crate) fn is_modifier(key: KeyCode) -> bool {
-    !Modifiers::from(key).is_empty()
+    matches!(
+        key,
+        KeyCode::ControlLeft
+            | KeyCode::ControlRight
+            | KeyCode::ShiftLeft
+            | KeyCode::ShiftRight
+            | KeyCode::AltLeft
+            | KeyCode::AltRight
+            | KeyCode::SuperLeft
+            | KeyCode::SuperRight
+    )
 }
 
 /// Manually add key chords to be processed as through they were pressed by the
 /// user.
 ///
 /// Normally this does not need to be manipulated. It is a kind of escape hatch.
-#[derive(Resource, Debug, Deref, DerefMut, Default, Reflect)]
-#[reflect(Resource)]
+#[derive(Resource, Debug, Deref, DerefMut, Default)]
 pub struct KeyChordQueue(pub VecDeque<KeyChord>);
