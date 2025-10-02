@@ -65,7 +65,7 @@ use bevy::prelude::*;
 use bevy_input_sequence::prelude::*;
 
 /// Define an event.
-#[derive(Event, Clone, Debug)]
+#[derive(Message, Clone, Debug, Default)]
 struct MyEvent;
 
 /// Add event as an key sequence.
@@ -73,7 +73,7 @@ fn main() {
     App::new()
         .add_plugins(MinimalPlugins)
         .add_plugins(InputSequencePlugin::default())
-        .add_event::<MyEvent>()
+        .add_message::<MyEvent>()
         .add_systems(Startup, setup)
         .update(); // Normally you'd run it here.
 }
@@ -85,7 +85,7 @@ fn setup(mut commands: Commands) {
     );
 }
 
-fn check_events(mut events: EventReader<MyEvent>) {
+fn check_events(mut events: MessageReader<MyEvent>) {
     for event in events.read() {
         info!("got event {event:?}");
     }
@@ -103,7 +103,7 @@ use bevy::prelude::*;
 use bevy_input_sequence::prelude::*;
 
 /// Define an event.
-#[derive(Event, Clone, Debug)]
+#[derive(Message, Clone, Debug)]
 struct MyEvent(Entity);
 
 /// Add event as an key sequence.
@@ -111,7 +111,7 @@ fn main() {
     App::new()
         .add_plugins(MinimalPlugins)
         .add_plugins(InputSequencePlugin::default())
-        .add_event::<MyEvent>()
+        .add_message::<MyEvent>()
         .add_systems(Startup, setup)
         .update(); // Normally you'd run it here.
 }
@@ -126,7 +126,7 @@ fn setup(mut commands: Commands) {
     );
 }
 
-fn check_events(mut events: EventReader<MyEvent>) {
+fn check_events(mut events: MessageReader<MyEvent>) {
     for event in events.read() {
         info!("got event {event:?}");
     }
@@ -142,7 +142,7 @@ use bevy::prelude::*;
 use bevy_input_sequence::prelude::*;
 
 /// Define an event.
-#[derive(Event, Clone, Debug)]
+#[derive(Event, Clone, Debug, Default)]
 struct MyEvent;
 
 /// Add event as an key sequence.
@@ -150,7 +150,6 @@ fn main() {
     App::new()
         .add_plugins(MinimalPlugins)
         .add_plugins(InputSequencePlugin::default())
-        .add_event::<MyEvent>()
         .add_systems(Startup, setup)
         .add_observer(check_trigger)
         .update(); // Normally you'd run it here.
@@ -163,7 +162,7 @@ fn setup(mut commands: Commands) {
     );
 }
 
-fn check_trigger(mut trigger: Trigger<MyEvent>) {
+fn check_trigger(mut trigger: On<MyEvent>) {
     info!("got event {:?}", trigger.event());
 }
 ```
@@ -177,7 +176,7 @@ Therefore, you need to call `Commands::queue` instead of `Commands::spawn`.
 use bevy::prelude::*;
 use bevy_input_sequence::prelude::*;
 
-#[derive(Event, Clone)]
+#[derive(Message, Clone, Debug, Default)]
 struct MyEvent;
 
 fn create_key_sequence(mut commands: Commands) {

@@ -13,12 +13,7 @@ fn keychord_display() {
 mod simulate_app {
     use bevy::{
         app::{App, PostUpdate},
-        ecs::{
-            component::Component,
-            event::{Event, EventReader},
-            system::Query,
-            world::World,
-        },
+        ecs::{component::Component, system::Query, world::World},
         input::{
             gamepad::{
                 GamepadButton, GamepadButtonChangedEvent, GamepadConnection::*,
@@ -28,14 +23,14 @@ mod simulate_app {
             ButtonInput as Input,
         },
         prelude::{
-            Command, Commands, Deref, DerefMut, Entity, Events, IntoScheduleConfigs, PreUpdate,
-            ResMut, Resource,
+            Command, Commands, Deref, DerefMut, Entity, In, IntoScheduleConfigs, Message,
+            MessageReader, MessageWriter, Messages, PreUpdate, ResMut, Resource,
         },
         MinimalPlugins,
     };
     use bevy_input_sequence::prelude::*;
 
-    #[derive(Event, Clone)]
+    #[derive(Message, Clone, Default)]
     struct MyEvent;
 
     #[derive(Component)]
@@ -69,7 +64,7 @@ mod simulate_app {
         let mut app = new_app();
 
         app.world_mut().add(KeySequence::new(
-            action::send_event(MyEvent),
+            send_my_event,
             [(Modifiers::empty(), KeyCode::KeyA)],
         ));
         press_key(&mut app, KeyCode::KeyA);
@@ -86,14 +81,10 @@ mod simulate_app {
     fn two_components_one_event() {
         let mut app = new_app();
 
-        app.world_mut().add(KeySequence::new(
-            action::send_event(MyEvent),
-            [KeyCode::KeyA],
-        ));
-        app.world_mut().add(KeySequence::new(
-            action::send_event(MyEvent),
-            [KeyCode::KeyA],
-        ));
+        app.world_mut()
+            .add(KeySequence::new(send_my_event, [KeyCode::KeyA]));
+        app.world_mut()
+            .add(KeySequence::new(send_my_event, [KeyCode::KeyA]));
         press_key(&mut app, KeyCode::KeyA);
         app.update();
         assert_eq!(
@@ -109,14 +100,10 @@ mod simulate_app {
     fn two_presses_two_events() {
         let mut app = new_app();
 
-        app.world_mut().add(KeySequence::new(
-            action::send_event(MyEvent),
-            [KeyCode::KeyA],
-        ));
-        app.world_mut().add(KeySequence::new(
-            action::send_event(MyEvent),
-            [KeyCode::KeyB],
-        ));
+        app.world_mut()
+            .add(KeySequence::new(send_my_event, [KeyCode::KeyA]));
+        app.world_mut()
+            .add(KeySequence::new(send_my_event, [KeyCode::KeyB]));
         press_key(&mut app, KeyCode::KeyA);
         press_key(&mut app, KeyCode::KeyB);
         app.update();
@@ -134,11 +121,11 @@ mod simulate_app {
         let mut app = new_app();
 
         app.world_mut().add(KeySequence::new(
-            action::send_event(MyEvent),
+            send_my_event,
             [KeyCode::KeyA, KeyCode::KeyB],
         ));
         app.world_mut().add(KeySequence::new(
-            action::send_event(MyEvent),
+            send_my_event,
             [KeyCode::KeyA, KeyCode::KeyC],
         ));
 
@@ -167,11 +154,11 @@ mod simulate_app {
         let mut app = new_app();
 
         app.world_mut().add(KeySequence::new(
-            action::send_event(MyEvent),
+            send_my_event,
             [KeyCode::KeyA, KeyCode::KeyB],
         ));
         app.world_mut().add(KeySequence::new(
-            action::send_event(MyEvent),
+            send_my_event,
             [KeyCode::KeyA, KeyCode::KeyB, KeyCode::KeyC],
         ));
 
@@ -229,11 +216,11 @@ mod simulate_app {
         let mut app = new_app();
 
         app.world_mut().add(KeySequence::new(
-            action::send_event(MyEvent),
+            send_my_event,
             [KeyCode::KeyA, KeyCode::KeyB],
         ));
         app.world_mut().add(KeySequence::new(
-            action::send_event(MyEvent),
+            send_my_event,
             [KeyCode::KeyA, KeyCode::KeyC],
         ));
 
@@ -282,15 +269,15 @@ mod simulate_app {
         let mut app = new_app();
 
         app.world_mut().add(KeySequence::new(
-            action::send_event(MyEvent),
+            send_my_event,
             [KeyCode::KeyA, KeyCode::KeyB],
         ));
         app.world_mut().add(KeySequence::new(
-            action::send_event(MyEvent),
+            send_my_event,
             [KeyCode::KeyA, KeyCode::KeyC],
         ));
         app.world_mut().add(KeySequence::new(
-            action::send_event(MyEvent),
+            send_my_event,
             [KeyCode::KeyA, KeyCode::KeyD],
         ));
         press_key(&mut app, KeyCode::KeyA);
@@ -318,15 +305,15 @@ mod simulate_app {
         let mut app = new_app();
 
         app.world_mut().add(KeySequence::new(
-            action::send_event(MyEvent),
+            send_my_event,
             [KeyCode::KeyA, KeyCode::KeyB],
         ));
         app.world_mut().add(KeySequence::new(
-            action::send_event(MyEvent),
+            send_my_event,
             [KeyCode::KeyA, KeyCode::KeyC],
         ));
         app.world_mut().add(KeySequence::new(
-            action::send_event(MyEvent),
+            send_my_event,
             [KeyCode::KeyA, KeyCode::KeyD],
         ));
         press_key(&mut app, KeyCode::KeyA);
@@ -354,7 +341,7 @@ mod simulate_app {
         let mut app = new_app();
 
         app.world_mut().add(KeySequence::new(
-            action::send_event(MyEvent),
+            send_my_event,
             [KeyCode::KeyA, KeyCode::KeyB],
         ));
 
@@ -383,7 +370,7 @@ mod simulate_app {
         let mut app = new_app();
 
         app.world_mut().add(KeySequence::new(
-            action::send_event(MyEvent),
+            send_my_event,
             [KeyCode::KeyA, KeyCode::KeyB, KeyCode::KeyC],
         ));
 
@@ -424,7 +411,7 @@ mod simulate_app {
         let id = app.send_gamepad_connection_event(None);
 
         app.world_mut().add(ButtonSequence::new(
-            action::send_event_with_input(|_: Entity| MyEvent),
+            send_my_event_with_input,
             [
                 GamepadButton::North,
                 GamepadButton::East,
@@ -470,7 +457,7 @@ mod simulate_app {
         // This is no longer possible right now. We could introduce a
         // KeyButtonSequence mixture struct would allow it.
         // app.world_mut().add(KeySequence::new(
-        //     action::send_event(MyEvent),
+        //     send_my_event,
         //     [
         //         (KeyCode::KeyA),
         //         (KeyCode::KeyB),
@@ -479,12 +466,12 @@ mod simulate_app {
         //     ],
         // ));
         app.world_mut().add(KeySequence::new(
-            action::send_event(MyEvent),
+            send_my_event,
             [KeyCode::KeyA, KeyCode::KeyB, KeyCode::KeyX],
         ));
 
         app.world_mut().add(ButtonSequence::new(
-            action::send_event_with_input(|_: Entity| MyEvent),
+            send_my_event_with_input,
             [GamepadButton::North, GamepadButton::C],
         ));
         app.update();
@@ -534,7 +521,7 @@ mod simulate_app {
         let mut app = new_app();
 
         app.world_mut().add(
-            KeySequence::new(action::send_event(MyEvent), [KeyCode::KeyA, KeyCode::KeyB])
+            KeySequence::new(send_my_event, [KeyCode::KeyA, KeyCode::KeyB])
                 .time_limit(TimeLimit::Frames(1)),
         );
 
@@ -568,7 +555,7 @@ mod simulate_app {
         let mut app = new_app();
 
         app.world_mut().add(KeySequence::new(
-            action::send_event(MyEvent),
+            send_my_event,
             [KeyCode::KeyA, KeyCode::KeyB],
         ));
 
@@ -610,7 +597,7 @@ mod simulate_app {
         let mut app = new_app();
 
         app.world_mut().add(
-            KeySequence::new(action::send_event(MyEvent), [KeyCode::KeyA, KeyCode::KeyB])
+            KeySequence::new(send_my_event, [KeyCode::KeyA, KeyCode::KeyB])
                 .time_limit(TimeLimit::Frames(2)),
         );
 
@@ -641,11 +628,8 @@ mod simulate_app {
         let mut app = new_app();
 
         app.world_mut().add(
-            KeySequence::new(
-                action::send_event(MyEvent),
-                [KeyCode::KeyA, KeyCode::KeyB, KeyCode::KeyC],
-            )
-            .time_limit(TimeLimit::Frames(2)),
+            KeySequence::new(send_my_event, [KeyCode::KeyA, KeyCode::KeyB, KeyCode::KeyC])
+                .time_limit(TimeLimit::Frames(2)),
         );
 
         press_key(&mut app, KeyCode::KeyA);
@@ -703,9 +687,17 @@ mod simulate_app {
             .release(key);
     }
 
+    fn send_my_event(mut writer: MessageWriter<MyEvent>) {
+        writer.write(MyEvent);
+    }
+
+    fn send_my_event_with_input(_input: In<Entity>, mut writer: MessageWriter<MyEvent>) {
+        writer.write(MyEvent);
+    }
+
     fn read(
         mut commands: Commands,
-        mut er: EventReader<MyEvent>,
+        mut er: MessageReader<MyEvent>,
         mut query: Query<&mut EventSent>,
     ) {
         for _ in er.read() {
@@ -730,7 +722,7 @@ mod simulate_app {
                 .match_button(true),
         );
         app.add_systems(PostUpdate, read);
-        app.add_event::<MyEvent>();
+        app.add_message::<MyEvent>();
         app.init_resource::<R>();
         app.init_resource::<Input<KeyCode>>();
         app
@@ -753,14 +745,14 @@ mod simulate_app {
                     gamepad_event_processing_system.after(gamepad_connection_system),
                 ),
             )
-            .add_event::<GamepadEvent>()
-            .add_event::<GamepadConnectionEvent>()
-            .add_event::<RawGamepadButtonChangedEvent>()
-            .add_event::<GamepadButtonChangedEvent>()
-            .add_event::<GamepadButtonStateChangedEvent>()
-            .add_event::<GamepadAxisChangedEvent>()
-            .add_event::<RawGamepadAxisChangedEvent>()
-            .add_event::<RawGamepadEvent>();
+            .add_message::<GamepadEvent>()
+            .add_message::<GamepadConnectionEvent>()
+            .add_message::<RawGamepadButtonChangedEvent>()
+            .add_message::<GamepadButtonChangedEvent>()
+            .add_message::<GamepadButtonStateChangedEvent>()
+            .add_message::<GamepadAxisChangedEvent>()
+            .add_message::<RawGamepadAxisChangedEvent>()
+            .add_message::<RawGamepadEvent>();
             Self { app }
         }
 
@@ -768,8 +760,8 @@ mod simulate_app {
             let gamepad = gamepad.unwrap_or_else(|| self.app.world_mut().spawn_empty().id());
             self.app
                 .world_mut()
-                .resource_mut::<Events<GamepadConnectionEvent>>()
-                .send(GamepadConnectionEvent::new(
+                .resource_mut::<Messages<GamepadConnectionEvent>>()
+                .write(GamepadConnectionEvent::new(
                     gamepad,
                     Connected {
                         name: "Test gamepad".to_string(),
@@ -783,15 +775,15 @@ mod simulate_app {
         pub fn send_gamepad_disconnection_event(&mut self, gamepad: Entity) {
             self.app
                 .world_mut()
-                .resource_mut::<Events<GamepadConnectionEvent>>()
-                .send(GamepadConnectionEvent::new(gamepad, Disconnected));
+                .resource_mut::<Messages<GamepadConnectionEvent>>()
+                .write(GamepadConnectionEvent::new(gamepad, Disconnected));
         }
 
         pub fn send_raw_gamepad_event(&mut self, event: RawGamepadEvent) {
             self.app
                 .world_mut()
-                .resource_mut::<Events<RawGamepadEvent>>()
-                .send(event);
+                .resource_mut::<Messages<RawGamepadEvent>>()
+                .write(event);
         }
 
         fn press_pad_button(&mut self, button: GamepadButton, id: Entity) {
@@ -822,8 +814,8 @@ mod simulate_app {
         ) {
             self.app
                 .world_mut()
-                .resource_mut::<Events<RawGamepadEvent>>()
-                .send_batch(events);
+                .resource_mut::<Messages<RawGamepadEvent>>()
+                .write_batch(events);
         }
     }
 }

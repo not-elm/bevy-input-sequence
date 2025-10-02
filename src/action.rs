@@ -12,7 +12,7 @@ use bevy::ecs::{
 ///
 /// #[derive(Debug, Clone, Eq, PartialEq, Hash, States)]
 /// enum AppState { Menu, Game }
-/// #[derive(Event, Clone, Debug)]
+/// #[derive(Message, Clone, Debug, Default)]
 /// struct MyEvent;
 ///
 /// KeySequence::new(
