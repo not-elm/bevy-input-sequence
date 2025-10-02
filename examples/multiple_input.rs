@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_input_sequence::prelude::*;
 
-#[derive(Event, Clone, Debug)]
+#[derive(Message, Clone, Debug)]
 #[allow(dead_code)]
 struct MyEvent(u8, Option<Entity>);
 
@@ -9,7 +9,7 @@ fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .add_plugins(InputSequencePlugin::default().match_button(true))
-        .add_event::<MyEvent>()
+        .add_message::<MyEvent>()
         .add_systems(Startup, setup)
         .add_systems(Update, input_sequence_event_system)
         .run();
@@ -56,7 +56,7 @@ fn setup(mut commands: Commands) {
     println!("Press W A S D or north west south east to emit event 3 and 4.");
 }
 
-fn input_sequence_event_system(mut er: EventReader<MyEvent>) {
+fn input_sequence_event_system(mut er: MessageReader<MyEvent>) {
     for e in er.read() {
         println!(
             "{e:?} emitted {}",

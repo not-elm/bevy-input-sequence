@@ -7,7 +7,7 @@ enum Direction {
     CounterClockwise,
 }
 
-#[derive(Event, Clone, Debug)]
+#[derive(Message, Clone, Debug)]
 #[allow(dead_code)]
 struct MyEvent(Direction);
 
@@ -15,7 +15,7 @@ fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .add_plugins(InputSequencePlugin::default())
-        .add_event::<MyEvent>()
+        .add_message::<MyEvent>()
         .add_systems(Startup, setup)
         .add_systems(Update, event_listener)
         .run();
@@ -48,7 +48,7 @@ fn setup(mut commands: Commands) {
     println!("Press W A S D to emit counter clockwise event.");
 }
 
-fn event_listener(mut er: EventReader<MyEvent>) {
+fn event_listener(mut er: MessageReader<MyEvent>) {
     for e in er.read() {
         println!("{:?} emitted.", e);
     }

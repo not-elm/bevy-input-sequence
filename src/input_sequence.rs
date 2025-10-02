@@ -11,7 +11,7 @@ use bevy::{
         world::World,
     },
     input::gamepad::GamepadButton,
-    prelude::{BuildChildrenTransformExt, ChildOf, Command, EntityWorldMut, Reflect},
+    prelude::{BuildChildrenTransformExt, Command, EntityWorldMut, Reflect},
 };
 
 /// An input sequence is a series of acts that fires an event when matched with

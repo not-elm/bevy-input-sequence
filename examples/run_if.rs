@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_input_sequence::prelude::*;
 
-#[derive(Event, Clone, Debug)]
+#[derive(Message, Clone, Debug)]
 struct MyEvent;
 
 #[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States)]
@@ -19,7 +19,7 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .init_state::<AppState>()
         .add_plugins(InputSequencePlugin::empty().run_in_set(Update, MySet))
-        .add_event::<MyEvent>()
+        .add_message::<MyEvent>()
         .configure_sets(Update, MySet.run_if(in_state(AppState::Game)))
         .add_systems(Startup, setup)
         .add_systems(Update, listen_for_myevent)
@@ -54,7 +54,7 @@ fn listen_for_escape_key(
     }
 }
 
-fn listen_for_myevent(mut er: EventReader<MyEvent>) {
+fn listen_for_myevent(mut er: MessageReader<MyEvent>) {
     for e in er.read() {
         println!("{e:?} emitted.");
     }
