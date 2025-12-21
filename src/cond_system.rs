@@ -1,6 +1,6 @@
 //! Extend [IntoSystem] for conditional execution
 use bevy::ecs::system::{CombinatorSystem, Combine, IntoSystem, System, SystemIn, SystemInput};
-use std::borrow::Cow;
+use bevy::prelude::DebugName;
 
 /// Extend [IntoSystem] to allow for some conditional execution. Probably only
 /// appropriate for one-shot systems. Prefer
@@ -20,7 +20,7 @@ where
         let system_a = IntoSystem::into_system(self);
         let system_b = IntoSystem::into_system(system);
         let name = format!("SilentCond({}, {})", system_a.name(), system_b.name());
-        SilentCondSystem::new(system_a, system_b, Cow::Owned(name))
+        SilentCondSystem::new(system_a, system_b, DebugName::owned(name))
     }
 
     /// Only run self's system if the given `system` parameter returns true. The
@@ -33,7 +33,7 @@ where
         let system_a = IntoSystem::into_system(self);
         let system_b = IntoSystem::into_system(system);
         let name = format!("Cond({}, {})", system_a.name(), system_b.name());
-        CondSystem::new(system_a, system_b, Cow::Owned(name))
+        CondSystem::new(system_a, system_b, DebugName::owned(name))
     }
 }
 
@@ -59,12 +59,18 @@ where
     type In = A::In;
     type Out = Option<A::Out>;
 
-    fn combine(
+    fn combine<T>(
         input: <Self::In as SystemInput>::Inner<'_>,
-        a: impl FnOnce(SystemIn<'_, A>) -> A::Out,
-        b: impl FnOnce(SystemIn<'_, B>) -> B::Out,
-    ) -> Self::Out {
-        b(()).then(|| a(input))
+        data: &mut T,
+        a: impl FnOnce(SystemIn<'_, A>, &mut T) -> Result<A::Out, bevy::ecs::system::RunSystemError>,
+        b: impl FnOnce(SystemIn<'_, B>, &mut T) -> Result<B::Out, bevy::ecs::system::RunSystemError>,
+    ) -> Result<Self::Out, bevy::ecs::system::RunSystemError> {
+        let condition = b((), data)?;
+        if condition {
+            Ok(Some(a(input, data)?))
+        } else {
+            Ok(None)
+        }
     }
 }
 
@@ -83,13 +89,16 @@ where
     type In = A::In;
     type Out = ();
 
-    fn combine(
+    fn combine<T>(
         input: <Self::In as SystemInput>::Inner<'_>,
-        a: impl FnOnce(SystemIn<'_, A>) -> A::Out,
-        b: impl FnOnce(SystemIn<'_, B>) -> B::Out,
-    ) -> Self::Out {
-        if b(()) {
-            a(input);
+        data: &mut T,
+        a: impl FnOnce(SystemIn<'_, A>, &mut T) -> Result<A::Out, bevy::ecs::system::RunSystemError>,
+        b: impl FnOnce(SystemIn<'_, B>, &mut T) -> Result<B::Out, bevy::ecs::system::RunSystemError>,
+    ) -> Result<Self::Out, bevy::ecs::system::RunSystemError> {
+        let condition = b((), data)?;
+        if condition {
+            a(input, data)?;
         }
+        Ok(())
     }
 }

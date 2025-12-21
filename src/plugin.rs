@@ -4,19 +4,17 @@ use bevy::{
     ecs::{
         entity::Entity,
         intern::Interned,
-        prelude::In,
+        prelude::{In, IntoScheduleConfigs, Messages, RemovedComponents},
         query::Added,
-        removal_detection::RemovedComponents,
         schedule::{ScheduleLabel, SystemSet},
         system::{Commands, Local, Query, Res, ResMut},
     },
     input::{
-        gamepad::{Gamepad, GamepadButton},
+        gamepad::{Gamepad, GamepadButton, GamepadEvent},
         keyboard::KeyCode,
         ButtonInput,
     },
     log::warn,
-    prelude::IntoScheduleConfigs,
     time::Time,
 };
 use std::collections::{HashMap, VecDeque};
@@ -55,12 +53,9 @@ impl Plugin for InputSequencePlugin {
             .unwrap_or(app.world().get_resource::<ButtonInput<KeyCode>>().is_some())
         {
             app
-                .register_type::<InputSequence<KeyChord, ()>>()
-                // .register_type::<InputSequenceCache<KeyChord, ()>>()
-                ;
-            // Add key sequence.
-            app.init_resource::<KeySequenceCache>();
-            app.init_resource::<KeyChordQueue>();
+                // Add key sequence.
+                .init_resource::<KeySequenceCache>()
+                .init_resource::<KeyChordQueue>();
 
             for (schedule, set) in &self.schedules {
                 if let Some(set) = set {
@@ -90,15 +85,12 @@ impl Plugin for InputSequencePlugin {
             warn!("No key sequence matcher added; consider adding DefaultPlugins.");
         }
 
-        if self.match_button.unwrap_or(
-            false, // NOTE: Is there a way to detect whether gamepad input is available post 0.14?
-                  // app.world()
-                  //     .get_resource::<ButtonInput<GamepadButton>>()
-                  //     .is_some(),
-        ) {
+        if self
+            .match_button
+            .unwrap_or(app.world().contains_resource::<Messages<GamepadEvent>>())
+        {
             // app
             //     .register_type::<InputSequence<GamepadButton, In<Entity>>>()
-            //     // .register_type::<InputSequenceCache<GamepadButton, Gamepad>>()
             //     ;
             // Add button sequences.
             app.init_resource::<ButtonSequenceCache>();
@@ -128,7 +120,10 @@ impl Plugin for InputSequencePlugin {
                 }
             }
         } else {
-            warn!("No button sequence matcher added; consider adding DefaultPlugins.");
+            // Only warn if not specified.
+            if self.match_button.is_none() {
+                warn!("No button sequence matcher added; consider adding DefaultPlugins.");
+            }
         }
     }
 }
