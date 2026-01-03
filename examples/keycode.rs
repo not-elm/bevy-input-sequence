@@ -26,7 +26,7 @@ fn setup(mut commands: Commands) {
     // Specify key codes directly.
     commands.queue(
         KeySequence::new(
-            action::send_event(MyEvent(Direction::Clockwise)),
+            action::write_message(MyEvent(Direction::Clockwise)),
             [KeyCode::KeyW,
              KeyCode::KeyD,
              KeyCode::KeyS,
@@ -38,7 +38,7 @@ fn setup(mut commands: Commands) {
     // Use keyseq! macro.
     commands.queue(
         KeySequence::new(
-            action::send_event(MyEvent(Direction::CounterClockwise)),
+            action::write_message(MyEvent(Direction::CounterClockwise)),
             keyseq!{ W A S D },
         )
         .time_limit(Duration::from_secs(1)),

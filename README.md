@@ -58,7 +58,7 @@ fn say_hello() {
 ## Send an Event on Key Sequence
 
 Originally `bevy-input-sequence` always sent an event. You can still do that
-with `action::send_event()`.
+with `action::write_message()`.
 
 ```rust
 use bevy::prelude::*;
@@ -80,7 +80,7 @@ fn main() {
 
 fn setup(mut commands: Commands) {
     commands.queue(
-        KeySequence::new(action::send_event(MyEvent), 
+        KeySequence::new(action::write_message(MyEvent), 
                          keyseq! { Ctrl-E Alt-L Shift-M })
     );
 }
@@ -118,7 +118,7 @@ fn main() {
 
 fn setup(mut commands: Commands) {
     commands.queue(
-        ButtonSequence::new(action::send_event_with_input(|gamepad| MyEvent(gamepad)), 
+        ButtonSequence::new(action::write_message_with_input(|gamepad| MyEvent(gamepad)), 
             [GamepadButton::North,
              GamepadButton::East,
              GamepadButton::South,
@@ -181,7 +181,7 @@ struct MyEvent;
 
 fn create_key_sequence(mut commands: Commands) {
     commands.queue(KeySequence::new(
-        action::send_event(bevy::app::AppExit::default()), 
+        action::write_message(bevy::app::AppExit::default()), 
         keyseq! { Ctrl-E L M }
     ));
 }
@@ -189,12 +189,12 @@ fn create_key_sequence(mut commands: Commands) {
 fn create_key_sequence_and_add_it_to_an_entity(mut commands: Commands) {
     let id = commands.spawn_empty().id();
     commands.entity(id).queue(KeySequence::new(
-        action::send_event(MyEvent), 
+        action::write_message(MyEvent), 
         keyseq! { Ctrl-E L M }
     ));
     // OR
     commands.spawn_empty().queue(KeySequence::new(
-        action::send_event(MyEvent), 
+        action::write_message(MyEvent), 
         keyseq! { Ctrl-E L M }
     ));
 }

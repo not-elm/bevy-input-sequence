@@ -17,7 +17,7 @@ fn main() {
 fn setup(mut commands: Commands) {
     commands.queue(
         KeySequence::new(
-            action::send_event(MyEvent),
+            action::write_message(MyEvent),
             keyseq! { Ctrl-W Ctrl-D Ctrl-S Ctrl-A },
         )
         .time_limit(Duration::from_secs(1)),

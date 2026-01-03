@@ -29,12 +29,12 @@ fn main() {
 
 fn setup(mut commands: Commands) {
     commands.queue(KeySequence::new(
-        action::send_event(GlobalEvent),
+        action::write_message(GlobalEvent),
         keyseq! { Escape },
     ));
     commands.queue(
         KeySequence::new(
-            action::send_event(MyEvent).only_if(in_state(AppState::Game)),
+            action::write_message(MyEvent).only_if(in_state(AppState::Game)),
             keyseq! { Space },
         )
         .time_limit(Duration::from_secs(1)),
