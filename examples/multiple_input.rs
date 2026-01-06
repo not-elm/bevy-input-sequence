@@ -17,13 +17,13 @@ fn main() {
 
 fn setup(mut commands: Commands) {
     commands.queue(
-        KeySequence::new(action::send_event(MyEvent(1, None)), keyseq! { W D S A })
+        KeySequence::new(action::write_message(MyEvent(1, None)), keyseq! { W D S A })
             .time_limit(Duration::from_secs(5)),
     );
 
     commands.queue(
         ButtonSequence::new(
-            action::send_event_with_input(|gamepad| MyEvent(2, Some(gamepad))),
+            action::write_message_with_input(|gamepad| MyEvent(2, Some(gamepad))),
             [
                 GamepadButton::North,
                 GamepadButton::East,
@@ -35,13 +35,13 @@ fn setup(mut commands: Commands) {
     );
 
     commands.queue(
-        KeySequence::new(action::send_event(MyEvent(3, None)), keyseq! { W A S D })
+        KeySequence::new(action::write_message(MyEvent(3, None)), keyseq! { W A S D })
             .time_limit(Duration::from_secs(5)),
     );
 
     commands.queue(
         ButtonSequence::new(
-            action::send_event_with_input(|gamepad| MyEvent(4, Some(gamepad))),
+            action::write_message_with_input(|gamepad| MyEvent(4, Some(gamepad))),
             [
                 GamepadButton::North,
                 GamepadButton::West,

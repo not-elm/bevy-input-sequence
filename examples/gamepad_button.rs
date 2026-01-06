@@ -17,7 +17,7 @@ fn main() {
 fn setup(mut commands: Commands) {
     commands.queue(
         ButtonSequence::new(
-            action::send_event_with_input(|gamepad| MyEvent(0, gamepad)),
+            action::write_message_with_input(|gamepad| MyEvent(0, gamepad)),
             [
                 GamepadButton::North,
                 GamepadButton::East,
@@ -30,7 +30,7 @@ fn setup(mut commands: Commands) {
 
     commands.queue(
         ButtonSequence::new(
-            action::send_event_with_input(|gamepad| MyEvent(1, gamepad)),
+            action::write_message_with_input(|gamepad| MyEvent(1, gamepad)),
             [
                 GamepadButton::North,
                 GamepadButton::West,
