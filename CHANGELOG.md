@@ -2,7 +2,9 @@
 
 All notable changes to this project will be documented in this file.
 
-## [unreleased]
+## [0.9.1] - 2026-01-07
+
+- Add Reflect derive to KeyChord
 
 ## [0.9.0] - 2025-10-01
 
