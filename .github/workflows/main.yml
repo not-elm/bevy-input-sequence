@@ -25,4 +25,4 @@ jobs:
       - name: Toolchain
         uses: dtolnay/rust-toolchain@stable
       - name: Test
-        run: cargo test
+        run: cargo test --lib --tests --examples --bins
