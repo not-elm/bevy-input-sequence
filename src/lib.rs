@@ -24,9 +24,9 @@ pub use keyseq::{
 pub mod prelude {
     pub use super::cond_system::IntoCondSystem;
     pub use super::input_sequence::{ButtonSequence, InputSequence, KeySequence};
-    pub use super::{action, keyseq, key, InputSequencePlugin, Modifiers, TimeLimit};
+    pub use super::{action, key, keyseq, InputSequencePlugin, Modifiers, TimeLimit};
+    pub use super::{KeyChord, KeyChordQueue};
     #[doc(hidden)]
     pub use keyseq as _keyseq;
-    pub use super::{KeyChord, KeyChordQueue};
     pub use std::time::Duration;
 }
