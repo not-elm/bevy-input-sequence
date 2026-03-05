@@ -1,4 +1,4 @@
-#![doc(html_root_url = "https://docs.rs/bevy-input-sequence/0.9.1")]
+#![doc(html_root_url = "https://docs.rs/bevy-input-sequence/0.10.0")]
 #![doc = include_str!("../README.md")]
 #![forbid(missing_docs)]
 
@@ -24,7 +24,9 @@ pub use keyseq::{
 pub mod prelude {
     pub use super::cond_system::IntoCondSystem;
     pub use super::input_sequence::{ButtonSequence, InputSequence, KeySequence};
-    pub use super::{action, keyseq, InputSequencePlugin, Modifiers, TimeLimit};
+    pub use super::{action, keyseq, key, InputSequencePlugin, Modifiers, TimeLimit};
+    #[doc(hidden)]
+    pub use keyseq as _keyseq;
     pub use super::{KeyChord, KeyChordQueue};
     pub use std::time::Duration;
 }

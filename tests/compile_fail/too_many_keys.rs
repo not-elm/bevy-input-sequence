@@ -1,4 +1,4 @@
-use bevy_input_sequence::*;
+use bevy_input_sequence::prelude::*;
 
 fn main() {
     let _ = key!(A B);
