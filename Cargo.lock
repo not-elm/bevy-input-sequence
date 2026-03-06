@@ -3035,6 +3035,8 @@ dependencies = [
 [[package]]
 name = "keyseq"
 version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6deacc639e4919460f2350b3965318f8e3100fcc048f3f340a049c6c6c00469f"
 dependencies = [
  "bevy",
  "bevy_reflect",
@@ -3045,6 +3047,8 @@ dependencies = [
 [[package]]
 name = "keyseq_macros"
 version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d8fe20ab8d5b7cdd8b87e27d1f598ebd3f68d6fb8b123a3bae46718001c42dca"
 dependencies = [
  "proc-macro-error",
  "proc-macro2",
