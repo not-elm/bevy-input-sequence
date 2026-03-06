@@ -1,4 +1,4 @@
-use bevy_input_sequence::{key, KeyChord};
+use bevy_input_sequence::prelude::*;
 
 #[test]
 fn keychord_display() {

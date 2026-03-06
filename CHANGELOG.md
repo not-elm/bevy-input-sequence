@@ -2,13 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.10.0] - 2026-03-04
+
+- Add support for Bevy v0.18
+
 ## [0.9.1] - 2026-01-07
 
 - Add Reflect derive to KeyChord
 
 ## [0.9.0] - 2025-10-01
 
-- Add support for bevy v0.17
+- Add support for Bevy v0.17
 
 ## [0.8.1] - 2025-04-28
 
@@ -16,11 +20,11 @@ All notable changes to this project will be documented in this file.
 
 ## [0.8.0] - 2025-04-27
 
-- Add support for bevy v0.16
+- Add support for Bevy v0.16
 
 ## [0.7.0] - 2024-12-09
 
-- Add support for bevy v0.15
+- Add support for Bevy v0.15
 
 ## [0.6.0] - 2024-12-08
 
@@ -66,7 +70,7 @@ All notable changes to this project will be documented in this file.
 
 ### Features
 
-- Add support for bevy v0.12
+- Add support for Bevy v0.12
 - Add key chord support
 - Add `key!` and `keyseq!` macro from `keyseq` crate.
 - Make controllers' sequences independent of one another.
