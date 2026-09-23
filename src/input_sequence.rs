@@ -124,6 +124,8 @@ where
     S: System<In = I, Out = ()> + Send + Sync + 'static,
     I: SystemInput + Send + Sync + 'static,
 {
+    type Out = ();
+
     fn apply(self, world: &mut World) {
         let act = self.build(world);
         let system_entity = act.system_id.entity();
@@ -138,6 +140,8 @@ where
     S: System<In = I, Out = ()> + Send + Sync + 'static,
     I: SystemInput + Send + Sync + 'static,
 {
+    type Out = ();
+
     fn apply(self, mut entity_world: EntityWorldMut) {
         let id = entity_world.id();
         entity_world.world_scope(move |world: &mut World| {
