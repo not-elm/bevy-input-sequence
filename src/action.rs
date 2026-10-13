@@ -32,10 +32,9 @@ pub fn send_event<E: Message + Clone>(event: E) -> impl FnMut(MessageWriter<E>) 
 }
 
 /// Trigger an event.
-pub fn trigger<'a, E>(event: E) -> impl FnMut(Commands)
+pub fn trigger<E>(event: E) -> impl FnMut(Commands)
 where
-    E: Event + Clone,
-    <E as Event>::Trigger<'a>: Default,
+    E: Event<Trigger<'static>: Default> + Clone,
 {
     move |mut commands: Commands| {
         commands.trigger(event.clone());

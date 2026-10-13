@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.12.0] - 2026-10-12
+
+- Add support for Bevy v0.20
+
+## [0.11.0] - 2026-09-23
+
+- Add support for Bevy v0.19
+
 ## [0.10.0] - 2026-03-04
 
 - Add support for Bevy v0.18
